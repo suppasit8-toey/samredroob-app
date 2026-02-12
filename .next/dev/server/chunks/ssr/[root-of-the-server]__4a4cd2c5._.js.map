@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "sources": [],
+  "sections": [
+    {"offset": {"line": 14, "column": 0}, "map": {"version":3,"sources":["file:///C:/Users/Suppa/OneDrive/SAMREDROOB_APP/src/app/about/page.tsx"],"sourcesContent":["export default function AboutPage() {\r\n    return (\r\n        <div style={{ padding: '2rem', textAlign: 'center' }}>\r\n            <h1>About Us</h1>\r\n            <p className=\"mt-4\">We are SAMREDROOB, dedicated to making your home beautiful.</p>\r\n        </div>\r\n    );\r\n}\r\n"],"names":[],"mappings":";;;;;;AAAe,SAAS;IACpB,qBACI,8OAAC;QAAI,OAAO;YAAE,SAAS;YAAQ,WAAW;QAAS;;0BAC/C,8OAAC;0BAAG;;;;;;0BACJ,8OAAC;gBAAE,WAAU;0BAAO;;;;;;;;;;;;AAGhC"}}]
+}

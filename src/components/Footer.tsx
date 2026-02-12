@@ -1,0 +1,43 @@
+import React from 'react';
+
+const Footer: React.FC = () => {
+    return (
+        <footer style={{
+            backgroundColor: 'var(--color-primary)',
+            color: 'white',
+            padding: '3rem 1rem',
+            marginTop: 'auto'
+        }}>
+            <div style={{
+                maxWidth: '1200px',
+                margin: '0 auto',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+                gap: '2rem'
+            }}>
+                <div>
+                    <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem', color: 'var(--color-accent)' }}>SAMREDROOB</h3>
+                    <p>Premium Curtains & Wallpapers for your home.</p>
+                </div>
+                <div>
+                    <h4 style={{ marginBottom: '1rem' }}>Contact</h4>
+                    <p>Phone: 08x-xxx-xxxx</p>
+                    <p>Line: @samredroob</p>
+                    <p>Location: Bangkok, Thailand</p>
+                </div>
+            </div>
+            <div style={{
+                textAlign: 'center',
+                marginTop: '3rem',
+                paddingTop: '1rem',
+                borderTop: '1px solid rgba(255,255,255,0.1)',
+                fontSize: '0.9rem',
+                color: '#aaa'
+            }}>
+                © {new Date().getFullYear()} SAMREDROOB. All rights reserved.
+            </div>
+        </footer>
+    );
+};
+
+export default Footer;
