@@ -369,7 +369,7 @@ export default function AdminCollectionsPage() {
                                     <span className="text-gray-500 flex items-center gap-1.5"><DollarSign size={14} /> ราคาปกติ</span>
                                     <span className="font-bold text-gray-900">฿{collection.price_per_unit.toLocaleString()}</span>
                                 </div>
-                                {collection.price_per_unit_platform > 0 && (
+                                {(collection.price_per_unit_platform ?? 0) > 0 && (
                                     <div className="flex items-center justify-between text-sm">
                                         <span className="text-purple-500 flex items-center gap-1.5"><DollarSign size={14} /> ราคา Platform</span>
                                         <span className="font-bold text-purple-700">฿{collection.price_per_unit_platform?.toLocaleString()}</span>
