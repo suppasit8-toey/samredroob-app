@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -16,13 +16,7 @@ interface Product {
     image_url: string;
 }
 
-export default function ProductsPage() {
-    // Note: We might want to lift state up or use a context for filtering via CategoryList in the future
-    // For now, we'll keep the filter logic local or simplified.
-    // Actually, CategoryList in the design is navigation/filter. 
-    // Let's reuse CategoryList just for visual consistency, but the page needs its own filter state 
-    // or we pass props. For this iteration, let's keep it simple.
-
+function ProductsContent() {
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -36,11 +30,7 @@ export default function ProductsPage() {
             setLoading(true);
             let query = supabase.from('products').select('*');
 
-            // Map frontend category IDs to database category names if they differ
-            // Or assume database uses the same IDs/slugs. 
-            // For now, let's assume loose matching or exact matching.
             if (currentCategory !== 'all') {
-                // Adjust this matching logic based on your actual DB values
                 query = query.eq('category', currentCategory);
             }
 
@@ -102,5 +92,13 @@ export default function ProductsPage() {
                 </motion.div>
             )}
         </div>
+    );
+}
+
+export default function ProductsPage() {
+    return (
+        <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
+            <ProductsContent />
+        </Suspense>
     );
 }
