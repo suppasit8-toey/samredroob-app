@@ -16,7 +16,13 @@ const Footer: React.FC = () => {
                 gap: '2rem'
             }}>
                 <div>
-                    <h3 style={{ fontSize: '1.2rem', marginBottom: '1rem', color: 'var(--color-accent)' }}>SAMREDROOB</h3>
+                    <div style={{ marginBottom: '1rem' }}>
+                        <img
+                            src="https://res.cloudinary.com/dcspjhgdj/image/upload/v1770868240/xq5odkgk3lkto43nzvgh.png"
+                            alt="SAMREDROOB"
+                            style={{ height: '50px', width: 'auto' }}
+                        />
+                    </div>
                     <p>Premium Curtains & Wallpapers for your home.</p>
                 </div>
                 <div>

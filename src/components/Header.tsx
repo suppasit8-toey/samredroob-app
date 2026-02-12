@@ -31,7 +31,11 @@ const Header: React.FC = () => {
                 alignItems: 'center'
             }}>
                 <Link href="/" style={{ fontSize: '1.5rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span style={{ color: 'var(--color-accent)' }}>SAMREDROOB</span>
+                    <img
+                        src="https://res.cloudinary.com/dcspjhgdj/image/upload/v1770868240/kksnv5p98nugmlwsjkyj.png"
+                        alt="SAMREDROOB"
+                        style={{ height: '40px', width: 'auto' }}
+                    />
                 </Link>
 
                 {/* Desktop Nav */}
