@@ -651,29 +651,20 @@ var _s = __turbopack_context__.k.signature();
 ;
 ;
 ;
-function ProductsPage() {
+function ProductsContent() {
     _s();
-    // Note: We might want to lift state up or use a context for filtering via CategoryList in the future
-    // For now, we'll keep the filter logic local or simplified.
-    // Actually, CategoryList in the design is navigation/filter. 
-    // Let's reuse CategoryList just for visual consistency, but the page needs its own filter state 
-    // or we pass props. For this iteration, let's keep it simple.
     const [products, setProducts] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])([]);
     const [loading, setLoading] = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useState"])(true);
     const searchParams = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSearchParams"])();
     const currentCategory = searchParams.get('category') || 'all';
     (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
-        "ProductsPage.useEffect": ()=>{
+        "ProductsContent.useEffect": ()=>{
             const fetchProducts = {
-                "ProductsPage.useEffect.fetchProducts": async ()=>{
+                "ProductsContent.useEffect.fetchProducts": async ()=>{
                     if (!__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabase$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["supabase"]) return;
                     setLoading(true);
                     let query = __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$lib$2f$supabase$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["supabase"].from('products').select('*');
-                    // Map frontend category IDs to database category names if they differ
-                    // Or assume database uses the same IDs/slugs. 
-                    // For now, let's assume loose matching or exact matching.
                     if (currentCategory !== 'all') {
-                        // Adjust this matching logic based on your actual DB values
                         query = query.eq('category', currentCategory);
                     }
                     const { data, error } = await query;
@@ -684,10 +675,10 @@ function ProductsPage() {
                     }
                     setLoading(false);
                 }
-            }["ProductsPage.useEffect.fetchProducts"];
+            }["ProductsContent.useEffect.fetchProducts"];
             fetchProducts();
         }
-    }["ProductsPage.useEffect"], [
+    }["ProductsContent.useEffect"], [
         currentCategory
     ]);
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -700,7 +691,7 @@ function ProductsPage() {
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$SearchBar$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
                 fileName: "[project]/src/app/(shop)/products/page.tsx",
-                lineNumber: 67,
+                lineNumber: 57,
                 columnNumber: 13
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -718,18 +709,18 @@ function ProductsPage() {
                         children: "สินค้าทั้งหมด"
                     }, void 0, false, {
                         fileName: "[project]/src/app/(shop)/products/page.tsx",
-                        lineNumber: 70,
+                        lineNumber: 60,
                         columnNumber: 17
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$src$2f$components$2f$CategoryList$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {}, void 0, false, {
                         fileName: "[project]/src/app/(shop)/products/page.tsx",
-                        lineNumber: 75,
+                        lineNumber: 65,
                         columnNumber: 17
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/app/(shop)/products/page.tsx",
-                lineNumber: 69,
+                lineNumber: 59,
                 columnNumber: 13
             }, this),
             loading ? /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -741,7 +732,7 @@ function ProductsPage() {
                 children: "กำลังโหลดสินค้า..."
             }, void 0, false, {
                 fileName: "[project]/src/app/(shop)/products/page.tsx",
-                lineNumber: 79,
+                lineNumber: 69,
                 columnNumber: 17
             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$framer$2d$motion$2f$dist$2f$es$2f$render$2f$components$2f$motion$2f$proxy$2e$mjs__$5b$app$2d$client$5d$__$28$ecmascript$29$__["motion"].div, {
                 layout: true,
@@ -758,34 +749,57 @@ function ProductsPage() {
                             image: product.image_url || 'https://placehold.co/600x400?text=No+Image'
                         }, product.id, false, {
                             fileName: "[project]/src/app/(shop)/products/page.tsx",
-                            lineNumber: 93,
+                            lineNumber: 83,
                             columnNumber: 29
                         }, this))
                 }, void 0, false, {
                     fileName: "[project]/src/app/(shop)/products/page.tsx",
-                    lineNumber: 91,
+                    lineNumber: 81,
                     columnNumber: 21
                 }, this)
             }, void 0, false, {
                 fileName: "[project]/src/app/(shop)/products/page.tsx",
-                lineNumber: 83,
+                lineNumber: 73,
                 columnNumber: 17
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/app/(shop)/products/page.tsx",
-        lineNumber: 61,
+        lineNumber: 51,
         columnNumber: 9
     }, this);
 }
-_s(ProductsPage, "DEcc0xzrDbrMSMbmfYjfJDyOwEw=", false, function() {
+_s(ProductsContent, "DEcc0xzrDbrMSMbmfYjfJDyOwEw=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useSearchParams"]
     ];
 });
-_c = ProductsPage;
-var _c;
-__turbopack_context__.k.register(_c, "ProductsPage");
+_c = ProductsContent;
+function ProductsPage() {
+    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Suspense"], {
+        fallback: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+            className: "p-8 text-center",
+            children: "Loading..."
+        }, void 0, false, {
+            fileName: "[project]/src/app/(shop)/products/page.tsx",
+            lineNumber: 100,
+            columnNumber: 29
+        }, void 0),
+        children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(ProductsContent, {}, void 0, false, {
+            fileName: "[project]/src/app/(shop)/products/page.tsx",
+            lineNumber: 101,
+            columnNumber: 13
+        }, this)
+    }, void 0, false, {
+        fileName: "[project]/src/app/(shop)/products/page.tsx",
+        lineNumber: 100,
+        columnNumber: 9
+    }, this);
+}
+_c1 = ProductsPage;
+var _c, _c1;
+__turbopack_context__.k.register(_c, "ProductsContent");
+__turbopack_context__.k.register(_c1, "ProductsPage");
 if (typeof globalThis.$RefreshHelpers$ === 'object' && globalThis.$RefreshHelpers !== null) {
     __turbopack_context__.k.registerExports(__turbopack_context__.m, globalThis.$RefreshHelpers$);
 }
