@@ -1,3 +1,20 @@
 {
-  "/page": "app/page.js"
+  "/(shop)/about/page": "app/(shop)/about/page.js",
+  "/(shop)/calculator/page": "app/(shop)/calculator/page.js",
+  "/(shop)/contact/page": "app/(shop)/contact/page.js",
+  "/(shop)/page": "app/(shop)/page.js",
+  "/(shop)/products/page": "app/(shop)/products/page.js",
+  "/(shop)/quotation/page": "app/(shop)/quotation/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/about/page": "app/about/page.js",
+  "/admin/categories/page": "app/admin/categories/page.js",
+  "/admin/collections/page": "app/admin/collections/page.js",
+  "/admin/login/page": "app/admin/login/page.js",
+  "/admin/page": "app/admin/page.js",
+  "/admin/pricing/page": "app/admin/pricing/page.js",
+  "/admin/products/page": "app/admin/products/page.js",
+  "/calculator/page": "app/calculator/page.js",
+  "/contact/page": "app/contact/page.js",
+  "/page": "app/page.js",
+  "/products/page": "app/products/page.js"
 }

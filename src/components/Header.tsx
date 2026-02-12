@@ -8,10 +8,10 @@ const Header: React.FC = () => {
     const pathname = usePathname();
 
     const navLinks = [
-        { name: 'Products', path: '/products' },
-        { name: 'Calculator', path: '/calculator' },
-        { name: 'About', path: '/about' },
-        { name: 'Contact', path: '/contact' },
+        { name: 'สินค้า', path: '/products' },
+        { name: 'คำนวณราคา', path: '/calculator' },
+        { name: 'เกี่ยวกับเรา', path: '/about' },
+        { name: 'ติดต่อเรา', path: '/contact' },
     ];
 
     return (
@@ -30,12 +30,26 @@ const Header: React.FC = () => {
                 justifyContent: 'space-between',
                 alignItems: 'center'
             }}>
-                <Link href="/" style={{ fontSize: '1.5rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Link href="/" style={{ fontSize: '1.5rem', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', color: 'black' }}>
                     <img
                         src="https://res.cloudinary.com/dcspjhgdj/image/upload/v1770868240/kksnv5p98nugmlwsjkyj.png"
                         alt="SAMREDROOB"
                         style={{ height: '40px', width: 'auto' }}
                     />
+                    <span style={{
+                        fontSize: '1.8rem',
+                        fontFamily: 'var(--font-mitr)',
+                        fontWeight: 600,
+                        lineHeight: 1,
+                        color: '#333',
+                        borderLeft: '2px solid #e5e7eb',
+                        paddingLeft: '1rem',
+                        marginLeft: '0.5rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        height: '40px',
+                        letterSpacing: '0.02em'
+                    }}>สำเร็จรูป</span>
                 </Link>
 
                 {/* Desktop Nav */}
@@ -46,6 +60,8 @@ const Header: React.FC = () => {
                                 key={link.name}
                                 href={link.path}
                                 style={{
+                                    fontFamily: 'var(--font-mitr)',
+                                    fontSize: '1rem',
                                     fontWeight: 500,
                                     transition: 'color 0.2s',
                                     color: pathname === link.path ? 'var(--color-accent)' : 'inherit'

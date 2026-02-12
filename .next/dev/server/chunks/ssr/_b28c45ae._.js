@@ -113,7 +113,7 @@ function CalculatorPage() {
                     marginBottom: '2rem',
                     fontSize: '2.5rem'
                 },
-                children: "Price Estimator"
+                children: "ประเมินราคาเบื้องต้น"
             }, void 0, false, {
                 fileName: "[project]/src/app/calculator/page.tsx",
                 lineNumber: 24,
@@ -149,7 +149,7 @@ function CalculatorPage() {
                                             fontWeight: 600
                                         },
                                         className: "jsx-567a92d65049605c",
-                                        children: "Product Type"
+                                        children: "ประเภทสินค้า"
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/calculator/page.tsx",
                                         lineNumber: 47,
@@ -170,7 +170,7 @@ function CalculatorPage() {
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
                                                 value: "curtain-uv",
                                                 className: "jsx-567a92d65049605c",
-                                                children: "UV Curtain (Blackout)"
+                                                children: "ผ้าม่านกัน UV (Blackout)"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/calculator/page.tsx",
                                                 lineNumber: 59,
@@ -179,7 +179,7 @@ function CalculatorPage() {
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
                                                 value: "curtain-sheer",
                                                 className: "jsx-567a92d65049605c",
-                                                children: "Sheer Curtain"
+                                                children: "ผ้าม่านโปร่ง (Sheer)"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/calculator/page.tsx",
                                                 lineNumber: 60,
@@ -188,7 +188,7 @@ function CalculatorPage() {
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
                                                 value: "wallpaper-vinyl",
                                                 className: "jsx-567a92d65049605c",
-                                                children: "Vinyl Wallpaper"
+                                                children: "วอลเปเปอร์ไวนิล"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/calculator/page.tsx",
                                                 lineNumber: 61,
@@ -197,7 +197,7 @@ function CalculatorPage() {
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("option", {
                                                 value: "wallpaper-fabric",
                                                 className: "jsx-567a92d65049605c",
-                                                children: "Fabric Wallpaper"
+                                                children: "วอลเปเปอร์ผ้า"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/calculator/page.tsx",
                                                 lineNumber: 62,
@@ -234,7 +234,7 @@ function CalculatorPage() {
                                                     fontWeight: 600
                                                 },
                                                 className: "jsx-567a92d65049605c",
-                                                children: "Width (cm)"
+                                                children: "ความกว้าง (ซม.)"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/calculator/page.tsx",
                                                 lineNumber: 68,
@@ -244,7 +244,7 @@ function CalculatorPage() {
                                                 type: "number",
                                                 value: width,
                                                 onChange: (e)=>setWidth(Number(e.target.value)),
-                                                placeholder: "e.g. 200",
+                                                placeholder: "เช่น 200",
                                                 required: true,
                                                 style: {
                                                     width: '100%',
@@ -274,7 +274,7 @@ function CalculatorPage() {
                                                     fontWeight: 600
                                                 },
                                                 className: "jsx-567a92d65049605c",
-                                                children: "Height (cm)"
+                                                children: "ความสูง (ซม.)"
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/calculator/page.tsx",
                                                 lineNumber: 84,
@@ -284,7 +284,7 @@ function CalculatorPage() {
                                                 type: "number",
                                                 value: height,
                                                 onChange: (e)=>setHeight(Number(e.target.value)),
-                                                placeholder: "e.g. 250",
+                                                placeholder: "เช่น 250",
                                                 required: true,
                                                 style: {
                                                     width: '100%',
@@ -334,7 +334,7 @@ function CalculatorPage() {
                                         lineNumber: 117,
                                         columnNumber: 25
                                     }, this),
-                                    " Calculate"
+                                    " คำนวณราคา"
                                 ]
                             }, void 0, true, {
                                 fileName: "[project]/src/app/calculator/page.tsx",
@@ -371,7 +371,7 @@ function CalculatorPage() {
                                         color: 'var(--color-accent)'
                                     },
                                     className: "jsx-567a92d65049605c",
-                                    children: "Estimated Price"
+                                    children: "ราคาประเมิน"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/calculator/page.tsx",
                                     lineNumber: 137,
@@ -426,7 +426,7 @@ function CalculatorPage() {
                                             lineNumber: 155,
                                             columnNumber: 33
                                         }, this),
-                                        " Reset"
+                                        " ล้างค่า"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/calculator/page.tsx",
@@ -453,7 +453,7 @@ function CalculatorPage() {
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$ssr$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$ssr$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                                     className: "jsx-567a92d65049605c",
-                                    children: "Enter your dimensions to see the estimated price."
+                                    children: "กรอกขนาดกว้าง x สูง เพื่อดูราคาประเมิน"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/calculator/page.tsx",
                                     lineNumber: 161,

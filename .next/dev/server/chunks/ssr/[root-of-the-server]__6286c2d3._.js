@@ -28,7 +28,7 @@ function ContactPage() {
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
                 className: "text-2xl font-bold mb-4",
-                children: "Contact Us"
+                children: "ติดต่อเรา"
             }, void 0, false, {
                 fileName: "[project]/src/app/contact/page.tsx",
                 lineNumber: 4,
@@ -40,13 +40,13 @@ function ContactPage() {
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                         children: [
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("strong", {
-                                children: "Phone:"
+                                children: "โทรศัพท์:"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/contact/page.tsx",
                                 lineNumber: 6,
                                 columnNumber: 20
                             }, this),
-                            " 08x-xxx-xxxx"
+                            " 094-746-1744"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/contact/page.tsx",
@@ -72,13 +72,13 @@ function ContactPage() {
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
                         children: [
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("strong", {
-                                children: "Address:"
+                                children: "ที่อยู่:"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/contact/page.tsx",
                                 lineNumber: 8,
                                 columnNumber: 20
                             }, this),
-                            " Bangkok, Thailand"
+                            " 44/10 มิตรไมตรี แขวงคู้ฝั่งเหนือ เขต หนองจอก กรุงเทพมหานคร, ประเทศไทย"
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/contact/page.tsx",

@@ -1,0 +1,48 @@
+export interface Category {
+    id: number;
+    name: string;
+    slug?: string;
+    image_url?: string;
+    created_at?: string;
+}
+
+export interface ProductCollection {
+    id: number;
+    name: string;
+    category_id: number;
+    unit: string;
+    price_per_unit: number;
+    price_per_unit_platform?: number;
+    calculation_method?: string;
+    created_at?: string;
+
+    // Constraints
+    min_width?: number;
+    max_width?: number;
+    max_height?: number;
+    min_area?: number;
+    area_factor?: number;
+    min_billable_width?: number;
+    min_billable_height?: number;
+    width_step?: number;
+    height_step?: number;
+    area_rounding?: number;
+
+    // Links
+    catalog_url?: string;
+    portfolio_url?: string;
+
+    // Joined fields (optional)
+    product_categories?: Category;
+}
+
+export interface ProductVariant {
+    id: number;
+    collection_id: number;
+    name: string;
+    image_url?: string;
+    created_at?: string;
+
+    // Joined fields
+    product_collections?: ProductCollection;
+}

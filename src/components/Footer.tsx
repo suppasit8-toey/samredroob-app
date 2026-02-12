@@ -23,13 +23,13 @@ const Footer: React.FC = () => {
                             style={{ height: '50px', width: 'auto' }}
                         />
                     </div>
-                    <p>Premium Curtains & Wallpapers for your home.</p>
+                    <p>ผ้าม่านและวอลเปเปอร์เกรดพรีเมียมสำหรับบ้านของคุณ</p>
                 </div>
                 <div>
-                    <h4 style={{ marginBottom: '1rem' }}>Contact</h4>
-                    <p>Phone: 08x-xxx-xxxx</p>
-                    <p>Line: @samredroob</p>
-                    <p>Location: Bangkok, Thailand</p>
+                    <h4 style={{ marginBottom: '1rem' }}>ติดต่อเรา</h4>
+                    <p>โทร: 094-746-1744</p>
+                    <p>Line ID: @samredroob</p>
+                    <p>ที่อยู่: 44/10 มิตรไมตรี แขวงคู้ฝั่งเหนือ เขต หนองจอก กทม.</p>
                 </div>
             </div>
             <div style={{

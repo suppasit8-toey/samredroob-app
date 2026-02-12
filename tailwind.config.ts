@@ -15,6 +15,9 @@ export default {
                 secondary: "var(--color-secondary)",
                 accent: "var(--color-accent)",
             },
+            fontFamily: {
+                sans: ["var(--font-kanit)", "sans-serif"],
+            },
         },
     },
     plugins: [],

@@ -1,12 +1,19 @@
 import type { Metadata } from "next";
+import { Kanit } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import BottomNav from "@/components/BottomNav";
+
+import { CartProvider } from "@/context/CartContext";
+
+const kanit = Kanit({
+    subsets: ["thai", "latin"],
+    weight: ["200", "300", "400", "500", "600", "700"],
+    variable: "--font-kanit",
+    display: 'swap',
+});
 
 export const metadata: Metadata = {
-    title: "SAMREDROOB - Premium Curtains & Wallpaper",
-    description: "Calculate prices and browse our premium collection.",
+    title: "SAMREDROOB - ผ้าม่านและวอลเปเปอร์เกรดพรีเมียม",
+    description: "คำนวณราคาและเลือกชมสินค้าคุณภาพเยี่ยมของเรา",
 };
 
 export default function RootLayout({
@@ -15,16 +22,11 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="en">
-            <body>
-                <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-                    <Header />
-                    <main style={{ flex: 1 }}>
-                        {children}
-                    </main>
-                    <Footer />
-                    <BottomNav />
-                </div>
+        <html lang="th">
+            <body className={`${kanit.variable} ${kanit.className} antialiased`}>
+                <CartProvider>
+                    {children}
+                </CartProvider>
             </body>
         </html>
     );

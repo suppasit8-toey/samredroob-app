@@ -72,7 +72,7 @@ function Home() {
                                     letterSpacing: '-1px'
                                 },
                                 children: [
-                                    "Elevate Your Space with ",
+                                    "ยกระดับบ้านของคุณด้วย ",
                                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                         style: {
                                             color: 'var(--color-accent)'
@@ -81,7 +81,7 @@ function Home() {
                                     }, void 0, false, {
                                         fileName: "[project]/src/app/page.tsx",
                                         lineNumber: 39,
-                                        columnNumber: 49
+                                        columnNumber: 47
                                     }, this)
                                 ]
                             }, void 0, true, {
@@ -96,7 +96,7 @@ function Home() {
                                     margin: '0 auto 2rem',
                                     color: 'rgba(255,255,255,0.9)'
                                 },
-                                children: "Premium Curtains, Wallpapers, and Interior Solutions. Get an instant price estimate today."
+                                children: "ผ้าม่าน วอลเปเปอร์ และโซลูชันการตกแต่งภายในระดับพรีเมียม คำนวณราคาประเมินได้ทันที"
                             }, void 0, false, {
                                 fileName: "[project]/src/app/page.tsx",
                                 lineNumber: 41,
@@ -130,7 +130,7 @@ function Home() {
                                                 lineNumber: 62,
                                                 columnNumber: 29
                                             }, this),
-                                            "Calculate Price"
+                                            "คำนวณราคา"
                                         ]
                                     }, void 0, true, {
                                         fileName: "[project]/src/app/page.tsx",
@@ -152,13 +152,13 @@ function Home() {
                                             gap: '0.5rem'
                                         },
                                         children: [
-                                            "View Catalog ",
+                                            "ดูแคตตาล็อก ",
                                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$arrow$2d$right$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__$3c$export__default__as__ArrowRight$3e$__["ArrowRight"], {
                                                 size: 20
                                             }, void 0, false, {
                                                 fileName: "[project]/src/app/page.tsx",
                                                 lineNumber: 77,
-                                                columnNumber: 42
+                                                columnNumber: 41
                                             }, this)
                                         ]
                                     }, void 0, true, {
@@ -201,7 +201,7 @@ function Home() {
                                 fontSize: '2.5rem',
                                 marginBottom: '3rem'
                             },
-                            children: "Why Choose Us"
+                            children: "ทำไมต้องเลือกเรา"
                         }, void 0, false, {
                             fileName: "[project]/src/app/page.tsx",
                             lineNumber: 86,
@@ -215,16 +215,16 @@ function Home() {
                             },
                             children: [
                                 {
-                                    title: 'Premium Quality',
-                                    desc: 'Sourced from the finest materials globally.'
+                                    title: 'คุณภาพพรีเมียม',
+                                    desc: 'คัดสรรวัสดุชั้นดีจากทั่วโลก'
                                 },
                                 {
-                                    title: 'Expert Installation',
-                                    desc: 'Professional team ensuring perfect fit.'
+                                    title: 'ติดตั้งโดยผู้เชี่ยวชาญ',
+                                    desc: 'ทีมงานมืออาชีพ รับประกันงานเรียบร้อย'
                                 },
                                 {
-                                    title: 'Custom Solutions',
-                                    desc: 'Tailored designs to match your unique style.'
+                                    title: 'ดีไซน์ตามใจคุณ',
+                                    desc: 'ออกแบบให้เข้ากับสไตล์ของคุณโดยเฉพาะ'
                                 }
                             ].map((feature, idx)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$server$2f$route$2d$modules$2f$app$2d$page$2f$vendored$2f$rsc$2f$react$2d$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$rsc$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     style: {

@@ -1,13 +1,13 @@
 self.__BUILD_MANIFEST = {
+  "/_error": [
+    "static/chunks/pages/_error.js"
+  ],
   "__rewrites": {
     "afterFiles": [],
     "beforeFiles": [],
     "fallback": []
   },
   "sortedPages": [
-    "/Calculator",
-    "/Home",
-    "/Products",
     "/_app",
     "/_error"
   ]

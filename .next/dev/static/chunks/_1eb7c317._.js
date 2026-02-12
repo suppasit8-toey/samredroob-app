@@ -19,19 +19,19 @@ const Header = ()=>{
     const pathname = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["usePathname"])();
     const navLinks = [
         {
-            name: 'Products',
+            name: 'สินค้า',
             path: '/products'
         },
         {
-            name: 'Calculator',
+            name: 'คำนวณราคา',
             path: '/calculator'
         },
         {
-            name: 'About',
+            name: 'เกี่ยวกับเรา',
             path: '/about'
         },
         {
-            name: 'Contact',
+            name: 'ติดต่อเรา',
             path: '/contact'
         }
     ];
@@ -60,19 +60,46 @@ const Header = ()=>{
                         fontWeight: 'bold',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '0.5rem'
+                        gap: '0.5rem',
+                        textDecoration: 'none',
+                        color: 'black'
                     },
-                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                        style: {
-                            color: 'var(--color-accent)'
-                        },
-                        children: "SAMREDROOB"
-                    }, void 0, false, {
-                        fileName: "[project]/src/components/Header.tsx",
-                        lineNumber: 34,
-                        columnNumber: 21
-                    }, ("TURBOPACK compile-time value", void 0))
-                }, void 0, false, {
+                    children: [
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("img", {
+                            src: "https://res.cloudinary.com/dcspjhgdj/image/upload/v1770868240/kksnv5p98nugmlwsjkyj.png",
+                            alt: "SAMREDROOB",
+                            style: {
+                                height: '40px',
+                                width: 'auto'
+                            }
+                        }, void 0, false, {
+                            fileName: "[project]/src/components/Header.tsx",
+                            lineNumber: 34,
+                            columnNumber: 21
+                        }, ("TURBOPACK compile-time value", void 0)),
+                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                            style: {
+                                fontSize: '1.8rem',
+                                fontFamily: 'var(--font-mitr)',
+                                fontWeight: 600,
+                                lineHeight: 1,
+                                color: '#333',
+                                borderLeft: '2px solid #e5e7eb',
+                                paddingLeft: '1rem',
+                                marginLeft: '0.5rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                height: '40px',
+                                letterSpacing: '0.02em'
+                            },
+                            children: "สำเร็จรูป"
+                        }, void 0, false, {
+                            fileName: "[project]/src/components/Header.tsx",
+                            lineNumber: 39,
+                            columnNumber: 21
+                        }, ("TURBOPACK compile-time value", void 0))
+                    ]
+                }, void 0, true, {
                     fileName: "[project]/src/components/Header.tsx",
                     lineNumber: 33,
                     columnNumber: 17
@@ -87,6 +114,8 @@ const Header = ()=>{
                         children: navLinks.map((link)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
                                 href: link.path,
                                 style: {
+                                    fontFamily: 'var(--font-mitr)',
+                                    fontSize: '1rem',
                                     fontWeight: 500,
                                     transition: 'color 0.2s',
                                     color: pathname === link.path ? 'var(--color-accent)' : 'inherit'
@@ -94,17 +123,17 @@ const Header = ()=>{
                                 children: link.name
                             }, link.name, false, {
                                 fileName: "[project]/src/components/Header.tsx",
-                                lineNumber: 41,
+                                lineNumber: 59,
                                 columnNumber: 29
                             }, ("TURBOPACK compile-time value", void 0)))
                     }, void 0, false, {
                         fileName: "[project]/src/components/Header.tsx",
-                        lineNumber: 39,
+                        lineNumber: 57,
                         columnNumber: 21
                     }, ("TURBOPACK compile-time value", void 0))
                 }, void 0, false, {
                     fileName: "[project]/src/components/Header.tsx",
-                    lineNumber: 38,
+                    lineNumber: 56,
                     columnNumber: 17
                 }, ("TURBOPACK compile-time value", void 0)),
                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("style", {
@@ -115,7 +144,7 @@ const Header = ()=>{
                 `
                 }, void 0, false, {
                     fileName: "[project]/src/components/Header.tsx",
-                    lineNumber: 56,
+                    lineNumber: 76,
                     columnNumber: 17
                 }, ("TURBOPACK compile-time value", void 0))
             ]
@@ -168,99 +197,121 @@ var _s = __turbopack_context__.k.signature();
 const BottomNav = ()=>{
     _s();
     const pathname = (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$navigation$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["usePathname"])();
-    // Helper to determine if a link is active
     const isActive = (path)=>pathname === path;
     const navItems = [
         {
-            name: 'Home',
+            name: 'หน้าแรก',
             path: '/',
             icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$house$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Home$3e$__["Home"], {
-                size: 24
+                size: 24,
+                strokeWidth: isActive('/') ? 2.75 : 2.25
+            }, void 0, false, {
+                fileName: "[project]/src/components/BottomNav.tsx",
+                lineNumber: 14,
+                columnNumber: 45
+            }, ("TURBOPACK compile-time value", void 0))
+        },
+        {
+            name: 'สินค้า',
+            path: '/products',
+            icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$grid$2d$3x3$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Grid$3e$__["Grid"], {
+                size: 24,
+                strokeWidth: isActive('/products') ? 2.75 : 2.25
             }, void 0, false, {
                 fileName: "[project]/src/components/BottomNav.tsx",
                 lineNumber: 15,
-                columnNumber: 42
+                columnNumber: 52
             }, ("TURBOPACK compile-time value", void 0))
         },
         {
-            name: 'Products',
-            path: '/products',
-            icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$grid$2d$3x3$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Grid$3e$__["Grid"], {
-                size: 24
+            name: 'คำนวณ',
+            path: '/calculator',
+            icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$calculator$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Calculator$3e$__["Calculator"], {
+                size: 24,
+                strokeWidth: isActive('/calculator') ? 2.75 : 2.25
             }, void 0, false, {
                 fileName: "[project]/src/components/BottomNav.tsx",
                 lineNumber: 16,
-                columnNumber: 54
+                columnNumber: 53
             }, ("TURBOPACK compile-time value", void 0))
         },
         {
-            name: 'Calculator',
-            path: '/calculator',
-            icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$calculator$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Calculator$3e$__["Calculator"], {
-                size: 24
+            name: 'ติดต่อ',
+            path: '/contact',
+            icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$phone$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Phone$3e$__["Phone"], {
+                size: 24,
+                strokeWidth: isActive('/contact') ? 2.75 : 2.25
             }, void 0, false, {
                 fileName: "[project]/src/components/BottomNav.tsx",
                 lineNumber: 17,
-                columnNumber: 58
-            }, ("TURBOPACK compile-time value", void 0))
-        },
-        {
-            name: 'Contact',
-            path: '/contact',
-            icon: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$phone$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Phone$3e$__["Phone"], {
-                size: 24
-            }, void 0, false, {
-                fileName: "[project]/src/components/BottomNav.tsx",
-                lineNumber: 18,
-                columnNumber: 52
+                columnNumber: 51
             }, ("TURBOPACK compile-time value", void 0))
         }
     ];
     return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["Fragment"], {
         children: [
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                className: "jsx-8a0d8f57fe38709" + " " + "bottom-nav-spacer"
+                className: "jsx-781697f76e2beda5" + " " + "bottom-nav-spacer"
+            }, void 0, false, {
+                fileName: "[project]/src/components/BottomNav.tsx",
+                lineNumber: 22,
+                columnNumber: 13
+            }, ("TURBOPACK compile-time value", void 0)),
+            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("nav", {
+                className: "jsx-781697f76e2beda5" + " " + "bottom-nav",
+                children: navItems.map((item)=>{
+                    const active = isActive(item.path);
+                    return /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
+                        href: item.path,
+                        className: `nav-item ${active ? 'active' : ''}`,
+                        children: [
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                className: "jsx-781697f76e2beda5" + " " + "icon-wrapper",
+                                children: [
+                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                        className: "jsx-781697f76e2beda5" + " " + "icon-container",
+                                        children: item.icon
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/components/BottomNav.tsx",
+                                        lineNumber: 33,
+                                        columnNumber: 33
+                                    }, ("TURBOPACK compile-time value", void 0)),
+                                    active && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                        className: "jsx-781697f76e2beda5" + " " + "active-dot"
+                                    }, void 0, false, {
+                                        fileName: "[project]/src/components/BottomNav.tsx",
+                                        lineNumber: 36,
+                                        columnNumber: 44
+                                    }, ("TURBOPACK compile-time value", void 0))
+                                ]
+                            }, void 0, true, {
+                                fileName: "[project]/src/components/BottomNav.tsx",
+                                lineNumber: 32,
+                                columnNumber: 29
+                            }, ("TURBOPACK compile-time value", void 0)),
+                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                className: "jsx-781697f76e2beda5" + " " + "label",
+                                children: item.name
+                            }, void 0, false, {
+                                fileName: "[project]/src/components/BottomNav.tsx",
+                                lineNumber: 38,
+                                columnNumber: 29
+                            }, ("TURBOPACK compile-time value", void 0))
+                        ]
+                    }, item.name, true, {
+                        fileName: "[project]/src/components/BottomNav.tsx",
+                        lineNumber: 27,
+                        columnNumber: 25
+                    }, ("TURBOPACK compile-time value", void 0));
+                })
             }, void 0, false, {
                 fileName: "[project]/src/components/BottomNav.tsx",
                 lineNumber: 23,
                 columnNumber: 13
             }, ("TURBOPACK compile-time value", void 0)),
-            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("nav", {
-                className: "jsx-8a0d8f57fe38709" + " " + "bottom-nav",
-                children: navItems.map((item)=>/*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$client$2f$app$2d$dir$2f$link$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
-                        href: item.path,
-                        className: `nav-item ${isActive(item.path) ? 'active' : ''}`,
-                        children: [
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                className: "jsx-8a0d8f57fe38709" + " " + "icon-container",
-                                children: item.icon
-                            }, void 0, false, {
-                                fileName: "[project]/src/components/BottomNav.tsx",
-                                lineNumber: 31,
-                                columnNumber: 25
-                            }, ("TURBOPACK compile-time value", void 0)),
-                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
-                                className: "jsx-8a0d8f57fe38709" + " " + "label",
-                                children: item.name
-                            }, void 0, false, {
-                                fileName: "[project]/src/components/BottomNav.tsx",
-                                lineNumber: 34,
-                                columnNumber: 25
-                            }, ("TURBOPACK compile-time value", void 0))
-                        ]
-                    }, item.name, true, {
-                        fileName: "[project]/src/components/BottomNav.tsx",
-                        lineNumber: 26,
-                        columnNumber: 21
-                    }, ("TURBOPACK compile-time value", void 0)))
-            }, void 0, false, {
-                fileName: "[project]/src/components/BottomNav.tsx",
-                lineNumber: 24,
-                columnNumber: 13
-            }, ("TURBOPACK compile-time value", void 0)),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$styled$2d$jsx$2f$style$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["default"], {
-                id: "8a0d8f57fe38709",
-                children: ".bottom-nav.jsx-8a0d8f57fe38709{z-index:1000;background-color:#fff;border-top:1px solid #f0f0f0;justify-content:space-around;align-items:center;padding:.75rem .5rem;display:flex;position:fixed;bottom:0;left:0;right:0;box-shadow:0 -2px 10px #0000000d}.bottom-nav-spacer.jsx-8a0d8f57fe38709{height:80px;display:none}.nav-item.jsx-8a0d8f57fe38709{color:#999;flex-direction:column;flex:1;justify-content:center;align-items:center;font-size:.75rem;text-decoration:none;transition:all .3s;display:flex}.nav-item.active.jsx-8a0d8f57fe38709{color:var(--color-accent)}.icon-container.jsx-8a0d8f57fe38709{margin-bottom:4px;transition:transform .2s}.nav-item.jsx-8a0d8f57fe38709:active .icon-container.jsx-8a0d8f57fe38709{transform:scale(.9)}@media (width>=769px){.bottom-nav.jsx-8a0d8f57fe38709,.bottom-nav-spacer.jsx-8a0d8f57fe38709{display:none!important}}@media (width<=768px){.bottom-nav.jsx-8a0d8f57fe38709,.bottom-nav-spacer.jsx-8a0d8f57fe38709{display:flex}.bottom-nav-spacer.jsx-8a0d8f57fe38709{display:block}}"
+                id: "781697f76e2beda5",
+                children: ".bottom-nav.jsx-781697f76e2beda5{-webkit-backdrop-filter:blur(12px);padding:.75rem 1rem;padding-bottom:max(.75rem,env(safe-area-inset-bottom));z-index:1000;background:#ffffffd9;border-top:1px solid #ffffff4d;border-radius:20px 20px 0 0;justify-content:space-around;align-items:center;display:flex;position:fixed;bottom:0;left:0;right:0;box-shadow:0 -4px 20px #00000014}.bottom-nav-spacer.jsx-781697f76e2beda5{height:90px;display:none}.nav-item.jsx-781697f76e2beda5{color:#a3a3a3;flex-direction:column;flex:1;justify-content:center;align-items:center;padding:4px 0;font-size:.75rem;text-decoration:none;transition:all .3s cubic-bezier(.4,0,.2,1);display:flex;position:relative}.nav-item.active.jsx-781697f76e2beda5{color:#000;transform:translateY(-2px)}.icon-wrapper.jsx-781697f76e2beda5{flex-direction:column;align-items:center;display:flex;position:relative}.icon-container.jsx-781697f76e2beda5{margin-bottom:4px;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}.nav-item.active.jsx-781697f76e2beda5 .icon-container.jsx-781697f76e2beda5{transform:scale(1.1)}.active-dot.jsx-781697f76e2beda5{background-color:#000;border-radius:50%;width:4px;height:4px;animation:.3s ease-out forwards fadeIn;position:absolute;bottom:-8px}.label.jsx-781697f76e2beda5{font-family:var(--font-mitr);letter-spacing:0;margin-top:2px;font-weight:600}.nav-item.jsx-781697f76e2beda5:active .icon-container.jsx-781697f76e2beda5{transform:scale(.95)}@keyframes fadeIn{0%{opacity:0;transform:scale(0)}to{opacity:1;transform:scale(1)}}@media (width>=769px){.bottom-nav.jsx-781697f76e2beda5,.bottom-nav-spacer.jsx-781697f76e2beda5{display:none!important}}@media (width<=768px){.bottom-nav.jsx-781697f76e2beda5,.bottom-nav-spacer.jsx-781697f76e2beda5{display:flex}.bottom-nav-spacer.jsx-781697f76e2beda5{display:block}}"
             }, void 0, false, void 0, ("TURBOPACK compile-time value", void 0))
         ]
     }, void 0, true);

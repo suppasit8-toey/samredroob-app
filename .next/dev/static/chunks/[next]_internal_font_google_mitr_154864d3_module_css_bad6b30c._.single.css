@@ -1,0 +1,236 @@
+/* [next]/internal/font/google/mitr_154864d3.module.css [app-client] (css) */
+@font-face {
+  font-family: Mitr;
+  font-style: normal;
+  font-weight: 200;
+  font-display: swap;
+  src: url("../media/0c7c0529c1bb366d-s.p.02d44787.woff2") format("woff2");
+  unicode-range: U+2D7, U+303, U+331, U+E01-E5B, U+200C-200D, U+25CC;
+}
+
+@font-face {
+  font-family: Mitr;
+  font-style: normal;
+  font-weight: 200;
+  font-display: swap;
+  src: url("../media/266e50f799076867-s.1db16f64.woff2") format("woff2");
+  unicode-range: U+102-103, U+110-111, U+128-129, U+168-169, U+1A0-1A1, U+1AF-1B0, U+300-301, U+303-304, U+308-309, U+323, U+329, U+1EA0-1EF9, U+20AB;
+}
+
+@font-face {
+  font-family: Mitr;
+  font-style: normal;
+  font-weight: 200;
+  font-display: swap;
+  src: url("../media/48981b8ebe22beed-s.a5bd2d16.woff2") format("woff2");
+  unicode-range: U+100-2BA, U+2BD-2C5, U+2C7-2CC, U+2CE-2D7, U+2DD-2FF, U+304, U+308, U+329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: Mitr;
+  font-style: normal;
+  font-weight: 200;
+  font-display: swap;
+  src: url("../media/2c26c346fddd2161-s.p.f9270a88.woff2") format("woff2");
+  unicode-range: U+??, U+131, U+152-153, U+2BB-2BC, U+2C6, U+2DA, U+2DC, U+304, U+308, U+329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: Mitr;
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url("../media/0a7854ba510e62d2-s.p.66ec6959.woff2") format("woff2");
+  unicode-range: U+2D7, U+303, U+331, U+E01-E5B, U+200C-200D, U+25CC;
+}
+
+@font-face {
+  font-family: Mitr;
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url("../media/d328a180cbbfd209-s.42c97712.woff2") format("woff2");
+  unicode-range: U+102-103, U+110-111, U+128-129, U+168-169, U+1A0-1A1, U+1AF-1B0, U+300-301, U+303-304, U+308-309, U+323, U+329, U+1EA0-1EF9, U+20AB;
+}
+
+@font-face {
+  font-family: Mitr;
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url("../media/4ac9f368719fa22a-s.b0de1715.woff2") format("woff2");
+  unicode-range: U+100-2BA, U+2BD-2C5, U+2C7-2CC, U+2CE-2D7, U+2DD-2FF, U+304, U+308, U+329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: Mitr;
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url("../media/793f1b3521d88a74-s.p.a34fb7a1.woff2") format("woff2");
+  unicode-range: U+??, U+131, U+152-153, U+2BB-2BC, U+2C6, U+2DA, U+2DC, U+304, U+308, U+329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: Mitr;
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../media/ef22391e6c3d42e3-s.p.1dd8c708.woff2") format("woff2");
+  unicode-range: U+2D7, U+303, U+331, U+E01-E5B, U+200C-200D, U+25CC;
+}
+
+@font-face {
+  font-family: Mitr;
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../media/d692e63643b137dc-s.11150c9c.woff2") format("woff2");
+  unicode-range: U+102-103, U+110-111, U+128-129, U+168-169, U+1A0-1A1, U+1AF-1B0, U+300-301, U+303-304, U+308-309, U+323, U+329, U+1EA0-1EF9, U+20AB;
+}
+
+@font-face {
+  font-family: Mitr;
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../media/c483d72726c5ba72-s.e5d28d49.woff2") format("woff2");
+  unicode-range: U+100-2BA, U+2BD-2C5, U+2C7-2CC, U+2CE-2D7, U+2DD-2FF, U+304, U+308, U+329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: Mitr;
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../media/b9c13d747524d081-s.p.93fab2dc.woff2") format("woff2");
+  unicode-range: U+??, U+131, U+152-153, U+2BB-2BC, U+2C6, U+2DA, U+2DC, U+304, U+308, U+329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: Mitr;
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../media/23135ca79f77541b-s.p.e1384f75.woff2") format("woff2");
+  unicode-range: U+2D7, U+303, U+331, U+E01-E5B, U+200C-200D, U+25CC;
+}
+
+@font-face {
+  font-family: Mitr;
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../media/116f85ba746052ed-s.1e6d3570.woff2") format("woff2");
+  unicode-range: U+102-103, U+110-111, U+128-129, U+168-169, U+1A0-1A1, U+1AF-1B0, U+300-301, U+303-304, U+308-309, U+323, U+329, U+1EA0-1EF9, U+20AB;
+}
+
+@font-face {
+  font-family: Mitr;
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../media/0dcb58815ea843cf-s.010e9cea.woff2") format("woff2");
+  unicode-range: U+100-2BA, U+2BD-2C5, U+2C7-2CC, U+2CE-2D7, U+2DD-2FF, U+304, U+308, U+329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: Mitr;
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../media/eb116f8ccfc8db06-s.p.be57fa29.woff2") format("woff2");
+  unicode-range: U+??, U+131, U+152-153, U+2BB-2BC, U+2C6, U+2DA, U+2DC, U+304, U+308, U+329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: Mitr;
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../media/6e7fbd9264f9cfcd-s.p.ad4ea818.woff2") format("woff2");
+  unicode-range: U+2D7, U+303, U+331, U+E01-E5B, U+200C-200D, U+25CC;
+}
+
+@font-face {
+  font-family: Mitr;
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../media/2472e41034c5ca03-s.2b60e49d.woff2") format("woff2");
+  unicode-range: U+102-103, U+110-111, U+128-129, U+168-169, U+1A0-1A1, U+1AF-1B0, U+300-301, U+303-304, U+308-309, U+323, U+329, U+1EA0-1EF9, U+20AB;
+}
+
+@font-face {
+  font-family: Mitr;
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../media/a9fb73a77009fb4e-s.44ebc5d7.woff2") format("woff2");
+  unicode-range: U+100-2BA, U+2BD-2C5, U+2C7-2CC, U+2CE-2D7, U+2DD-2FF, U+304, U+308, U+329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: Mitr;
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("../media/828bab53091ffe6d-s.p.dbd108c6.woff2") format("woff2");
+  unicode-range: U+??, U+131, U+152-153, U+2BB-2BC, U+2C6, U+2DA, U+2DC, U+304, U+308, U+329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: Mitr;
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../media/4430a10dd16b3cde-s.p.906db08d.woff2") format("woff2");
+  unicode-range: U+2D7, U+303, U+331, U+E01-E5B, U+200C-200D, U+25CC;
+}
+
+@font-face {
+  font-family: Mitr;
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../media/919648b7642b6ba2-s.35016d41.woff2") format("woff2");
+  unicode-range: U+102-103, U+110-111, U+128-129, U+168-169, U+1A0-1A1, U+1AF-1B0, U+300-301, U+303-304, U+308-309, U+323, U+329, U+1EA0-1EF9, U+20AB;
+}
+
+@font-face {
+  font-family: Mitr;
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../media/d148f3baf5e77bfe-s.6c52b9ad.woff2") format("woff2");
+  unicode-range: U+100-2BA, U+2BD-2C5, U+2C7-2CC, U+2CE-2D7, U+2DD-2FF, U+304, U+308, U+329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: Mitr;
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("../media/719db1248c1a81f0-s.p.1b0a6a33.woff2") format("woff2");
+  unicode-range: U+??, U+131, U+152-153, U+2BB-2BC, U+2C6, U+2DA, U+2DC, U+304, U+308, U+329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: Mitr Fallback;
+  src: local(Arial);
+  ascent-override: 100.52%;
+  descent-override: 36.71%;
+  line-gap-override: 0.0%;
+  size-adjust: 114.4%;
+}
+
+.mitr_154864d3-module___HYimG__className {
+  font-family: Mitr, Mitr Fallback;
+  font-style: normal;
+}
+
+.mitr_154864d3-module___HYimG__variable {
+  --font-mitr: "Mitr", "Mitr Fallback";
+}
+
+/*# sourceMappingURL=%5Bnext%5D_internal_font_google_mitr_154864d3_module_css_bad6b30c._.single.css.map*/
