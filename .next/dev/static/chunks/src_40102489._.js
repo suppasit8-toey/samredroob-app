@@ -205,23 +205,14 @@ function CalculatorPage() {
     }["CalculatorPage.useEffect"], []);
     // Filter collections based on selected category
     const filteredCollections = collections.filter((c)=>selectedCategoryId ? c.category_id.toString() === selectedCategoryId : true);
-    const handleCalculate = (e)=>{
-        e.preventDefault();
-        setAddedItems(new Set()); // Reset added state on new calculation
+    // Extract calculation logic
+    const performCalculation = ()=>{
         if (width && height && filteredCollections.length > 0) {
             const calculatedResults = filteredCollections.map((collection)=>{
-                // Determine price based on mode
-                // If platform mode, use platform price. If not available, fallback to shop price?
-                // Or maybe use 0 if not available? Let's use standard fallback logic in pricing util if we pass undefined,
-                // but here we want to be explicit.
                 let priceToUse = collection.price_per_unit;
                 if (priceMode === 'platform') {
-                    // Check if platform price exists and is > 0
-                    if (collection.price_per_unit_platform && collection.price_per_unit_platform > 0) {
+                    if ((collection.price_per_unit_platform ?? 0) > 0) {
                         priceToUse = collection.price_per_unit_platform;
-                    } else {
-                        // Fallback or warning? For now use standard
-                        priceToUse = collection.price_per_unit;
                     }
                 }
                 const res = (0, __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$utils$2f$pricing$2e$ts__$5b$app$2d$client$5d$__$28$ecmascript$29$__["calculatePrice"])(collection, Number(width), Number(height), priceToUse);
@@ -231,9 +222,30 @@ function CalculatorPage() {
                     breakdown: res.breakdown
                 };
             });
-            // Sort by price (lowest first)
             calculatedResults.sort((a, b)=>a.total - b.total);
             setResults(calculatedResults);
+        }
+    };
+    // Auto-calculate when priceMode changes AND we already have results (or valid inputs)
+    (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$index$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useEffect"])({
+        "CalculatorPage.useEffect": ()=>{
+            if (width && height && results) {
+                performCalculation();
+            }
+        }
+    }["CalculatorPage.useEffect"], [
+        priceMode
+    ]); // Only trigger on priceMode change for now to avoid loops or aggressive recalcs on typing
+    const handleCalculate = (e)=>{
+        e.preventDefault();
+        setAddedItems(new Set());
+        // Instruction: Set priceMode to 'shop' at the start of handleCalculate to ensure "calculate normal price first".
+        // If priceMode is 'platform', setting it to 'shop' will trigger the useEffect to perform calculation.
+        // If priceMode is already 'shop', the useEffect won't trigger, so we call performCalculation directly.
+        if (priceMode === 'platform') {
+            setPriceMode('shop'); // This will trigger the useEffect to call performCalculation
+        } else {
+            performCalculation(); // priceMode is already 'shop', so call performCalculation directly
         }
     };
     const handleAddToCart = (item)=>{
@@ -254,12 +266,12 @@ function CalculatorPage() {
                 size: 48
             }, void 0, false, {
                 fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                lineNumber: 123,
+                lineNumber: 131,
                 columnNumber: 17
             }, this)
         }, void 0, false, {
             fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-            lineNumber: 122,
+            lineNumber: 130,
             columnNumber: 13
         }, this);
     }
@@ -282,7 +294,7 @@ function CalculatorPage() {
                                 size: 24
                             }, void 0, false, {
                                 fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                lineNumber: 138,
+                                lineNumber: 146,
                                 columnNumber: 25
                             }, this),
                             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -290,13 +302,13 @@ function CalculatorPage() {
                                 children: cartCount
                             }, void 0, false, {
                                 fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                lineNumber: 139,
+                                lineNumber: 147,
                                 columnNumber: 25
                             }, this)
                         ]
                     }, void 0, true, {
                         fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                        lineNumber: 137,
+                        lineNumber: 145,
                         columnNumber: 21
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -304,13 +316,13 @@ function CalculatorPage() {
                         children: "ดูใบเสนอราคา"
                     }, void 0, false, {
                         fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                        lineNumber: 143,
+                        lineNumber: 151,
                         columnNumber: 21
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                lineNumber: 133,
+                lineNumber: 141,
                 columnNumber: 17
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h1", {
@@ -323,7 +335,7 @@ function CalculatorPage() {
                 children: "คำนวณราคา"
             }, void 0, false, {
                 fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                lineNumber: 147,
+                lineNumber: 155,
                 columnNumber: 13
             }, this),
             /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -356,7 +368,7 @@ function CalculatorPage() {
                                     children: "กรอกข้อมูล"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                    lineNumber: 189,
+                                    lineNumber: 197,
                                     columnNumber: 25
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -376,7 +388,7 @@ function CalculatorPage() {
                                             children: "หมวดหมู่สินค้า"
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                            lineNumber: 193,
+                                            lineNumber: 201,
                                             columnNumber: 29
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("select", {
@@ -401,18 +413,18 @@ function CalculatorPage() {
                                                     children: c.name
                                                 }, c.id, false, {
                                                     fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                                    lineNumber: 211,
+                                                    lineNumber: 219,
                                                     columnNumber: 37
                                                 }, this))
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                            lineNumber: 194,
+                                            lineNumber: 202,
                                             columnNumber: 29
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                    lineNumber: 192,
+                                    lineNumber: 200,
                                     columnNumber: 25
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -438,7 +450,7 @@ function CalculatorPage() {
                                                     children: "ความกว้าง (ซม.)"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                                    lineNumber: 220,
+                                                    lineNumber: 228,
                                                     columnNumber: 33
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -458,13 +470,13 @@ function CalculatorPage() {
                                                     className: "jsx-f07ef469939759f5"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                                    lineNumber: 221,
+                                                    lineNumber: 229,
                                                     columnNumber: 33
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                            lineNumber: 219,
+                                            lineNumber: 227,
                                             columnNumber: 29
                                         }, this),
                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -481,7 +493,7 @@ function CalculatorPage() {
                                                     children: "ความสูง (ซม.)"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                                    lineNumber: 238,
+                                                    lineNumber: 246,
                                                     columnNumber: 33
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("input", {
@@ -501,166 +513,19 @@ function CalculatorPage() {
                                                     className: "jsx-f07ef469939759f5"
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                                    lineNumber: 239,
+                                                    lineNumber: 247,
                                                     columnNumber: 33
                                                 }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                            lineNumber: 237,
+                                            lineNumber: 245,
                                             columnNumber: 29
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                    lineNumber: 218,
-                                    columnNumber: 25
-                                }, this),
-                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                    style: {
-                                        marginBottom: '1.5rem'
-                                    },
-                                    className: "jsx-f07ef469939759f5",
-                                    children: [
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("label", {
-                                            style: {
-                                                display: 'block',
-                                                marginBottom: '0.5rem',
-                                                fontWeight: 500,
-                                                color: '#666'
-                                            },
-                                            className: "jsx-f07ef469939759f5",
-                                            children: "ช่องทางการสั่งซื้อ"
-                                        }, void 0, false, {
-                                            fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                            lineNumber: 258,
-                                            columnNumber: 29
-                                        }, this),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
-                                            style: {
-                                                display: 'flex',
-                                                gap: '0.5rem',
-                                                backgroundColor: '#f5f5f5',
-                                                padding: '0.25rem',
-                                                borderRadius: '8px'
-                                            },
-                                            className: "jsx-f07ef469939759f5",
-                                            children: [
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
-                                                    type: "button",
-                                                    onClick: ()=>{
-                                                        setPriceMode('shop');
-                                                        setResults(null);
-                                                    },
-                                                    style: {
-                                                        flex: 1,
-                                                        padding: '0.5rem',
-                                                        borderRadius: '6px',
-                                                        border: 'none',
-                                                        backgroundColor: priceMode === 'shop' ? 'white' : 'transparent',
-                                                        color: priceMode === 'shop' ? 'black' : '#666',
-                                                        boxShadow: priceMode === 'shop' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-                                                        fontWeight: 600,
-                                                        fontSize: '0.9rem',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        gap: '0.4rem',
-                                                        cursor: 'pointer',
-                                                        transition: 'all 0.2s'
-                                                    },
-                                                    className: "jsx-f07ef469939759f5",
-                                                    children: [
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$store$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Store$3e$__["Store"], {
-                                                            size: 16
-                                                        }, void 0, false, {
-                                                            fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                                            lineNumber: 284,
-                                                            columnNumber: 37
-                                                        }, this),
-                                                        " หน้าร้าน"
-                                                    ]
-                                                }, void 0, true, {
-                                                    fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                                    lineNumber: 260,
-                                                    columnNumber: 33
-                                                }, this),
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
-                                                    type: "button",
-                                                    onClick: ()=>{
-                                                        setPriceMode('platform');
-                                                        setResults(null);
-                                                    },
-                                                    style: {
-                                                        flex: 1,
-                                                        padding: '0.5rem',
-                                                        borderRadius: '6px',
-                                                        border: 'none',
-                                                        backgroundColor: priceMode === 'platform' ? 'white' : 'transparent',
-                                                        color: priceMode === 'platform' ? '#f97316' : '#666',
-                                                        boxShadow: priceMode === 'platform' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-                                                        fontWeight: 600,
-                                                        fontSize: '0.9rem',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        gap: '0.4rem',
-                                                        cursor: 'pointer',
-                                                        transition: 'all 0.2s'
-                                                    },
-                                                    className: "jsx-f07ef469939759f5",
-                                                    children: [
-                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$shopping$2d$bag$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ShoppingBag$3e$__["ShoppingBag"], {
-                                                            size: 16
-                                                        }, void 0, false, {
-                                                            fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                                            lineNumber: 310,
-                                                            columnNumber: 37
-                                                        }, this),
-                                                        " แพลตฟอร์ม"
-                                                    ]
-                                                }, void 0, true, {
-                                                    fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                                    lineNumber: 286,
-                                                    columnNumber: 33
-                                                }, this)
-                                            ]
-                                        }, void 0, true, {
-                                            fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                            lineNumber: 259,
-                                            columnNumber: 29
-                                        }, this),
-                                        priceMode === 'platform' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
-                                            style: {
-                                                fontSize: '0.75rem',
-                                                color: '#f97316',
-                                                marginTop: '0.5rem',
-                                                display: 'flex',
-                                                gap: '0.25rem'
-                                            },
-                                            className: "jsx-f07ef469939759f5",
-                                            children: [
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$info$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Info$3e$__["Info"], {
-                                                    size: 12,
-                                                    style: {
-                                                        marginTop: '2px'
-                                                    }
-                                                }, void 0, false, {
-                                                    fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                                    lineNumber: 315,
-                                                    columnNumber: 37
-                                                }, this),
-                                                " ราคาอาจสูงกว่าหน้าร้านเนื่องจากมีค่าธรรมเนียม"
-                                            ]
-                                        }, void 0, true, {
-                                            fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                            lineNumber: 314,
-                                            columnNumber: 33
-                                        }, this)
-                                    ]
-                                }, void 0, true, {
-                                    fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                    lineNumber: 257,
+                                    lineNumber: 226,
                                     columnNumber: 25
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -687,26 +552,25 @@ function CalculatorPage() {
                                             size: 20
                                         }, void 0, false, {
                                             fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                            lineNumber: 339,
+                                            lineNumber: 284,
                                             columnNumber: 29
                                         }, this),
-                                        " คำนวณราคา ",
-                                        priceMode === 'platform' ? '(Platform)' : ''
+                                        " คำนวณราคา"
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                    lineNumber: 320,
+                                    lineNumber: 265,
                                     columnNumber: 25
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                            lineNumber: 182,
+                            lineNumber: 190,
                             columnNumber: 21
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                        lineNumber: 181,
+                        lineNumber: 189,
                         columnNumber: 17
                     }, this),
                     /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -715,63 +579,244 @@ function CalculatorPage() {
                             children: [
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                     style: {
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        alignItems: 'center',
                                         marginBottom: '1.5rem'
                                     },
                                     className: "jsx-f07ef469939759f5",
                                     children: [
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             style: {
-                                                fontSize: '1.5rem',
-                                                fontWeight: 600
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center',
+                                                marginBottom: '1rem',
+                                                flexWrap: 'wrap',
+                                                gap: '1rem'
                                             },
                                             className: "jsx-f07ef469939759f5",
                                             children: [
-                                                "ผลลัพธ์การคำนวณ (",
-                                                results.length,
-                                                " รายการ)"
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("h2", {
+                                                    style: {
+                                                        fontSize: '1.5rem',
+                                                        fontWeight: 600
+                                                    },
+                                                    className: "jsx-f07ef469939759f5",
+                                                    children: [
+                                                        "ผลลัพธ์การคำนวณ (",
+                                                        results.length,
+                                                        " รายการ)"
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "[project]/src/app/(shop)/calculator/page.tsx",
+                                                    lineNumber: 295,
+                                                    columnNumber: 37
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                    onClick: ()=>setResults(null),
+                                                    style: {
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '0.5rem',
+                                                        color: '#666',
+                                                        fontSize: '0.9rem',
+                                                        padding: '0.5rem 1rem',
+                                                        borderRadius: '20px',
+                                                        backgroundColor: '#f5f5f5',
+                                                        border: 'none',
+                                                        cursor: 'pointer'
+                                                    },
+                                                    className: "jsx-f07ef469939759f5",
+                                                    children: [
+                                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$refresh$2d$cw$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__RefreshCw$3e$__["RefreshCw"], {
+                                                            size: 14
+                                                        }, void 0, false, {
+                                                            fileName: "[project]/src/app/(shop)/calculator/page.tsx",
+                                                            lineNumber: 313,
+                                                            columnNumber: 41
+                                                        }, this),
+                                                        " ล้างค่าใหม่"
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "[project]/src/app/(shop)/calculator/page.tsx",
+                                                    lineNumber: 298,
+                                                    columnNumber: 37
+                                                }, this)
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                            lineNumber: 349,
+                                            lineNumber: 294,
                                             columnNumber: 33
                                         }, this),
-                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
-                                            onClick: ()=>setResults(null),
+                                        /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
                                             style: {
+                                                backgroundColor: 'white',
+                                                padding: '1rem',
+                                                borderRadius: '12px',
+                                                border: '1px solid #f0f0f0',
                                                 display: 'flex',
                                                 alignItems: 'center',
-                                                gap: '0.5rem',
-                                                color: '#666',
-                                                fontSize: '0.9rem',
-                                                padding: '0.5rem 1rem',
-                                                borderRadius: '20px',
-                                                backgroundColor: '#f5f5f5',
-                                                border: 'none',
-                                                cursor: 'pointer'
+                                                justifyContent: 'space-between',
+                                                flexWrap: 'wrap',
+                                                gap: '1rem'
                                             },
                                             className: "jsx-f07ef469939759f5",
                                             children: [
-                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$refresh$2d$cw$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__RefreshCw$3e$__["RefreshCw"], {
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                    style: {
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '0.5rem'
+                                                    },
+                                                    className: "jsx-f07ef469939759f5",
+                                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
+                                                        style: {
+                                                            fontWeight: 600,
+                                                            color: '#333'
+                                                        },
+                                                        className: "jsx-f07ef469939759f5",
+                                                        children: "ราคาสำหรับ:"
+                                                    }, void 0, false, {
+                                                        fileName: "[project]/src/app/(shop)/calculator/page.tsx",
+                                                        lineNumber: 320,
+                                                        columnNumber: 41
+                                                    }, this)
+                                                }, void 0, false, {
+                                                    fileName: "[project]/src/app/(shop)/calculator/page.tsx",
+                                                    lineNumber: 319,
+                                                    columnNumber: 37
+                                                }, this),
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                    style: {
+                                                        display: 'flex',
+                                                        flexDirection: 'column',
+                                                        gap: '0.5rem'
+                                                    },
+                                                    className: "jsx-f07ef469939759f5",
+                                                    children: /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
+                                                        style: {
+                                                            display: 'flex',
+                                                            gap: '0.5rem',
+                                                            backgroundColor: '#f5f5f5',
+                                                            padding: '0.25rem',
+                                                            borderRadius: '8px'
+                                                        },
+                                                        className: "jsx-f07ef469939759f5",
+                                                        children: [
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                                type: "button",
+                                                                onClick: ()=>setPriceMode('shop'),
+                                                                style: {
+                                                                    padding: '0.5rem 1rem',
+                                                                    borderRadius: '6px',
+                                                                    border: 'none',
+                                                                    backgroundColor: priceMode === 'shop' ? 'white' : 'transparent',
+                                                                    color: priceMode === 'shop' ? 'black' : '#666',
+                                                                    boxShadow: priceMode === 'shop' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                                                                    fontWeight: 600,
+                                                                    fontSize: '0.9rem',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    gap: '0.4rem',
+                                                                    cursor: 'pointer',
+                                                                    transition: 'all 0.2s'
+                                                                },
+                                                                className: "jsx-f07ef469939759f5",
+                                                                children: [
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$store$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Store$3e$__["Store"], {
+                                                                        size: 16
+                                                                    }, void 0, false, {
+                                                                        fileName: "[project]/src/app/(shop)/calculator/page.tsx",
+                                                                        lineNumber: 343,
+                                                                        columnNumber: 49
+                                                                    }, this),
+                                                                    " หน้าร้าน"
+                                                                ]
+                                                            }, void 0, true, {
+                                                                fileName: "[project]/src/app/(shop)/calculator/page.tsx",
+                                                                lineNumber: 324,
+                                                                columnNumber: 45
+                                                            }, this),
+                                                            /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
+                                                                type: "button",
+                                                                onClick: ()=>setPriceMode('platform'),
+                                                                style: {
+                                                                    padding: '0.5rem 1rem',
+                                                                    borderRadius: '6px',
+                                                                    border: 'none',
+                                                                    backgroundColor: priceMode === 'platform' ? 'white' : 'transparent',
+                                                                    color: priceMode === 'platform' ? '#f97316' : '#666',
+                                                                    boxShadow: priceMode === 'platform' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                                                                    fontWeight: 600,
+                                                                    fontSize: '0.9rem',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    gap: '0.4rem',
+                                                                    cursor: 'pointer',
+                                                                    transition: 'all 0.2s'
+                                                                },
+                                                                className: "jsx-f07ef469939759f5",
+                                                                children: [
+                                                                    /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$shopping$2d$bag$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__ShoppingBag$3e$__["ShoppingBag"], {
+                                                                        size: 16
+                                                                    }, void 0, false, {
+                                                                        fileName: "[project]/src/app/(shop)/calculator/page.tsx",
+                                                                        lineNumber: 364,
+                                                                        columnNumber: 49
+                                                                    }, this),
+                                                                    " แพลตฟอร์ม"
+                                                                ]
+                                                            }, void 0, true, {
+                                                                fileName: "[project]/src/app/(shop)/calculator/page.tsx",
+                                                                lineNumber: 345,
+                                                                columnNumber: 45
+                                                            }, this)
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "[project]/src/app/(shop)/calculator/page.tsx",
+                                                        lineNumber: 323,
+                                                        columnNumber: 41
+                                                    }, this)
+                                                }, void 0, false, {
+                                                    fileName: "[project]/src/app/(shop)/calculator/page.tsx",
+                                                    lineNumber: 322,
+                                                    columnNumber: 37
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "[project]/src/app/(shop)/calculator/page.tsx",
+                                            lineNumber: 318,
+                                            columnNumber: 33
+                                        }, this),
+                                        priceMode === 'platform' && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
+                                            style: {
+                                                fontSize: '0.8rem',
+                                                color: '#f97316',
+                                                marginTop: '0.5rem',
+                                                textAlign: 'right',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'flex-end',
+                                                gap: '0.25rem'
+                                            },
+                                            className: "jsx-f07ef469939759f5",
+                                            children: [
+                                                /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])(__TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$lucide$2d$react$2f$dist$2f$esm$2f$icons$2f$info$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__$3c$export__default__as__Info$3e$__["Info"], {
                                                     size: 14
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                                    lineNumber: 367,
-                                                    columnNumber: 37
+                                                    lineNumber: 371,
+                                                    columnNumber: 41
                                                 }, this),
-                                                " ล้างค่าใหม่"
+                                                " ราคาอาจสูงกว่าหน้าร้านเนื่องจากมีค่าธรรมเนียม"
                                             ]
                                         }, void 0, true, {
                                             fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                            lineNumber: 352,
-                                            columnNumber: 33
+                                            lineNumber: 370,
+                                            columnNumber: 37
                                         }, this)
                                     ]
                                 }, void 0, true, {
                                     fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                    lineNumber: 348,
+                                    lineNumber: 293,
                                     columnNumber: 29
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -825,7 +870,7 @@ function CalculatorPage() {
                                                                     children: item.collection.name
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                                                    lineNumber: 396,
+                                                                    lineNumber: 401,
                                                                     columnNumber: 53
                                                                 }, this),
                                                                 index === 0 && !isError && /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -842,13 +887,13 @@ function CalculatorPage() {
                                                                     children: "คุ้มค่าที่สุด"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                                                    lineNumber: 400,
+                                                                    lineNumber: 405,
                                                                     columnNumber: 57
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                                            lineNumber: 395,
+                                                            lineNumber: 400,
                                                             columnNumber: 49
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -866,7 +911,7 @@ function CalculatorPage() {
                                                                 children: "เกินเงื่อนไข"
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                                                lineNumber: 416,
+                                                                lineNumber: 421,
                                                                 columnNumber: 57
                                                             }, this) : /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
                                                                 style: {
@@ -881,12 +926,12 @@ function CalculatorPage() {
                                                                 ]
                                                             }, void 0, true, {
                                                                 fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                                                lineNumber: 420,
+                                                                lineNumber: 425,
                                                                 columnNumber: 57
                                                             }, this)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                                            lineNumber: 414,
+                                                            lineNumber: 419,
                                                             columnNumber: 49
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -909,7 +954,7 @@ function CalculatorPage() {
                                                                     className: "jsx-f07ef469939759f5"
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                                                    lineNumber: 428,
+                                                                    lineNumber: 433,
                                                                     columnNumber: 53
                                                                 }, this),
                                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("span", {
@@ -921,13 +966,13 @@ function CalculatorPage() {
                                                                     children: isError ? item.breakdown : item.breakdown.split(' (')[0]
                                                                 }, void 0, false, {
                                                                     fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                                                    lineNumber: 429,
+                                                                    lineNumber: 434,
                                                                     columnNumber: 53
                                                                 }, this)
                                                             ]
                                                         }, void 0, true, {
                                                             fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                                            lineNumber: 426,
+                                                            lineNumber: 431,
                                                             columnNumber: 49
                                                         }, this),
                                                         /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("button", {
@@ -955,7 +1000,7 @@ function CalculatorPage() {
                                                                         size: 18
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                                                        lineNumber: 455,
+                                                                        lineNumber: 460,
                                                                         columnNumber: 61
                                                                     }, this),
                                                                     " เพิ่มแล้ว"
@@ -966,7 +1011,7 @@ function CalculatorPage() {
                                                                         size: 18
                                                                     }, void 0, false, {
                                                                         fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                                                        lineNumber: 461,
+                                                                        lineNumber: 466,
                                                                         columnNumber: 61
                                                                     }, this),
                                                                     " เพิ่มรายการ"
@@ -974,13 +1019,13 @@ function CalculatorPage() {
                                                             }, void 0, true)
                                                         }, void 0, false, {
                                                             fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                                            lineNumber: 434,
+                                                            lineNumber: 439,
                                                             columnNumber: 49
                                                         }, this)
                                                     ]
                                                 }, void 0, true, {
                                                     fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                                    lineNumber: 394,
+                                                    lineNumber: 399,
                                                     columnNumber: 45
                                                 }, this),
                                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("div", {
@@ -1017,31 +1062,31 @@ function CalculatorPage() {
                                                                 size: 14
                                                             }, void 0, false, {
                                                                 fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                                                lineNumber: 495,
+                                                                lineNumber: 500,
                                                                 columnNumber: 57
                                                             }, this),
                                                             " Catalog"
                                                         ]
                                                     }, void 0, true, {
                                                         fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                                        lineNumber: 475,
+                                                        lineNumber: 480,
                                                         columnNumber: 53
                                                     }, this)
                                                 }, void 0, false, {
                                                     fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                                    lineNumber: 467,
+                                                    lineNumber: 472,
                                                     columnNumber: 45
                                                 }, this)
                                             ]
                                         }, item.collection.id, true, {
                                             fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                            lineNumber: 383,
+                                            lineNumber: 388,
                                             columnNumber: 41
                                         }, this);
                                     })
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                    lineNumber: 371,
+                                    lineNumber: 376,
                                     columnNumber: 29
                                 }, this)
                             ]
@@ -1068,7 +1113,7 @@ function CalculatorPage() {
                                     }
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                    lineNumber: 517,
+                                    lineNumber: 522,
                                     columnNumber: 29
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1080,7 +1125,7 @@ function CalculatorPage() {
                                     children: "กรอกขนาดเพื่อเปรียบเทียบราคา"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                    lineNumber: 518,
+                                    lineNumber: 523,
                                     columnNumber: 29
                                 }, this),
                                 /*#__PURE__*/ (0, __TURBOPACK__imported__module__$5b$project$5d2f$node_modules$2f$next$2f$dist$2f$compiled$2f$react$2f$jsx$2d$dev$2d$runtime$2e$js__$5b$app$2d$client$5d$__$28$ecmascript$29$__["jsxDEV"])("p", {
@@ -1092,34 +1137,34 @@ function CalculatorPage() {
                                     children: "ระบบจะคำนวณราคาสินค้าทั้งหมดในหมวดหมู่นี้ให้ทันที"
                                 }, void 0, false, {
                                     fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                                    lineNumber: 519,
+                                    lineNumber: 524,
                                     columnNumber: 29
                                 }, this)
                             ]
                         }, void 0, true, {
                             fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                            lineNumber: 505,
+                            lineNumber: 510,
                             columnNumber: 25
                         }, this)
                     }, void 0, false, {
                         fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                        lineNumber: 345,
+                        lineNumber: 290,
                         columnNumber: 17
                     }, this)
                 ]
             }, void 0, true, {
                 fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-                lineNumber: 149,
+                lineNumber: 157,
                 columnNumber: 13
             }, this)
         ]
     }, void 0, true, {
         fileName: "[project]/src/app/(shop)/calculator/page.tsx",
-        lineNumber: 129,
+        lineNumber: 137,
         columnNumber: 9
     }, this);
 }
-_s(CalculatorPage, "Vd0hevHZ5ZJo2+rkexFKiWzkTlk=", false, function() {
+_s(CalculatorPage, "2ojpYudTblDq717xvqwHlyXFJQE=", false, function() {
     return [
         __TURBOPACK__imported__module__$5b$project$5d2f$src$2f$context$2f$CartContext$2e$tsx__$5b$app$2d$client$5d$__$28$ecmascript$29$__["useCart"]
     ];

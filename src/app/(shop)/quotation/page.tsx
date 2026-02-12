@@ -1,30 +1,47 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useCart } from '@/context/CartContext';
 import Link from 'next/link';
-import { Trash2, ArrowLeft, Send, Printer } from 'lucide-react';
+import { Trash2, ArrowLeft, Send, Store, ShoppingBag, Info } from 'lucide-react';
+import { calculatePrice } from '@/utils/pricing';
 
 export default function QuotationPage() {
-    const { items, removeFromCart, clearCart } = useCart();
+    const { items, removeFromCart } = useCart();
+    const [priceMode, setPriceMode] = useState<'shop' | 'platform'>('shop');
 
-    const totalEstimate = items.reduce((sum, item) => sum + item.totalPrice, 0);
+    // Calculate totals based on current mode
+    const calculatedItems = items.map(item => {
+        let priceToUse = item.collection.price_per_unit;
+        // Use Platform price if mode is platform and price exists
+        if (priceMode === 'platform') {
+            if ((item.collection.price_per_unit_platform ?? 0) > 0) {
+                priceToUse = item.collection.price_per_unit_platform!;
+            }
+        }
 
-    const handlePrint = () => {
-        window.print();
-    };
+        const res = calculatePrice(item.collection, item.width, item.height, priceToUse);
+        return {
+            ...item,
+            currentTotal: res.total,
+            currentBreakdown: res.breakdown,
+            unitPrice: priceToUse
+        };
+    });
+
+    const totalEstimate = calculatedItems.reduce((sum, item) => sum + item.currentTotal, 0);
+
+
 
     const handleSendLine = () => {
         let message = "สนใจสั่งทำผ้าม่าน/วอลเปเปอร์ครับ\n\nรายการสินค้า:\n";
-        items.forEach((item, index) => {
-            message += `${index + 1}. ${item.collection.name}\n   ขนาด: ${item.width}x${item.height} ซม.\n   ราคา: ${item.totalPrice.toLocaleString()} บาท\n`;
+        calculatedItems.forEach((item, index) => {
+            message += `${index + 1}. ${item.collection.name}\n   ขนาด: ${item.width}x${item.height} ซม.\n   ราคา: ${item.currentTotal.toLocaleString()} บาท\n`;
         });
-        message += `\nราคารวมทั้งหมด: ${totalEstimate.toLocaleString()} บาท`;
+        message += `\nราคารวมทั้งหมด (${priceMode === 'platform' ? 'Platform' : 'หน้าร้าน'}): ${totalEstimate.toLocaleString()} บาท`;
         message += `\n\n(ข้อมูลจากเว็บ Samredroob Calculator)`;
 
         const encodedMessage = encodeURIComponent(message);
-
-        // Use LINE Share URL which is more robust across platforms
         window.open(`https://line.me/R/share?text=${encodedMessage}`, '_blank');
     };
 
@@ -44,24 +61,66 @@ export default function QuotationPage() {
                 <ArrowLeft size={16} /> กลับไปหน้าคำนวณ
             </Link>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                <h1 style={{ fontSize: '2.5rem', fontFamily: 'var(--font-mitr)' }}>ใบเสนอราคา (จำลอง)</h1>
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                    <button
-                        onClick={handlePrint}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            padding: '0.75rem 1.25rem',
-                            border: '1px solid #ddd',
-                            borderRadius: '8px',
-                            backgroundColor: 'white',
-                            cursor: 'pointer'
-                        }}
-                    >
-                        <Printer size={18} /> พิมพ์ใบเสนอราคา
-                    </button>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                <h1 style={{ fontSize: '1.8rem', fontFamily: 'var(--font-mitr)', margin: 0 }}>ใบเสนอราคา</h1>
+            </div>
+
+            {/* Price Mode Toggle */}
+            <div style={{ marginBottom: '2rem', backgroundColor: 'white', padding: '1.5rem', borderRadius: '16px', border: '1px solid #f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+                <div>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '0.25rem' }}>เลือกช่องทางการสั่งซื้อ</h3>
+                    <p style={{ color: '#666', fontSize: '0.9rem' }}>ราคาอาจแตกต่างกันตามช่องทางที่เลือก</p>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                    <div style={{ display: 'flex', gap: '0.5rem', backgroundColor: '#f5f5f5', padding: '0.25rem', borderRadius: '8px' }}>
+                        <button
+                            type="button"
+                            onClick={() => setPriceMode('shop')}
+                            style={{
+                                padding: '0.5rem 1rem',
+                                borderRadius: '6px',
+                                border: 'none',
+                                backgroundColor: priceMode === 'shop' ? 'white' : 'transparent',
+                                color: priceMode === 'shop' ? 'black' : '#666',
+                                boxShadow: priceMode === 'shop' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                                fontWeight: 600,
+                                fontSize: '0.9rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.4rem',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            <Store size={16} /> หน้าร้าน
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setPriceMode('platform')}
+                            style={{
+                                padding: '0.5rem 1rem',
+                                borderRadius: '6px',
+                                border: 'none',
+                                backgroundColor: priceMode === 'platform' ? 'white' : 'transparent',
+                                color: priceMode === 'platform' ? '#f97316' : '#666',
+                                boxShadow: priceMode === 'platform' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                                fontWeight: 600,
+                                fontSize: '0.9rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.4rem',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            <ShoppingBag size={16} /> แพลตฟอร์ม
+                        </button>
+                    </div>
+                    {priceMode === 'platform' && (
+                        <p style={{ fontSize: '0.75rem', color: '#f97316', display: 'flex', gap: '0.25rem', justifyContent: 'flex-end' }}>
+                            <Info size={12} style={{ marginTop: '2px' }} /> ราคาอาจสูงกว่าหน้าร้านเนื่องจากมีค่าธรรมเนียม
+                        </p>
+                    )}
                 </div>
             </div>
 
@@ -78,41 +137,58 @@ export default function QuotationPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {items.map((item) => (
-                                    <tr key={item.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
-                                        <td style={{ padding: '1.25rem' }}>
-                                            <div style={{ fontWeight: 600, fontSize: '1.1rem' }}>{item.collection.name}</div>
-                                            <div style={{ fontSize: '0.85rem', color: '#888' }}>
-                                                {item.collection.price_per_unit} บาท/{item.collection.unit}
-                                            </div>
-                                        </td>
-                                        <td style={{ padding: '1.25rem', color: '#666' }}>
-                                            {item.width} x {item.height} ซม.
-                                        </td>
-                                        <td style={{ padding: '1.25rem', textAlign: 'right', fontWeight: 600, fontSize: '1.1rem' }}>
-                                            ฿{item.totalPrice.toLocaleString()}
-                                        </td>
-                                        <td style={{ padding: '1.25rem', textAlign: 'center' }}>
-                                            <button
-                                                onClick={() => removeFromCart(item.id)}
-                                                style={{ color: '#ef4444', border: 'none', background: 'none', cursor: 'pointer' }}
-                                                title="ลบรายการ"
-                                            >
-                                                <Trash2 size={18} />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))}
+                                {calculatedItems.map((item) => {
+                                    const isError = item.currentTotal === 0;
+                                    return (
+                                        <tr key={item.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                                            <td style={{ padding: '1.25rem' }}>
+                                                <div style={{ fontWeight: 600, fontSize: '1.1rem' }}>{item.collection.name}</div>
+                                                <div style={{ fontSize: '0.85rem', color: '#888' }}>
+                                                    {item.unitPrice} บาท/{item.collection.unit}
+                                                </div>
+                                                {isError && (
+                                                    <div style={{ fontSize: '0.8rem', color: '#ef4444', marginTop: '0.25rem' }}>
+                                                        {item.currentBreakdown}
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td style={{ padding: '1.25rem', color: '#666' }}>
+                                                {item.width} x {item.height} ซม.
+                                            </td>
+                                            <td style={{ padding: '1.25rem', textAlign: 'right', fontWeight: 600, fontSize: '1.1rem' }}>
+                                                {isError ? (
+                                                    <span style={{ color: '#ef4444' }}>เกินเงื่อนไข</span>
+                                                ) : (
+                                                    `฿${item.currentTotal.toLocaleString()}`
+                                                )}
+                                            </td>
+                                            <td style={{ padding: '1.25rem', textAlign: 'center' }}>
+                                                <button
+                                                    onClick={() => removeFromCart(item.id)}
+                                                    style={{ color: '#ef4444', border: 'none', background: 'none', cursor: 'pointer' }}
+                                                    title="ลบรายการ"
+                                                >
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    )
+                                })}
                             </tbody>
                             <tfoot style={{ backgroundColor: '#f9fafb', borderTop: '1px solid #e5e5e5' }}>
                                 <tr>
                                     <td colSpan={2} style={{ padding: '1.5rem', textAlign: 'right', fontWeight: 600, fontSize: '1.2rem' }}>
-                                        ราคารวมทั้งหมด
+                                        ราคารวมทั้งหมด ({priceMode === 'platform' ? 'Platform' : 'หน้าร้าน'})
                                     </td>
                                     <td style={{ padding: '1.5rem', textAlign: 'right', fontWeight: 700, fontSize: '1.5rem', color: 'black' }}>
                                         ฿{totalEstimate.toLocaleString()}
                                     </td>
                                     <td></td>
+                                </tr>
+                                <tr>
+                                    <td colSpan={4} style={{ padding: '0.75rem 1.5rem', textAlign: 'right', color: '#ff4d4f', fontSize: '0.9rem', borderTop: '1px dashed #e5e5e5' }}>
+                                        * ราคาเฉพาะค่าสินค้า ยังไม่รวมค่าจัดส่งและค่าติดตั้ง
+                                    </td>
                                 </tr>
                             </tfoot>
                         </table>

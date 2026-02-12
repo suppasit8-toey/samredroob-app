@@ -70,25 +70,14 @@ export default function CalculatorPage() {
         selectedCategoryId ? c.category_id.toString() === selectedCategoryId : true
     );
 
-    const handleCalculate = (e: React.FormEvent) => {
-        e.preventDefault();
-        setAddedItems(new Set()); // Reset added state on new calculation
-
+    // Extract calculation logic
+    const performCalculation = () => {
         if (width && height && filteredCollections.length > 0) {
             const calculatedResults: CalculationResult[] = filteredCollections.map(collection => {
-                // Determine price based on mode
-                // If platform mode, use platform price. If not available, fallback to shop price?
-                // Or maybe use 0 if not available? Let's use standard fallback logic in pricing util if we pass undefined,
-                // but here we want to be explicit.
-
                 let priceToUse = collection.price_per_unit;
                 if (priceMode === 'platform') {
-                    // Check if platform price exists and is > 0
-                    if (collection.price_per_unit_platform && collection.price_per_unit_platform > 0) {
-                        priceToUse = collection.price_per_unit_platform;
-                    } else {
-                        // Fallback or warning? For now use standard
-                        priceToUse = collection.price_per_unit;
+                    if ((collection.price_per_unit_platform ?? 0) > 0) {
+                        priceToUse = collection.price_per_unit_platform!;
                     }
                 }
 
@@ -100,9 +89,28 @@ export default function CalculatorPage() {
                 };
             });
 
-            // Sort by price (lowest first)
             calculatedResults.sort((a, b) => a.total - b.total);
             setResults(calculatedResults);
+        }
+    };
+
+    // Auto-calculate when priceMode changes AND we already have results (or valid inputs)
+    useEffect(() => {
+        if (width && height && results) {
+            performCalculation();
+        }
+    }, [priceMode]); // Only trigger on priceMode change for now to avoid loops or aggressive recalcs on typing
+
+    const handleCalculate = (e: React.FormEvent) => {
+        e.preventDefault();
+        setAddedItems(new Set());
+        // Instruction: Set priceMode to 'shop' at the start of handleCalculate to ensure "calculate normal price first".
+        // If priceMode is 'platform', setting it to 'shop' will trigger the useEffect to perform calculation.
+        // If priceMode is already 'shop', the useEffect won't trigger, so we call performCalculation directly.
+        if (priceMode === 'platform') {
+            setPriceMode('shop'); // This will trigger the useEffect to call performCalculation
+        } else {
+            performCalculation(); // priceMode is already 'shop', so call performCalculation directly
         }
     };
 
@@ -254,69 +262,6 @@ export default function CalculatorPage() {
                             </div>
                         </div>
 
-                        <div style={{ marginBottom: '1.5rem' }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: '#666' }}>ช่องทางการสั่งซื้อ</label>
-                            <div style={{ display: 'flex', gap: '0.5rem', backgroundColor: '#f5f5f5', padding: '0.25rem', borderRadius: '8px' }}>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setPriceMode('shop');
-                                        setResults(null);
-                                    }}
-                                    style={{
-                                        flex: 1,
-                                        padding: '0.5rem',
-                                        borderRadius: '6px',
-                                        border: 'none',
-                                        backgroundColor: priceMode === 'shop' ? 'white' : 'transparent',
-                                        color: priceMode === 'shop' ? 'black' : '#666',
-                                        boxShadow: priceMode === 'shop' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-                                        fontWeight: 600,
-                                        fontSize: '0.9rem',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        gap: '0.4rem',
-                                        cursor: 'pointer',
-                                        transition: 'all 0.2s'
-                                    }}
-                                >
-                                    <Store size={16} /> หน้าร้าน
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        setPriceMode('platform');
-                                        setResults(null);
-                                    }}
-                                    style={{
-                                        flex: 1,
-                                        padding: '0.5rem',
-                                        borderRadius: '6px',
-                                        border: 'none',
-                                        backgroundColor: priceMode === 'platform' ? 'white' : 'transparent',
-                                        color: priceMode === 'platform' ? '#f97316' : '#666',
-                                        boxShadow: priceMode === 'platform' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-                                        fontWeight: 600,
-                                        fontSize: '0.9rem',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        gap: '0.4rem',
-                                        cursor: 'pointer',
-                                        transition: 'all 0.2s'
-                                    }}
-                                >
-                                    <ShoppingBag size={16} /> แพลตฟอร์ม
-                                </button>
-                            </div>
-                            {priceMode === 'platform' && (
-                                <p style={{ fontSize: '0.75rem', color: '#f97316', marginTop: '0.5rem', display: 'flex', gap: '0.25rem' }}>
-                                    <Info size={12} style={{ marginTop: '2px' }} /> ราคาอาจสูงกว่าหน้าร้านเนื่องจากมีค่าธรรมเนียม
-                                </p>
-                            )}
-                        </div>
-
                         <button
                             type="submit"
                             style={{
@@ -336,7 +281,7 @@ export default function CalculatorPage() {
                                 fontSize: '1rem'
                             }}
                         >
-                            <CalcIcon size={20} /> คำนวณราคา {priceMode === 'platform' ? '(Platform)' : ''}
+                            <CalcIcon size={20} /> คำนวณราคา
                         </button>
                     </form>
                 </div>
@@ -345,27 +290,87 @@ export default function CalculatorPage() {
                 <div className="results-section">
                     {results ? (
                         <>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                                <h2 style={{ fontSize: '1.5rem', fontWeight: 600 }}>
-                                    ผลลัพธ์การคำนวณ ({results.length} รายการ)
-                                </h2>
-                                <button
-                                    onClick={() => setResults(null)}
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '0.5rem',
-                                        color: '#666',
-                                        fontSize: '0.9rem',
-                                        padding: '0.5rem 1rem',
-                                        borderRadius: '20px',
-                                        backgroundColor: '#f5f5f5',
-                                        border: 'none',
-                                        cursor: 'pointer'
-                                    }}
-                                >
-                                    <RefreshCw size={14} /> ล้างค่าใหม่
-                                </button>
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+                                    <h2 style={{ fontSize: '1.5rem', fontWeight: 600 }}>
+                                        ผลลัพธ์การคำนวณ ({results.length} รายการ)
+                                    </h2>
+                                    <button
+                                        onClick={() => setResults(null)}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.5rem',
+                                            color: '#666',
+                                            fontSize: '0.9rem',
+                                            padding: '0.5rem 1rem',
+                                            borderRadius: '20px',
+                                            backgroundColor: '#f5f5f5',
+                                            border: 'none',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        <RefreshCw size={14} /> ล้างค่าใหม่
+                                    </button>
+                                </div>
+
+                                {/* Price Mode Toggle (Moved here) */}
+                                <div style={{ backgroundColor: 'white', padding: '1rem', borderRadius: '12px', border: '1px solid #f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <span style={{ fontWeight: 600, color: '#333' }}>ราคาสำหรับ:</span>
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                        <div style={{ display: 'flex', gap: '0.5rem', backgroundColor: '#f5f5f5', padding: '0.25rem', borderRadius: '8px' }}>
+                                            <button
+                                                type="button"
+                                                onClick={() => setPriceMode('shop')}
+                                                style={{
+                                                    padding: '0.5rem 1rem',
+                                                    borderRadius: '6px',
+                                                    border: 'none',
+                                                    backgroundColor: priceMode === 'shop' ? 'white' : 'transparent',
+                                                    color: priceMode === 'shop' ? 'black' : '#666',
+                                                    boxShadow: priceMode === 'shop' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                                                    fontWeight: 600,
+                                                    fontSize: '0.9rem',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '0.4rem',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s'
+                                                }}
+                                            >
+                                                <Store size={16} /> หน้าร้าน
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setPriceMode('platform')}
+                                                style={{
+                                                    padding: '0.5rem 1rem',
+                                                    borderRadius: '6px',
+                                                    border: 'none',
+                                                    backgroundColor: priceMode === 'platform' ? 'white' : 'transparent',
+                                                    color: priceMode === 'platform' ? '#f97316' : '#666',
+                                                    boxShadow: priceMode === 'platform' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                                                    fontWeight: 600,
+                                                    fontSize: '0.9rem',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '0.4rem',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s'
+                                                }}
+                                            >
+                                                <ShoppingBag size={16} /> แพลตฟอร์ม
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                {priceMode === 'platform' && (
+                                    <p style={{ fontSize: '0.8rem', color: '#f97316', marginTop: '0.5rem', textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.25rem' }}>
+                                        <Info size={14} /> ราคาอาจสูงกว่าหน้าร้านเนื่องจากมีค่าธรรมเนียม
+                                    </p>
+                                )}
                             </div>
 
                             <div className="results-grid">
