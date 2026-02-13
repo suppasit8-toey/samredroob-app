@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
 import Link from 'next/link';
-import { Trash2, ArrowLeft, Send, Store, ShoppingBag, Info, BookOpen, Images } from 'lucide-react';
+import { Trash2, ArrowLeft, Send, Store, ShoppingBag, Info, BookOpen, Images, ChevronDown, ChevronUp } from 'lucide-react';
 import { calculatePrice } from '@/utils/pricing';
 import { supabase } from '@/lib/supabase';
 import { ProductVariant } from '@/lib/types';
@@ -164,6 +164,8 @@ export default function QuotationPage() {
         }
     };
 
+    const [showRemarks, setShowRemarks] = useState(false);
+
     return (
         <div style={{ padding: '3rem 1rem', maxWidth: '1000px', margin: '0 auto' }}>
             <Link
@@ -184,19 +186,38 @@ export default function QuotationPage() {
                 <h1 style={{ fontSize: '1.8rem', fontFamily: 'var(--font-mitr)', margin: 0 }}>ใบเสนอราคา</h1>
             </div>
 
-            <div style={{ textAlign: 'center', maxWidth: '800px', margin: '-1rem auto 2rem auto', color: '#666', lineHeight: '1.6' }}>
-                <div className="flex justify-center flex-wrap gap-4 text-sm bg-gray-50 inline-flex px-6 py-2 rounded-full border border-gray-100">
-                    <span className="flex items-center gap-1"><span className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center text-xs">1</span> เลือกหมวดหมู่</span>
-                    <span className="text-gray-300">|</span>
-                    <span className="flex items-center gap-1"><span className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center text-xs">2</span> ระบุขนาด</span>
-                    <span className="text-gray-300">|</span>
-                    <span className="flex items-center gap-1"><span className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center text-xs">3</span> คำนวณราคา</span>
-                    <span className="text-gray-300">|</span>
-                    <span className="flex items-center gap-1"><span className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center text-xs">4</span> เพิ่มสินค้า</span>
-                    <span className="text-gray-300">|</span>
-                    <span className="flex items-center gap-1"><span className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center text-xs">5</span> ส่งใบเสนอราคา</span>
-                </div>
+            <div style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '12px', overflow: 'hidden', marginBottom: '2rem' }}>
+                <button
+                    onClick={() => setShowRemarks(!showRemarks)}
+                    style={{
+                        width: '100%',
+                        padding: '1.5rem',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: '#1f2937'
+                    }}
+                >
+                    <h3 style={{ fontSize: '1rem', fontWeight: 600, fontFamily: 'var(--font-mitr)', margin: 0 }}>หมายเหตุ / เงื่อนไขการเสนอราคาเบื้องต้น</h3>
+                    {showRemarks ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                </button>
+
+                {showRemarks && (
+                    <div style={{ padding: '0 1.5rem 1.5rem 1.5rem', fontSize: '0.9rem', color: '#4b5563', animation: 'fadeIn 0.2s ease-in-out' }}>
+                        <ul style={{ listStyleType: 'disc', paddingLeft: '1.5rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            <li>ราคาที่แสดงเป็นราคาประเมินเบื้องต้น อาจมีการเปลี่ยนแปลงตามขนาดจริงและหน้างาน</li>
+                            <li>ราคายังไม่รวมภาษีมูลค่าเพิ่ม (VAT 7%)</li>
+                            <li>ราคายังไม่รวมค่าบริการติดตั้งและค่าจัดส่ง</li>
+                            <li>ระยะเวลาผลิตสินค้าประมาณ 7-14 วันทำการ หลังยืนยันการสั่งซื้อ</li>
+                        </ul>
+                    </div>
+                )}
             </div>
+
+
 
             {/* Price Mode Toggle */}
             <div style={{ marginBottom: '2rem', backgroundColor: 'white', padding: '1.5rem', borderRadius: '16px', border: '1px solid #f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
@@ -487,7 +508,7 @@ export default function QuotationPage() {
 
                     <div style={{ backgroundColor: '#F0FDF4', padding: '2rem', borderRadius: '16px', border: '1px solid #BBF7D0', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
                         <div style={{ marginBottom: '1.5rem' }}>
-                            <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#166534', marginBottom: '0.5rem' }}>พร้อมสั่งทำหรือไม่?</h3>
+
                             <p style={{ color: '#166534', opacity: 0.8 }}>ส่งข้อมูลเพื่อขอใบเสนอราคาฉบับเต็มจากทางร้าน</p>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', alignItems: 'center' }}>

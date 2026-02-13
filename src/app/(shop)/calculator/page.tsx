@@ -26,9 +26,9 @@ export default function CalculatorPage() {
     const [height, setHeight] = useState<number | ''>('');
     const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
     const [priceMode, setPriceMode] = useState<'shop' | 'platform'>('shop');
-    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedTag, setSelectedTag] = useState<string | null>(null); // Added selectedTag state
+    const [selectedTags, setSelectedTags] = useState<string[]>([]); // Changed to array for multi-select
     const [results, setResults] = useState<CalculationResult[] | null>(null);
     const [addedItems, setAddedItems] = useState<Set<string>>(new Set());
 
@@ -163,7 +163,7 @@ export default function CalculatorPage() {
     }
 
     return (
-        <div style={{ padding: '2rem 1rem', maxWidth: '1200px', margin: '0 auto', position: 'relative' }}>
+        <div className="page-container" style={{ padding: '2rem 1rem', maxWidth: '1200px', margin: '0 auto', position: 'relative' }}>
 
             {/* Floating Cart Button */}
             {cartCount > 0 && (
@@ -181,10 +181,10 @@ export default function CalculatorPage() {
                 </Link>
             )}
 
-            <h1 style={{ textAlign: 'center', marginBottom: '2rem', fontSize: '2.5rem', fontFamily: 'var(--font-mitr)' }}>คำนวณราคา</h1>
+            <h1 className="page-title" style={{ textAlign: 'center', marginBottom: '2rem', fontSize: '2.5rem', fontFamily: 'var(--font-mitr)' }}>คำนวณราคา</h1>
 
-            <div style={{ textAlign: 'center', maxWidth: '800px', margin: '-1.5rem auto 2rem auto', color: '#666', lineHeight: '1.6' }}>
-                <div className="flex justify-center flex-wrap gap-4 text-sm bg-gray-50 inline-flex px-6 py-2 rounded-full border border-gray-100">
+            <div className="steps-wrapper" style={{ textAlign: 'center', maxWidth: '800px', margin: '-1.5rem auto 2rem auto', color: '#666', lineHeight: '1.6' }}>
+                <div className="steps-container flex justify-center flex-wrap gap-4 text-sm bg-gray-50 inline-flex px-6 py-2 rounded-full border border-gray-100">
                     <span className="flex items-center gap-1"><span className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center text-xs">1</span> เลือกหมวดหมู่</span>
                     <span className="text-gray-300">|</span>
                     <span className="flex items-center gap-1"><span className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center text-xs">2</span> ระบุขนาดที่ต้องการ</span>
@@ -236,6 +236,73 @@ export default function CalculatorPage() {
                             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
                         }
                     }
+                    @media (max-width: 768px) {
+                        .page-container {
+                            padding: 1.5rem 1rem !important;
+                        }
+                        .page-title {
+                            font-size: 1.75rem !important;
+                            margin-bottom: 1.5rem !important;
+                        }
+                        .steps-wrapper {
+                            margin: -1rem auto 1.5rem auto !important;
+                        }
+                        .steps-container {
+                            flex-wrap: nowrap !important;
+                            overflow-x: auto;
+                            justify-content: flex-start !important;
+                            padding: 0.5rem 1rem !important;
+                            width: 100%;
+                            -webkit-overflow-scrolling: touch;
+                            scrollbar-width: none;
+                        }
+                        .steps-container::-webkit-scrollbar {
+                            display: none;
+                        }
+                        .steps-container > span {
+                            white-space: nowrap;
+                            flex-shrink: 0;
+                        }
+                        
+                        /* List View Mobile Optimizations */
+                        .result-item-list {
+                            flex-direction: column;
+                            align-items: stretch !important;
+                            gap: 0.75rem !important;
+                            padding: 1rem !important;
+                        }
+                        .result-info {
+                            flex: 1 1 auto !important;
+                            margin-bottom: 0.5rem;
+                        }
+                        .result-price {
+                            text-align: left !important;
+                            display: flex;
+                            justify-content: space-between;
+                            align-items: center;
+                            background-color: #f9fafb;
+                            padding: 0.75rem;
+                            border-radius: 8px;
+                            margin: 0.5rem 0;
+                        }
+                        .result-price::before {
+                            content: "ราคารวม";
+                            font-size: 0.9rem;
+                            color: #666;
+                            font-weight: 500;
+                        }
+                        .result-actions {
+                            width: 100%;
+                            gap: 0.75rem !important;
+                            margin-top: 0.5rem;
+                        }
+                        .result-actions button {
+                            flex: 1;
+                            justify-content: center;
+                            padding: 0.75rem !important;
+                            height: 44px; /* Touch friendly */
+                        }
+                    }
                 `}</style>
 
                 {/* Input Section */}
@@ -257,6 +324,7 @@ export default function CalculatorPage() {
                                 onChange={(e) => {
                                     setSelectedCategoryId(e.target.value);
                                     setResults(null); // Clear results on category change
+                                    setSelectedTags([]); // Reset tags on category change
                                 }}
                                 style={{
                                     width: '100%',
@@ -459,14 +527,14 @@ export default function CalculatorPage() {
                                 return (
                                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '1rem' }}>
                                         <button
-                                            onClick={() => setSelectedTag(null)}
+                                            onClick={() => setSelectedTags([])}
                                             style={{
                                                 padding: '4px 12px',
                                                 borderRadius: '20px',
                                                 border: '1px solid',
-                                                borderColor: selectedTag === null ? 'black' : '#e5e5e5',
-                                                backgroundColor: selectedTag === null ? 'black' : 'white',
-                                                color: selectedTag === null ? 'white' : '#666',
+                                                borderColor: selectedTags.length === 0 ? 'black' : '#e5e5e5',
+                                                backgroundColor: selectedTags.length === 0 ? 'black' : 'white',
+                                                color: selectedTags.length === 0 ? 'white' : '#666',
                                                 fontSize: '0.85rem',
                                                 fontWeight: 500,
                                                 cursor: 'pointer',
@@ -478,14 +546,20 @@ export default function CalculatorPage() {
                                         {allTags.map(tag => (
                                             <button
                                                 key={tag}
-                                                onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
+                                                onClick={() => {
+                                                    if (selectedTags.includes(tag)) {
+                                                        setSelectedTags(prev => prev.filter(t => t !== tag));
+                                                    } else {
+                                                        setSelectedTags(prev => [...prev, tag]);
+                                                    }
+                                                }}
                                                 style={{
                                                     padding: '4px 12px',
                                                     borderRadius: '20px',
                                                     border: '1px solid',
-                                                    borderColor: selectedTag === tag ? 'black' : '#e5e5e5',
-                                                    backgroundColor: selectedTag === tag ? 'black' : 'white',
-                                                    color: selectedTag === tag ? 'white' : '#666',
+                                                    borderColor: selectedTags.includes(tag) ? 'black' : '#e5e5e5',
+                                                    backgroundColor: selectedTags.includes(tag) ? 'black' : 'white',
+                                                    color: selectedTags.includes(tag) ? 'white' : '#666',
                                                     fontSize: '0.85rem',
                                                     fontWeight: 500,
                                                     cursor: 'pointer',
@@ -546,7 +620,7 @@ export default function CalculatorPage() {
                                     const filteredResults = results.filter(item => {
                                         const matchesSearch = item.collection.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                                             item.collection.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-                                        const matchesTag = selectedTag ? item.collection.tags?.includes(selectedTag) : true;
+                                        const matchesTag = selectedTags.length > 0 ? item.collection.tags?.some(tag => selectedTags.includes(tag)) : true;
                                         return matchesSearch && matchesTag;
                                     });
 
@@ -572,7 +646,7 @@ export default function CalculatorPage() {
                                         if (viewMode === 'list') {
                                             // LIST VIEW RENDER
                                             return (
-                                                <div key={item.collection.id} style={{
+                                                <div key={item.collection.id} className="result-item-list" style={{
                                                     backgroundColor: 'white',
                                                     borderRadius: '12px',
                                                     border: isAdded ? '2px solid #22c55e' : (isError ? '1px solid #fee2e2' : '1px solid #f0f0f0'),
@@ -586,7 +660,7 @@ export default function CalculatorPage() {
                                                     flexWrap: 'wrap'
                                                 }}>
                                                     {/* 1. Name & Breakdown */}
-                                                    <div style={{ flex: '1 1 300px' }}>
+                                                    <div className="result-info" style={{ flex: '1 1 300px' }}>
                                                         <div style={{ flex: '1', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                                             <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#1a1a1a', margin: 0 }}>
                                                                 {item.collection.name}
@@ -606,7 +680,7 @@ export default function CalculatorPage() {
                                                     </div>
 
                                                     {/* 2. Price */}
-                                                    <div style={{ flex: '0 0 auto', textAlign: 'right' }}>
+                                                    <div className="result-price" style={{ flex: '0 0 auto', textAlign: 'right' }}>
                                                         {isError ? (
                                                             <span style={{ fontSize: '1rem', fontWeight: 700, color: '#ef4444' }}>เกินเงื่อนไข</span>
                                                         ) : (
@@ -617,7 +691,7 @@ export default function CalculatorPage() {
                                                     </div>
 
                                                     {/* 3. Actions */}
-                                                    <div style={{ display: 'flex', gap: '0.5rem', flex: '0 0 auto' }}>
+                                                    <div className="result-actions" style={{ display: 'flex', gap: '0.5rem', flex: '0 0 auto' }}>
                                                         <button
                                                             onClick={() => handleAddToCart(item)}
                                                             disabled={isAdded || isError}

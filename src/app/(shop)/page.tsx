@@ -1,47 +1,17 @@
 "use client";
 
 import React from 'react';
-import Link from 'next/link';
+
 import { ArrowRight, ShoppingBag, Truck, ShieldCheck, Star } from 'lucide-react';
-import SearchBar from '@/components/SearchBar';
-import CategoryList from '@/components/CategoryList';
-import ProductCard from '@/components/ProductCard';
+
+
 import ServiceList from '@/components/ServiceList';
 import ServiceComparisonTable from '@/components/ServiceComparisonTable';
 import HeroBanner from '@/components/HeroBanner';
 
 export default function Home() {
     // Sample data for "Explore" section
-    const featuredProducts = [
-        {
-            id: 1,
-            name: 'ม่านจีบกัน UV',
-            price: '฿2,500',
-            category: 'Curtain',
-            image: 'https://images.unsplash.com/photo-1513694203232-719a280e022f?q=80&w=600&auto=format&fit=crop'
-        },
-        {
-            id: 2,
-            name: 'วอลเปเปอร์ลายหินอ่อน',
-            price: '฿1,200',
-            category: 'Wallpaper',
-            image: 'https://images.unsplash.com/photo-1615873968403-89e068629265?q=80&w=600&auto=format&fit=crop'
-        },
-        {
-            id: 3,
-            name: 'ม่านม้วน Sunscreen',
-            price: '฿1,800',
-            category: 'Blinds',
-            image: 'https://images.unsplash.com/photo-1505691938895-1758d7feb511?q=80&w=600&auto=format&fit=crop'
-        },
-        {
-            id: 4,
-            name: 'ผ้าม่านโปร่งแสง',
-            price: '฿1,500',
-            category: 'Sheer',
-            image: 'https://images.unsplash.com/photo-1499364660878-4a3079642631?q=80&w=600&auto=format&fit=crop'
-        }
-    ];
+
 
     return (
         <div style={{
@@ -50,8 +20,7 @@ export default function Home() {
             padding: '1rem',
             paddingTop: '2rem'
         }}>
-            {/* Search Section */}
-            <SearchBar />
+
 
             {/* Hero Banner Component */}
             <HeroBanner />
@@ -83,36 +52,11 @@ export default function Home() {
                     </div>
                 </div>
             </a>
-            <CategoryList />
+
 
             {/* Explore / Featured */}
             <div style={{ marginBottom: '2rem' }}>
-                <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '1rem',
-                    padding: '0 0.5rem'
-                }}>
-                    <h2 style={{ fontSize: '1.25rem', fontWeight: 700 }}>สินค้าแนะนำ</h2>
-                    <Link href="/products" style={{ color: 'var(--color-secondary)', fontSize: '0.9rem' }}>ดูทั้งหมด</Link>
-                </div>
 
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', // Responsive grid
-                    gap: '1.5rem'
-                }}>
-                    {featuredProducts.map(product => (
-                        <ProductCard
-                            key={product.id}
-                            name={product.name}
-                            price={product.price}
-                            category={product.category}
-                            image={product.image}
-                        />
-                    ))}
-                </div>
                 {/* Service Options */}
                 <ServiceList />
                 <ServiceComparisonTable />

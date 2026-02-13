@@ -48,20 +48,7 @@ const Header: React.FC = () => {
                         alt="SAMREDROOB"
                         style={{ height: '40px', width: 'auto' }}
                     />
-                    <span style={{
-                        fontSize: '1.8rem',
-                        fontFamily: 'var(--font-mitr)',
-                        fontWeight: 600,
-                        lineHeight: 1,
-                        color: '#333',
-                        borderLeft: '2px solid #e5e7eb',
-                        paddingLeft: '1rem',
-                        marginLeft: '0.5rem',
-                        display: 'flex',
-                        alignItems: 'center',
-                        height: '40px',
-                        letterSpacing: '0.02em'
-                    }}>สำเร็จรูป-Samredroob</span>
+                    <span className="logo-text">สำเร็จรูป-Samredroob</span>
                 </Link>
 
                 {/* Desktop Nav */}
@@ -86,7 +73,28 @@ const Header: React.FC = () => {
                 </div>
 
                 <style>{`
-                    @media (max-width: 767px) {
+                    .logo-text {
+                        font-size: 1.8rem;
+                        font-family: var(--font-mitr);
+                        font-weight: 600;
+                        line-height: 1;
+                        color: #333;
+                        border-left: 2px solid #e5e7eb;
+                        padding-left: 1rem;
+                        margin-left: 0.5rem;
+                        display: flex;
+                        align-items: center;
+                        height: 40px;
+                        letter-spacing: 0.05em; /* More luxury spacing */
+                    }
+                    @media (max-width: 768px) {
+                        .logo-text {
+                            font-size: 1.1rem !important; /* Smaller on mobile */
+                            font-weight: 500; /* Slightly lighter for elegance */
+                            padding-left: 0.75rem;
+                            margin-left: 0.25rem;
+                            letter-spacing: 0.03em;
+                        }
                         .desktop-nav { display: none !important; }
                     }
                 `}</style>
