@@ -34,6 +34,7 @@ export interface ProductCollection {
 
     // Joined fields (optional)
     product_categories?: Category;
+    tags?: string[];
 }
 
 export interface ProductVariant {
@@ -42,6 +43,8 @@ export interface ProductVariant {
     name: string;
     image_url?: string;
     created_at?: string;
+    in_stock?: boolean;
+    description?: string; // New field
 
     // Joined fields
     product_collections?: ProductCollection;
