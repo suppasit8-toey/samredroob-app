@@ -245,7 +245,9 @@ export default function QuotationPage() {
 
             {items.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                    <div style={{ backgroundColor: 'white', borderRadius: '16px', border: '1px solid #f0f0f0', overflow: 'hidden' }}>
+
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block bg-white rounded-2xl border border-gray-100 overflow-hidden">
                         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                             <thead style={{ backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e5e5' }}>
                                 <tr>
@@ -364,6 +366,109 @@ export default function QuotationPage() {
                                 </tr>
                             </tfoot>
                         </table>
+                    </div>
+
+                    {/* Mobile Card View */}
+                    <div className="md:hidden flex flex-col gap-4">
+                        {calculatedItems.map((item) => {
+                            const isError = item.currentTotal === 0;
+                            const collectionVariants = variantsMap[item.collection.id] || [];
+
+                            return (
+                                <div key={item.id} className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm relative">
+                                    <div className="flex justify-between items-start mb-2 pr-8">
+                                        <div className="font-semibold text-lg">{item.collection.name}</div>
+                                    </div>
+                                    <button
+                                        onClick={() => removeFromCart(item.id)}
+                                        className="absolute top-4 right-4 text-red-500 p-1 bg-red-50 rounded-full"
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
+
+                                    <div className="text-sm text-gray-500 mb-3">
+                                        {item.width} x {item.height} ซม. • {item.unitPrice} บาท/{item.collection.unit}
+                                    </div>
+
+                                    {/* Variant Selection */}
+                                    <div className="mb-3">
+                                        <label className="text-xs font-semibold text-gray-500 mb-1 block">เลือกสเปค/วัสดุ</label>
+                                        {collectionVariants.length > 0 ? (
+                                            <select
+                                                value={item.selectedVariant?.id || ''}
+                                                onChange={(e) => {
+                                                    const variantId = Number(e.target.value);
+                                                    const variant = collectionVariants.find(v => v.id === variantId);
+                                                    if (updateItem) {
+                                                        updateItem(item.id, { selectedVariant: variant });
+                                                    }
+                                                }}
+                                                className="w-full text-sm bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-black/5"
+                                            >
+                                                <option value="">-- เลือก --</option>
+                                                {collectionVariants.map(variant => (
+                                                    <option key={variant.id} value={variant.id}>
+                                                        {variant.name}{variant.description ? ` - ${variant.description}` : ''}
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        ) : (
+                                            <div className="text-sm text-gray-400">-</div>
+                                        )}
+                                    </div>
+
+                                    {/* Action Buttons */}
+                                    <div className="grid grid-cols-2 gap-2 mb-3">
+                                        {catalogMap[item.collection.id] && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setViewingCatalogUrl(catalogMap[item.collection.id]!)}
+                                                className="py-1.5 px-3 rounded text-xs bg-blue-50 text-blue-600 font-medium flex items-center justify-center gap-1"
+                                            >
+                                                <BookOpen size={14} /> ดู Catalog
+                                            </button>
+                                        )}
+                                        {portfolioMap[item.collection.id] && (
+                                            <button
+                                                type="button"
+                                                onClick={() => setViewingCatalogUrl(portfolioMap[item.collection.id]!)}
+                                                className="py-1.5 px-3 rounded text-xs bg-purple-50 text-purple-600 font-medium flex items-center justify-center gap-1"
+                                            >
+                                                <Images size={14} /> ดูตัวอย่าง
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {/* Price and Error */}
+                                    <div className="flex justify-between items-end border-t border-gray-50 pt-3 mt-1">
+                                        <div className="text-xs text-gray-400">ราคารวม ({priceMode === 'platform' ? 'Platform' : 'หน้าร้าน'})</div>
+                                        <div className="text-xl font-bold text-gray-900">
+                                            {isError ? (
+                                                <span className="text-red-500 text-base">เกินเงื่อนไข</span>
+                                            ) : (
+                                                `฿${item.currentTotal.toLocaleString()}`
+                                            )}
+                                        </div>
+                                    </div>
+                                    {isError && (
+                                        <div className="text-xs text-red-500 mt-1">
+                                            {item.currentBreakdown}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+
+                        {/* Mobile Total */}
+                        <div className="bg-gray-50 rounded-xl p-4 flex flex-col gap-2 border border-gray-100">
+                            <div className="flex justify-between items-center">
+                                <span className="font-semibold text-gray-700">ราคารวมโดยประมาณ</span>
+                                <span className="font-bold text-xl text-black">{totalEstimate.toLocaleString()} บาท</span>
+                            </div>
+                            <div className="text-right text-xs text-red-500">
+                                * ราคาเฉพาะค่าสินค้า ยังไม่รวมค่าจัดส่งและค่าติดตั้ง
+                            </div>
+                        </div>
                     </div>
 
                     <div style={{ backgroundColor: '#F0FDF4', padding: '2rem', borderRadius: '16px', border: '1px solid #BBF7D0', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
