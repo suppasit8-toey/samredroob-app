@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { ProductCollection } from '@/lib/types';
+import { ProductCollection, ProductVariant } from '@/lib/types';
 
 export interface CartItem {
     id: string; // unique timestamp
@@ -11,11 +11,13 @@ export interface CartItem {
     totalPrice: number;
     breakdown: string;
     quantity: number;
+    selectedVariant?: ProductVariant;
 }
 
 interface CartContextType {
     items: CartItem[];
     addToCart: (item: Omit<CartItem, 'id' | 'quantity'>) => void;
+    updateItem: (id: string, updates: Partial<CartItem>) => void;
     removeFromCart: (id: string) => void;
     clearCart: () => void;
     cartCount: number;
@@ -51,6 +53,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         });
     };
 
+    const updateItem = (id: string, updates: Partial<CartItem>) => {
+        setItems(prev => prev.map(item =>
+            item.id === id ? { ...item, ...updates } : item
+        ));
+    };
+
     const removeFromCart = (id: string) => {
         setItems(prev => prev.filter(item => item.id !== id));
     };
@@ -60,7 +68,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <CartContext.Provider value={{ items, addToCart, removeFromCart, clearCart, cartCount: items.length }}>
+        <CartContext.Provider value={{ items, addToCart, updateItem, removeFromCart, clearCart, cartCount: items.length }}>
             {children}
         </CartContext.Provider>
     );
