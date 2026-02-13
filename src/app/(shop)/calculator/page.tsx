@@ -4,9 +4,10 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { ProductCollection, Category } from '@/lib/types';
 import { calculatePrice } from '@/utils/pricing';
-import { Calculator as CalcIcon, RefreshCw, Loader2, ExternalLink, ArrowRight, ShoppingCart, Check, Store, ShoppingBag, Info } from 'lucide-react';
+import { Calculator as CalcIcon, RefreshCw, Loader2, ExternalLink, ArrowRight, ShoppingCart, Check, Store, ShoppingBag, Info, LayoutGrid, List, Search } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import Link from 'next/link';
+import CatalogModal from '@/components/CatalogModal';
 
 interface CalculationResult {
     collection: ProductCollection;
@@ -25,8 +26,14 @@ export default function CalculatorPage() {
     const [height, setHeight] = useState<number | ''>('');
     const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
     const [priceMode, setPriceMode] = useState<'shop' | 'platform'>('shop');
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [selectedTag, setSelectedTag] = useState<string | null>(null); // Added selectedTag state
     const [results, setResults] = useState<CalculationResult[] | null>(null);
     const [addedItems, setAddedItems] = useState<Set<string>>(new Set());
+
+    // Catalog Modal State
+    const [activeCatalog, setActiveCatalog] = useState<{ url: string; title: string } | null>(null);
 
     useEffect(() => {
         const initData = async () => {
@@ -51,10 +58,7 @@ export default function CalculatorPage() {
                 if (colError) throw colError;
                 setCollections(colData || []);
 
-                // Set Default Category if exists
-                if (catData && catData.length > 0) {
-                    setSelectedCategoryId(catData[0].id.toString());
-                }
+                // Removed auto-selection logic
             } catch (error) {
                 console.error('Error fetching data:', error);
             } finally {
@@ -91,6 +95,31 @@ export default function CalculatorPage() {
 
             calculatedResults.sort((a, b) => a.total - b.total);
             setResults(calculatedResults);
+
+            // Track calculation event
+            if (supabase) {
+                supabase
+                    .from('analytics_events')
+                    .insert([
+                        {
+                            event_type: 'calculate',
+                            page_path: '/calculator',
+                            metadata: {
+                                item_count: calculatedResults.length,
+                                total_amount: calculatedResults.reduce((sum, item) => sum + item.total, 0),
+                                price_mode: priceMode,
+                                width: Number(width),
+                                height: Number(height),
+                                category_id: selectedCategoryId,
+                                category_name: categories.find(c => c.id === Number(selectedCategoryId))?.name,
+                                top_product: calculatedResults.length > 0 ? calculatedResults[0].collection.name : null,
+                                top_price: calculatedResults.length > 0 ? calculatedResults[0].total : null
+                            }
+                        }
+                    ]).then(({ error }) => {
+                        if (error) console.error('Error logging calculation event:', error);
+                    });
+            }
         }
     };
 
@@ -166,6 +195,16 @@ export default function CalculatorPage() {
                         grid-template-columns: 1fr;
                         gap: 1.5rem;
                     }
+                    .results-container.grid {
+                        display: grid;
+                        grid-template-columns: 1fr;
+                        gap: 1.5rem;
+                    }
+                    .results-container.list {
+                        display: flex;
+                        flex-direction: column;
+                        gap: 1rem;
+                    }
                     @media (min-width: 768px) {
                         .calculator-layout {
                             flex-direction: row;
@@ -179,7 +218,7 @@ export default function CalculatorPage() {
                         .results-section {
                             flex: 1;
                         }
-                        .results-grid {
+                        .results-grid, .results-container.grid {
                             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
                         }
                     }
@@ -215,6 +254,7 @@ export default function CalculatorPage() {
                                     backgroundColor: '#fff'
                                 }}
                             >
+                                <option value="">-- กรุณาเลือกหมวดหมู่ --</option>
                                 {categories.map(c => (
                                     <option key={c.id} value={c.id}>
                                         {c.name}
@@ -373,137 +413,352 @@ export default function CalculatorPage() {
                                 )}
                             </div>
 
-                            <div className="results-grid">
-                                {results.map((item, index) => {
-                                    const isAdded = addedItems.has(item.collection.id.toString());
-                                    const isError = item.total === 0;
+                            {/* Search Input */}
+                            <div style={{ marginBottom: '1rem' }}>
+                                <div style={{ position: 'relative' }}>
+                                    <input
+                                        type="text"
+                                        placeholder="ค้นหาชื่อ..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        style={{
+                                            width: '100%',
+                                            padding: '0.75rem 1rem 0.75rem 2.5rem',
+                                            borderRadius: '12px',
+                                            border: '1px solid #e5e5e5',
+                                            fontSize: '1rem',
+                                            fontFamily: 'var(--font-mitr)',
+                                            outline: 'none'
+                                        }}
+                                    />
+                                    <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }}>
+                                        <Search size={18} />
+                                    </div>
+                                </div>
+                            </div>
 
-                                    // Determine display unit price
-                                    let displayUnitPrice = item.collection.price_per_unit;
-                                    if (priceMode === 'platform' && item.collection.price_per_unit_platform) {
-                                        displayUnitPrice = item.collection.price_per_unit_platform;
-                                    }
+                            {/* Tag Chips */}
+                            {(() => {
+                                const allTags = Array.from(new Set(results.flatMap(r => r.collection.tags || []))).sort();
+                                if (allTags.length === 0) return null;
 
-                                    return (
-                                        <div key={item.collection.id} style={{
-                                            backgroundColor: 'white',
-                                            borderRadius: '16px',
-                                            overflow: 'hidden',
-                                            border: isAdded ? '2px solid #22c55e' : (isError ? '1px solid #fee2e2' : '1px solid #f0f0f0'),
-                                            boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
-                                            transition: 'all 0.2s',
+                                return (
+                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '1rem' }}>
+                                        <button
+                                            onClick={() => setSelectedTag(null)}
+                                            style={{
+                                                padding: '4px 12px',
+                                                borderRadius: '20px',
+                                                border: '1px solid',
+                                                borderColor: selectedTag === null ? 'black' : '#e5e5e5',
+                                                backgroundColor: selectedTag === null ? 'black' : 'white',
+                                                color: selectedTag === null ? 'white' : '#666',
+                                                fontSize: '0.85rem',
+                                                fontWeight: 500,
+                                                cursor: 'pointer',
+                                                transition: 'all 0.2s'
+                                            }}
+                                        >
+                                            ทั้งหมด
+                                        </button>
+                                        {allTags.map(tag => (
+                                            <button
+                                                key={tag}
+                                                onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
+                                                style={{
+                                                    padding: '4px 12px',
+                                                    borderRadius: '20px',
+                                                    border: '1px solid',
+                                                    borderColor: selectedTag === tag ? 'black' : '#e5e5e5',
+                                                    backgroundColor: selectedTag === tag ? 'black' : 'white',
+                                                    color: selectedTag === tag ? 'white' : '#666',
+                                                    fontSize: '0.85rem',
+                                                    fontWeight: 500,
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s'
+                                                }}
+                                            >
+                                                {tag}
+                                            </button>
+                                        ))}
+                                    </div>
+                                );
+                            })()}
+
+                            {/* View Mode Toggle */}
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1rem' }}>
+                                <div style={{ display: 'flex', backgroundColor: '#f5f5f5', padding: '0.25rem', borderRadius: '8px', gap: '0.25rem' }}>
+                                    <button
+                                        onClick={() => setViewMode('grid')}
+                                        style={{
+                                            padding: '0.4rem',
+                                            borderRadius: '6px',
+                                            border: 'none',
+                                            backgroundColor: viewMode === 'grid' ? 'white' : 'transparent',
+                                            color: viewMode === 'grid' ? 'black' : '#888',
+                                            boxShadow: viewMode === 'grid' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
+                                            cursor: 'pointer',
                                             display: 'flex',
-                                            flexDirection: 'column',
-                                            opacity: isError ? 0.8 : 1
-                                        }}>
-                                            <div style={{ padding: '1.5rem', flex: 1 }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                                                    <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#1a1a1a', lineHeight: 1.4 }}>
-                                                        {item.collection.name}
-                                                    </h3>
-                                                    {index === 0 && !isError && (
-                                                        <span style={{
-                                                            fontSize: '0.7rem',
-                                                            padding: '0.2rem 0.6rem',
-                                                            backgroundColor: '#DCFCE7',
-                                                            color: '#166534',
-                                                            borderRadius: '12px',
-                                                            fontWeight: 700,
-                                                            whiteSpace: 'nowrap'
-                                                        }}>
-                                                            คุ้มค่าที่สุด
-                                                        </span>
-                                                    )}
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                        }}
+                                        title="Grid View"
+                                    >
+                                        <LayoutGrid size={18} />
+                                    </button>
+                                    <button
+                                        onClick={() => setViewMode('list')}
+                                        style={{
+                                            padding: '0.4rem',
+                                            borderRadius: '6px',
+                                            border: 'none',
+                                            backgroundColor: viewMode === 'list' ? 'white' : 'transparent',
+                                            color: viewMode === 'list' ? 'black' : '#888',
+                                            boxShadow: viewMode === 'list' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                        }}
+                                        title="List View"
+                                    >
+                                        <List size={18} />
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className={`results-container ${viewMode}`}>
+                                {(() => {
+                                    const filteredResults = results.filter(item => {
+                                        const matchesSearch = item.collection.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                            item.collection.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+                                        const matchesTag = selectedTag ? item.collection.tags?.includes(selectedTag) : true;
+                                        return matchesSearch && matchesTag;
+                                    });
+
+                                    // Find minimum price (greater than 0)
+                                    const minPrice = filteredResults.reduce((min, item) => {
+                                        if (item.total > 0 && (min === 0 || item.total < min)) {
+                                            return item.total;
+                                        }
+                                        return min;
+                                    }, 0);
+
+                                    return filteredResults.map((item, index) => {
+                                        const isAdded = addedItems.has(item.collection.id.toString());
+                                        const isError = item.total === 0;
+                                        const isBestValue = !isError && item.total === minPrice && minPrice > 0;
+
+                                        // Determine display unit price
+                                        let displayUnitPrice = item.collection.price_per_unit;
+                                        if (priceMode === 'platform' && item.collection.price_per_unit_platform) {
+                                            displayUnitPrice = item.collection.price_per_unit_platform;
+                                        }
+
+                                        if (viewMode === 'list') {
+                                            // LIST VIEW RENDER
+                                            return (
+                                                <div key={item.collection.id} style={{
+                                                    backgroundColor: 'white',
+                                                    borderRadius: '12px',
+                                                    border: isAdded ? '2px solid #22c55e' : (isError ? '1px solid #fee2e2' : '1px solid #f0f0f0'),
+                                                    boxShadow: '0 2px 5px rgba(0,0,0,0.03)',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    padding: '1rem',
+                                                    gap: '1rem',
+                                                    transition: 'all 0.2s',
+                                                    opacity: isError ? 0.8 : 1,
+                                                    flexWrap: 'wrap'
+                                                }}>
+                                                    {/* 1. Name & Breakdown */}
+                                                    <div style={{ flex: '1 1 300px' }}>
+                                                        <div style={{ flex: '1', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#1a1a1a', margin: 0 }}>
+                                                                {item.collection.name}
+                                                            </h3>
+                                                            {isBestValue && (
+                                                                <span style={{ fontSize: '0.7rem', padding: '0.2rem 0.6rem', backgroundColor: '#DCFCE7', color: '#166534', borderRadius: '12px', fontWeight: 700 }}>
+                                                                    คุ้มสุด
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <div style={{ fontSize: '0.8rem', color: '#666' }}>
+                                                            ราคาต่อหน่วย: {displayUnitPrice} บาท/{item.collection.unit}
+                                                            <span style={{ marginLeft: '0.5rem', opacity: 0.8, color: isError ? '#ef4444' : '#888' }}>
+                                                                ({isError ? item.breakdown : item.breakdown.split(' (')[0]})
+                                                            </span>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* 2. Price */}
+                                                    <div style={{ flex: '0 0 auto', textAlign: 'right' }}>
+                                                        {isError ? (
+                                                            <span style={{ fontSize: '1rem', fontWeight: 700, color: '#ef4444' }}>เกินเงื่อนไข</span>
+                                                        ) : (
+                                                            <span style={{ fontSize: '1.25rem', fontWeight: 700, color: 'black' }}>
+                                                                ฿{item.total.toLocaleString()}
+                                                            </span>
+                                                        )}
+                                                    </div>
+
+                                                    {/* 3. Actions */}
+                                                    <div style={{ display: 'flex', gap: '0.5rem', flex: '0 0 auto' }}>
+                                                        <button
+                                                            onClick={() => handleAddToCart(item)}
+                                                            disabled={isAdded || isError}
+                                                            style={{
+                                                                padding: '0.5rem 1rem',
+                                                                backgroundColor: isAdded ? '#dcfce7' : (isError ? '#e5e5e5' : 'black'),
+                                                                color: isAdded ? '#166534' : (isError ? '#a3a3a3' : 'white'),
+                                                                border: 'none',
+                                                                borderRadius: '8px',
+                                                                fontWeight: 600,
+                                                                cursor: (isAdded || isError) ? 'default' : 'pointer',
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: '0.4rem',
+                                                                fontSize: '0.85rem'
+                                                            }}
+                                                        >
+                                                            {isAdded ? (
+                                                                <>
+                                                                    <Check size={16} /> <span className="hidden sm:inline">เพิ่มแล้ว</span>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <ShoppingCart size={16} /> <span className="hidden sm:inline">เพิ่ม</span>
+                                                                </>
+                                                            )}
+                                                        </button>
+
+                                                        {item.collection.catalog_url && (
+                                                            <button
+                                                                onClick={() => setActiveCatalog({
+                                                                    url: item.collection.catalog_url!,
+                                                                    title: `Spec: ${item.collection.name}`
+                                                                })}
+                                                                className="flex items-center justify-center p-2 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition cursor-pointer"
+                                                                title="ดู Catalog / Spec"
+                                                            >
+                                                                <ExternalLink size={16} />
+                                                            </button>
+                                                        )}
+                                                    </div>
                                                 </div>
+                                            );
+                                        }
 
-                                                <div style={{ marginBottom: '1rem' }}>
-                                                    {isError ? (
-                                                        <span style={{ fontSize: '1.5rem', fontWeight: 700, color: '#ef4444' }}>
-                                                            เกินเงื่อนไข
-                                                        </span>
-                                                    ) : (
-                                                        <span style={{ fontSize: '2rem', fontWeight: 700, color: 'black' }}>
-                                                            ฿{item.total.toLocaleString()}
-                                                        </span>
-                                                    )}
-                                                </div>
-
-                                                <div style={{ fontSize: '0.85rem', color: '#666', lineHeight: 1.6, backgroundColor: '#f9fafb', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem' }}>
-                                                    ราคาต่อหน่วย: {displayUnitPrice} บาท/{item.collection.unit}
-                                                    <br />
-                                                    <span style={{ opacity: 0.8, color: isError ? '#ef4444' : 'inherit' }}>
-                                                        {isError ? item.breakdown : item.breakdown.split(' (')[0]}
-                                                    </span>
-                                                </div>
-
-                                                <button
-                                                    onClick={() => handleAddToCart(item)}
-                                                    disabled={isAdded || isError}
-                                                    style={{
-                                                        width: '100%',
-                                                        padding: '0.75rem',
-                                                        backgroundColor: isAdded ? '#dcfce7' : (isError ? '#e5e5e5' : 'black'),
-                                                        color: isAdded ? '#166534' : (isError ? '#a3a3a3' : 'white'),
-                                                        border: 'none',
-                                                        borderRadius: '8px',
-                                                        fontWeight: 600,
-                                                        cursor: (isAdded || isError) ? 'default' : 'pointer',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        gap: '0.5rem',
-                                                        transition: 'all 0.2s'
-                                                    }}
-                                                >
-                                                    {isAdded ? (
-                                                        <>
-                                                            <Check size={18} /> เพิ่มแล้ว
-                                                        </>
-                                                    ) : isError ? (
-                                                        'ไม่สามารถสั่งซื้อได้'
-                                                    ) : (
-                                                        <>
-                                                            <ShoppingCart size={18} /> เพิ่มรายการ
-                                                        </>
-                                                    )}
-                                                </button>
-                                            </div>
-
-                                            <div style={{
-                                                padding: '1rem 1.5rem',
-                                                borderTop: '1px solid #f5f5f5',
+                                        // GRID VIEW RENDER (Default)
+                                        return (
+                                            <div key={item.collection.id} style={{
+                                                backgroundColor: 'white',
+                                                borderRadius: '16px',
+                                                overflow: 'hidden',
+                                                border: isAdded ? '2px solid #22c55e' : (isError ? '1px solid #fee2e2' : '1px solid #f0f0f0'),
+                                                boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+                                                transition: 'all 0.2s',
                                                 display: 'flex',
-                                                gap: '0.5rem',
-                                                backgroundColor: '#fafafa'
+                                                flexDirection: 'column',
+                                                opacity: isError ? 0.8 : 1
                                             }}>
-                                                {item.collection.catalog_url && (
-                                                    <a
-                                                        href={item.collection.catalog_url}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
+                                                <div style={{ padding: '1.5rem', flex: 1 }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                                                        <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#1a1a1a', lineHeight: 1.4 }}>
+                                                            {item.collection.name}
+                                                        </h3>
+                                                        {isBestValue && (
+                                                            <span style={{
+                                                                fontSize: '0.7rem',
+                                                                padding: '0.2rem 0.6rem',
+                                                                backgroundColor: '#DCFCE7',
+                                                                color: '#166534',
+                                                                borderRadius: '12px',
+                                                                fontWeight: 700,
+                                                                whiteSpace: 'nowrap'
+                                                            }}>
+                                                                คุ้มค่าที่สุด
+                                                            </span>
+                                                        )}
+                                                    </div>
+
+                                                    <div style={{ marginBottom: '1rem' }}>
+                                                        {isError ? (
+                                                            <span style={{ fontSize: '1.5rem', fontWeight: 700, color: '#ef4444' }}>
+                                                                เกินเงื่อนไข
+                                                            </span>
+                                                        ) : (
+                                                            <span style={{ fontSize: '2rem', fontWeight: 700, color: 'black' }}>
+                                                                ฿{item.total.toLocaleString()}
+                                                            </span>
+                                                        )}
+                                                    </div>
+
+                                                    <div style={{ fontSize: '0.85rem', color: '#666', lineHeight: 1.6, backgroundColor: '#f9fafb', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem' }}>
+                                                        ราคาต่อหน่วย: {displayUnitPrice} บาท/{item.collection.unit}
+                                                        <br />
+                                                        <span style={{ opacity: 0.8, color: isError ? '#ef4444' : 'inherit' }}>
+                                                            {isError ? item.breakdown : item.breakdown.split(' (')[0]}
+                                                        </span>
+                                                    </div>
+
+                                                    <button
+                                                        onClick={() => handleAddToCart(item)}
+                                                        disabled={isAdded || isError}
                                                         style={{
-                                                            flex: 1,
+                                                            width: '100%',
+                                                            padding: '0.75rem',
+                                                            backgroundColor: isAdded ? '#dcfce7' : (isError ? '#e5e5e5' : 'black'),
+                                                            color: isAdded ? '#166534' : (isError ? '#a3a3a3' : 'white'),
+                                                            border: 'none',
+                                                            borderRadius: '8px',
+                                                            fontWeight: 600,
+                                                            cursor: (isAdded || isError) ? 'default' : 'pointer',
                                                             display: 'flex',
-                                                            justifyContent: 'center',
                                                             alignItems: 'center',
-                                                            gap: '0.4rem',
-                                                            padding: '0.5rem',
-                                                            backgroundColor: 'white',
-                                                            border: '1px solid #e5e5e5',
-                                                            borderRadius: '6px',
-                                                            fontSize: '0.85rem',
-                                                            color: '#333',
-                                                            textDecoration: 'none',
-                                                            fontWeight: 500
+                                                            justifyContent: 'center',
+                                                            gap: '0.5rem',
+                                                            transition: 'all 0.2s'
                                                         }}
                                                     >
-                                                        <ExternalLink size={14} /> Catalog
-                                                    </a>
-                                                )}
+                                                        {isAdded ? (
+                                                            <>
+                                                                <Check size={18} /> เพิ่มแล้ว
+                                                            </>
+                                                        ) : isError ? (
+                                                            'ไม่สามารถสั่งซื้อได้'
+                                                        ) : (
+                                                            <>
+                                                                <ShoppingCart size={18} /> เพิ่มรายการ
+                                                            </>
+                                                        )}
+                                                    </button>
+                                                </div>
+
+                                                <div style={{
+                                                    padding: '1rem 1.5rem',
+                                                    borderTop: '1px solid #f5f5f5',
+                                                    display: 'flex',
+                                                    gap: '0.5rem',
+                                                    backgroundColor: '#fafafa'
+                                                }}>
+                                                    {item.collection.catalog_url && (
+                                                        <button
+                                                            onClick={() => setActiveCatalog({
+                                                                url: item.collection.catalog_url!,
+                                                                title: `Spec: ${item.collection.name}`
+                                                            })}
+                                                            className="flex-1 flex justify-center items-center gap-2 p-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer"
+                                                            title="ดู Catalog / Spec"
+                                                        >
+                                                            <ExternalLink size={14} /> ดู Catalog
+                                                        </button>
+                                                    )}
+                                                </div>
                                             </div>
-                                        </div>
-                                    );
-                                })}
+                                        );
+                                    })
+                                })()}
                             </div>
                         </>
                     ) : (
@@ -526,6 +781,14 @@ export default function CalculatorPage() {
                     )}
                 </div>
             </div>
+
+            {/* Catalog Modal */}
+            <CatalogModal
+                isOpen={!!activeCatalog}
+                onClose={() => setActiveCatalog(null)}
+                url={activeCatalog?.url || null}
+                title={activeCatalog?.title}
+            />
         </div>
     );
 }

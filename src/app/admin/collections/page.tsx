@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { ProductCollection, Category } from '@/lib/types';
+import { ProductCollection, Category, ProductVariant } from '@/lib/types';
 import {
     Plus,
     Edit,
@@ -17,9 +17,12 @@ import {
     DollarSign,
     Ruler,
     Link2,
-    ImageIcon
+    ImageIcon,
+    Upload
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+
+
 
 // Mock options for Units and Calculation Methods
 const UNIT_OPTIONS = [
@@ -48,8 +51,17 @@ export default function AdminCollectionsPage() {
     const [editingCollection, setEditingCollection] = useState<ProductCollection | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [selectedCategory, setSelectedCategory] = useState<number | 'all'>('all');
 
-    // Form State
+    // Tag State
+    const [tagInput, setTagInput] = useState('');
+    const [tags, setTags] = useState<string[]>([]);
+
+    // Variants State
+    const [variants, setVariants] = useState<ProductVariant[]>([]);
+    const [variantsLoading, setVariantsLoading] = useState(false);
+    const [newVariantCode, setNewVariantCode] = useState('');
+    const [newVariantDescription, setNewVariantDescription] = useState('');
     const [formData, setFormData] = useState({
         name: '',
         category_id: 0,
@@ -112,6 +124,94 @@ export default function AdminCollectionsPage() {
         setLoading(false);
     };
 
+    const fetchVariants = async (collectionId: number) => {
+        if (!supabase) return;
+        setVariantsLoading(true);
+        const { data, error } = await supabase
+            .from('product_variants')
+            .select('*')
+            .eq('collection_id', collectionId)
+            .order('name');
+
+        if (error) console.error('Error fetching variants:', error);
+        else setVariants(data || []);
+        setVariantsLoading(false);
+    };
+
+    const handleAddVariant = async () => {
+        if (!editingCollection || !newVariantCode.trim() || !supabase) return;
+
+        try {
+            const { error } = await supabase
+                .from('product_variants')
+                .insert([{
+                    collection_id: editingCollection.id,
+                    name: newVariantCode.trim(),
+                    description: newVariantDescription.trim() || null,
+                    in_stock: true
+                }]);
+
+            if (error) throw error;
+
+            setNewVariantCode('');
+            setNewVariantDescription('');
+            fetchVariants(editingCollection.id);
+        } catch (error) {
+            console.error('Error adding variant:', error);
+            alert('ไม่สามารถเพิ่มรหัสสินค้าได้');
+        }
+    };
+
+    const handleDeleteVariant = async (id: number) => {
+        if (!supabase || !confirm('ต้องการลบรหัสสินค้านี้?')) return;
+
+        try {
+            const { error } = await supabase
+                .from('product_variants')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+
+            if (editingCollection) fetchVariants(editingCollection.id);
+        } catch (error) {
+            console.error('Error deleting variant:', error);
+            alert('ลบรายการไม่สำเร็จ');
+        }
+    };
+
+    const handleToggleVariantStock = async (id: number, currentStatus: boolean) => {
+        if (!supabase) return;
+
+        try {
+            const { error } = await supabase
+                .from('product_variants')
+                .update({ in_stock: !currentStatus })
+                .eq('id', id);
+
+            if (error) throw error;
+
+            if (editingCollection) fetchVariants(editingCollection.id);
+        } catch (error) {
+            console.error('Error toggling status:', error);
+        }
+    };
+
+    const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement> | React.MouseEvent) => {
+        if (e.type === 'keydown' && (e as React.KeyboardEvent).key !== 'Enter') return;
+        e.preventDefault();
+
+        const newTag = tagInput.trim();
+        if (newTag && !tags.includes(newTag)) {
+            setTags([...tags, newTag]);
+            setTagInput('');
+        }
+    };
+
+    const handleRemoveTag = (tagToRemove: string) => {
+        setTags(tags.filter(tag => tag !== tagToRemove));
+    };
+
     const handleOpenModal = (collection?: ProductCollection) => {
         // Set default category related values
         const defaultCategory = categories.length > 0 ? categories[0].id : 0;
@@ -151,6 +251,8 @@ export default function AdminCollectionsPage() {
                 portfolio_url: collection.portfolio_url || ''
             });
 
+            setTags(collection.tags || []);
+
             // Set enabled states based on values
             setEnabledConstraints({
                 // @ts-ignore
@@ -174,6 +276,9 @@ export default function AdminCollectionsPage() {
                 // @ts-ignore
                 area_rounding: !!collection.area_rounding
             });
+
+            // Fetch variants
+            fetchVariants(collection.id);
         } else {
             setEditingCollection(null);
             setFormData({
@@ -196,6 +301,9 @@ export default function AdminCollectionsPage() {
                 catalog_url: '',
                 portfolio_url: ''
             });
+            setTags([]);
+            setVariants([]);
+            setNewVariantCode('');
             setEnabledConstraints({
                 min_width: false,
                 max_width: false,
@@ -255,7 +363,8 @@ export default function AdminCollectionsPage() {
                 height_step: enabledConstraints.height_step && formData.height_step ? Number(formData.height_step) : null,
                 area_rounding: enabledConstraints.area_rounding && formData.area_rounding ? Number(formData.area_rounding) : null,
                 catalog_url: formData.catalog_url || null,
-                portfolio_url: formData.portfolio_url || null
+                portfolio_url: formData.portfolio_url || null,
+                tags: tags
             };
 
             if (editingCollection) {
@@ -278,16 +387,28 @@ export default function AdminCollectionsPage() {
             handleCloseModal();
             fetchData();
         } catch (error) {
-            console.error('Error saving collection:', error);
-            alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+            console.error('Error saving collection full object:', JSON.stringify(error, null, 2));
+            // @ts-ignore
+            if (error.message) console.error('Error message:', error.message);
+            // @ts-ignore
+            if (error.details) console.error('Error details:', error.details);
+            // @ts-ignore
+            if (error.hint) console.error('Error hint:', error.hint);
+
+            alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + (error as any)?.message || 'Unknown error');
         }
     };
 
-    const filteredCollections = collections.filter(c =>
-        c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        // @ts-ignore
-        c.product_categories?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredCollections = collections.filter(c => {
+        const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            // @ts-ignore
+            c.product_categories?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            c.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+
+        const matchesCategory = selectedCategory === 'all' || c.category_id === selectedCategory;
+
+        return matchesSearch && matchesCategory;
+    });
 
     return (
         <div className="space-y-6 font-sans">
@@ -312,12 +433,23 @@ export default function AdminCollectionsPage() {
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                     <input
                         type="text"
-                        placeholder="ค้นหาชื่อคอลเล็กชัน หรือ หมวดหมู่..."
+                        placeholder="ค้นหาชื่อคอลเล็กชัน, หมวดหมู่ หรือ Tags..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition"
                     />
                 </div>
+
+                <select
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+                    className="py-2.5 px-4 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition min-w-[200px]"
+                >
+                    <option value="all">ทุกหมวดหมู่</option>
+                    {categories.map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    ))}
+                </select>
                 <div className="flex items-center gap-2 bg-gray-50 p-1 rounded-xl border border-gray-100">
                     <button
                         onClick={() => setViewMode('grid')}
@@ -357,6 +489,13 @@ export default function AdminCollectionsPage() {
                                     <h3 className="font-bold text-lg text-gray-900 leading-tight mb-1 line-clamp-1">{collection.name}</h3>
                                     {/* @ts-ignore */}
                                     <span className="text-xs font-semibold px-2 py-0.5 bg-blue-50 text-blue-700 rounded-md">{collection.product_categories?.name || 'Unknown Category'}</span>
+                                    {collection.tags && collection.tags.length > 0 && (
+                                        <div className="flex gap-1 mt-1 flex-wrap">
+                                            {collection.tags.map((tag, idx) => (
+                                                <span key={idx} className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded-md font-medium border border-gray-200">{tag}</span>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -398,6 +537,7 @@ export default function AdminCollectionsPage() {
                             <tr>
                                 <th className="p-4 pl-6 font-semibold text-gray-600">ชื่อคอลเล็กชัน</th>
                                 <th className="p-4 font-semibold text-gray-600">หมวดหมู่</th>
+                                <th className="p-4 font-semibold text-gray-600">Tags</th>
                                 <th className="p-4 font-semibold text-gray-600">หน่วยขาย</th>
                                 <th className="p-4 font-semibold text-gray-600">ราคาปกติ</th>
                                 <th className="p-4 font-semibold text-gray-600">ราคา Platform</th>
@@ -410,6 +550,18 @@ export default function AdminCollectionsPage() {
                                     <td className="p-4 pl-6 font-bold text-gray-900">{col.name}</td>
                                     {/* @ts-ignore */}
                                     <td className="p-4 text-gray-600">{col.product_categories?.name}</td>
+                                    <td className="p-4">
+                                        <div className="flex gap-1 flex-wrap max-w-[200px]">
+                                            {col.tags && col.tags.slice(0, 3).map((tag, idx) => (
+                                                <span key={idx} className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded-md font-medium border border-gray-200">
+                                                    {tag}
+                                                </span>
+                                            ))}
+                                            {col.tags && col.tags.length > 3 && (
+                                                <span className="text-[10px] px-1.5 py-0.5 text-gray-400">+{col.tags.length - 3}</span>
+                                            )}
+                                        </div>
+                                    </td>
                                     <td className="p-4">
                                         <span className="px-2 py-1 bg-gray-100 rounded text-xs text-gray-700 font-medium">
                                             {UNIT_OPTIONS.find(u => u.value === col.unit)?.label || col.unit}
@@ -463,6 +615,36 @@ export default function AdminCollectionsPage() {
                                             className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition"
                                             placeholder="เช่น ม่านจีบ รุ่น Premium UV"
                                         />
+                                    </div>
+
+                                    {/* Tag Input */}
+                                    <div className="col-span-2">
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">Tags (ป้ายกำกับ)</label>
+                                        <div className="flex gap-2 mb-2 flex-wrap">
+                                            {tags.map((tag, index) => (
+                                                <span key={index} className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium flex items-center gap-1">
+                                                    {tag}
+                                                    <button type="button" onClick={() => handleRemoveTag(tag)} className="hover:text-red-500 rounded-full p-0.5"><X size={14} /></button>
+                                                </span>
+                                            ))}
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={tagInput}
+                                                onChange={(e) => setTagInput(e.target.value)}
+                                                onKeyDown={handleAddTag}
+                                                className="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition"
+                                                placeholder="พิมพ์ Tag แล้วกด Enter..."
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={handleAddTag}
+                                                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition font-medium"
+                                            >
+                                                เพิ่ม
+                                            </button>
+                                        </div>
                                     </div>
 
                                     <div>
@@ -709,13 +891,51 @@ export default function AdminCollectionsPage() {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">🗂️ ดูแคตตาล็อก (Catalog URL)</label>
-                                            <input
-                                                type="url"
-                                                value={formData.catalog_url}
-                                                onChange={(e) => setFormData({ ...formData, catalog_url: e.target.value })}
-                                                className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition text-sm"
-                                                placeholder="https://example.com/catalog"
-                                            />
+                                            <div className="flex gap-3">
+                                                <input
+                                                    type="url"
+                                                    value={formData.catalog_url}
+                                                    onChange={(e) => setFormData({ ...formData, catalog_url: e.target.value })}
+                                                    className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition text-sm"
+                                                    placeholder="https://example.com/catalog"
+                                                />
+                                                <div>
+                                                    <input
+                                                        type="file"
+                                                        id="catalog-upload"
+                                                        accept=".pdf,.jpg,.jpeg,.png"
+                                                        className="hidden"
+                                                        onChange={async (e) => {
+                                                            if (!supabase || !e.target.files || e.target.files.length === 0) return;
+                                                            const file = e.target.files[0];
+                                                            const fileExt = file.name.split('.').pop();
+                                                            const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+
+                                                            try {
+                                                                const { error: uploadError } = await supabase.storage
+                                                                    .from('catalogs')
+                                                                    .upload(fileName, file);
+
+                                                                if (uploadError) throw uploadError;
+
+                                                                const { data } = supabase.storage.from('catalogs').getPublicUrl(fileName);
+                                                                setFormData({ ...formData, catalog_url: data.publicUrl });
+                                                                alert('อัพโหลดไฟล์เรียบร้อยแล้ว');
+                                                            } catch (error) {
+                                                                console.error('Upload error:', error);
+                                                                alert('เกิดข้อผิดพลาดในการอัพโหลด');
+                                                            }
+                                                        }}
+                                                    />
+                                                    <label
+                                                        htmlFor="catalog-upload"
+                                                        className="flex items-center justify-center p-2.5 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition cursor-pointer border border-gray-200"
+                                                        title="อัพโหลด PDF หรือ รูปภาพ"
+                                                    >
+                                                        <Upload size={20} />
+                                                    </label>
+                                                </div>
+                                            </div>
                                         </div>
                                         <div>
                                             <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">🏗️ ผลงานการผลิตและติดตั้ง (Portfolio URL)</label>
@@ -729,6 +949,94 @@ export default function AdminCollectionsPage() {
                                         </div>
                                     </div>
                                     <p className="text-xs text-gray-500">* ลิงก์เหล่านี้จะแสดงให้ลูกค้าเห็นในหน้าคำนวณราคา</p>
+                                </div>
+
+                                {/* Product Variants Management */}
+                                <div className="p-6 bg-[#FAFAFA] rounded-2xl border border-dashed border-gray-200 space-y-4">
+                                    <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                                        <div className="w-5 h-5 rounded bg-amber-100 text-amber-600 flex items-center justify-center">
+                                            <span className="text-xs font-bold">#</span>
+                                        </div>
+                                        รหัสสินค้าในคอลเล็กชัน (Product Codes)
+                                    </h3>
+
+                                    {/* Add New Variant */}
+                                    <div className="flex flex-col sm:flex-row gap-2">
+                                        <input
+                                            type="text"
+                                            value={newVariantCode}
+                                            onChange={(e) => setNewVariantCode(e.target.value)}
+                                            onKeyDown={(e) => { if (e.key === 'Enter') handleAddVariant(); }}
+                                            className="w-full sm:w-1/3 px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition text-sm"
+                                            placeholder="รหัส (เช่น 850-1)"
+                                        />
+                                        <input
+                                            type="text"
+                                            value={newVariantDescription}
+                                            onChange={(e) => setNewVariantDescription(e.target.value)}
+                                            onKeyDown={(e) => { if (e.key === 'Enter') handleAddVariant(); }}
+                                            className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition text-sm"
+                                            placeholder="รายละเอียด (เช่น สีเทาเข้ม)"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={handleAddVariant}
+                                            disabled={!newVariantCode.trim()}
+                                            className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition text-sm font-medium whitespace-nowrap"
+                                        >
+                                            เพิ่ม
+                                        </button>
+                                    </div>
+
+                                    {/* Variants List */}
+                                    <div className="min-h-[100px] max-h-[200px] overflow-y-auto custom-scrollbar border border-gray-100 rounded-lg bg-white p-1">
+                                        {variantsLoading ? (
+                                            <div className="flex items-center justify-center h-20 text-gray-400 text-sm">
+                                                กำลังโหลด...
+                                            </div>
+                                        ) : variants.length === 0 ? (
+                                            <div className="flex items-center justify-center h-20 text-gray-400 text-sm">
+                                                ยังไม่มีรหัสสินค้า
+                                            </div>
+                                        ) : (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-2">
+                                                {variants.map((variant) => (
+                                                    <div key={variant.id} className={`flex items-center justify-between p-2 rounded-lg border ${variant.in_stock ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-200'}`}>
+                                                        <div className="flex flex-col overflow-hidden mr-2">
+                                                            <div className="flex items-center gap-2">
+                                                                <div className={`w-2 h-2 rounded-full shrink-0 ${variant.in_stock ? 'bg-green-500' : 'bg-red-500'}`} />
+                                                                <span className={`text-sm font-medium truncate ${variant.in_stock ? 'text-gray-900' : 'text-gray-400 line-through'}`}>
+                                                                    {variant.name}
+                                                                </span>
+                                                            </div>
+                                                            {variant.description && (
+                                                                <span className="text-[10px] text-gray-500 ml-4 truncate">
+                                                                    {variant.description}
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex items-center gap-1 shrink-0">
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleToggleVariantStock(variant.id, variant.in_stock ?? true)}
+                                                                className={`text-[10px] px-2 py-1 rounded border transition cursor-pointer ${variant.in_stock ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100' : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'}`}
+                                                            >
+                                                                {variant.in_stock ? 'มีของ' : 'หมด'}
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleDeleteVariant(variant.id)}
+                                                                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition cursor-pointer"
+                                                            >
+                                                                <Trash2 size={14} />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-gray-500">* กดที่ปุ่มสถานะเพื่อเปลี่ยนระหว่าง "มีของ" และ "หมด"</p>
                                 </div>
 
                                 <div className="pt-4 flex justify-end gap-3 border-t border-gray-100 mt-4">
