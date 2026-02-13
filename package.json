@@ -21,9 +21,12 @@
     "lucide-react": "^0.563.0",
     "next": "^16.1.6",
     "next-cloudinary": "^6.17.5",
+    "pdfjs-dist": "^4.4.168",
     "postcss": "^8.5.6",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
+    "react-pageflip": "^2.0.3",
+    "react-pdf": "^9.1.1",
     "react-router-dom": "^7.13.0",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.1.18"
