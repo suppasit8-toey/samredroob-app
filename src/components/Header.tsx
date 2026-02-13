@@ -3,6 +3,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { Phone } from 'lucide-react';
 
 const Header: React.FC = () => {
     const pathname = usePathname();
@@ -22,6 +23,17 @@ const Header: React.FC = () => {
             top: 0,
             zIndex: 1000
         }}>
+            {/* Top Bar for Contact Info */}
+            <div style={{ backgroundColor: '#111', color: 'white', padding: '0.4rem 1rem', fontSize: '0.85rem' }}>
+                <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '1.5rem' }}>
+                    <a href="tel:0947461744" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'white', textDecoration: 'none' }}>
+                        <Phone size={14} /> 094-746-1744
+                    </a>
+                    <a href="https://line.me/ti/p/~@samredroob" target="_blank" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'white', textDecoration: 'none' }}>
+                        <span style={{ backgroundColor: '#06c755', padding: '2px 6px', borderRadius: '4px', fontWeight: 'bold', fontSize: '0.75rem', lineHeight: '1.2' }}>LINE</span> @samredroob
+                    </a>
+                </div>
+            </div>
             <nav style={{
                 maxWidth: '1200px',
                 margin: '0 auto',
@@ -49,7 +61,7 @@ const Header: React.FC = () => {
                         alignItems: 'center',
                         height: '40px',
                         letterSpacing: '0.02em'
-                    }}>สำเร็จรูป</span>
+                    }}>สำเร็จรูป-Samredroob</span>
                 </Link>
 
                 {/* Desktop Nav */}

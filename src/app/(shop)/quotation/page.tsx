@@ -184,6 +184,20 @@ export default function QuotationPage() {
                 <h1 style={{ fontSize: '1.8rem', fontFamily: 'var(--font-mitr)', margin: 0 }}>ใบเสนอราคา</h1>
             </div>
 
+            <div style={{ textAlign: 'center', maxWidth: '800px', margin: '-1rem auto 2rem auto', color: '#666', lineHeight: '1.6' }}>
+                <div className="flex justify-center flex-wrap gap-4 text-sm bg-gray-50 inline-flex px-6 py-2 rounded-full border border-gray-100">
+                    <span className="flex items-center gap-1"><span className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center text-xs">1</span> เลือกหมวดหมู่</span>
+                    <span className="text-gray-300">|</span>
+                    <span className="flex items-center gap-1"><span className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center text-xs">2</span> ระบุขนาด</span>
+                    <span className="text-gray-300">|</span>
+                    <span className="flex items-center gap-1"><span className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center text-xs">3</span> คำนวณราคา</span>
+                    <span className="text-gray-300">|</span>
+                    <span className="flex items-center gap-1"><span className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center text-xs">4</span> เพิ่มสินค้า</span>
+                    <span className="text-gray-300">|</span>
+                    <span className="flex items-center gap-1"><span className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center text-xs">5</span> ส่งใบเสนอราคา</span>
+                </div>
+            </div>
+
             {/* Price Mode Toggle */}
             <div style={{ marginBottom: '2rem', backgroundColor: 'white', padding: '1.5rem', borderRadius: '16px', border: '1px solid #f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>

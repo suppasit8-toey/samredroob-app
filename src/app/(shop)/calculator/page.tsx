@@ -183,6 +183,20 @@ export default function CalculatorPage() {
 
             <h1 style={{ textAlign: 'center', marginBottom: '2rem', fontSize: '2.5rem', fontFamily: 'var(--font-mitr)' }}>คำนวณราคา</h1>
 
+            <div style={{ textAlign: 'center', maxWidth: '800px', margin: '-1.5rem auto 2rem auto', color: '#666', lineHeight: '1.6' }}>
+                <div className="flex justify-center flex-wrap gap-4 text-sm bg-gray-50 inline-flex px-6 py-2 rounded-full border border-gray-100">
+                    <span className="flex items-center gap-1"><span className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center text-xs">1</span> เลือกหมวดหมู่</span>
+                    <span className="text-gray-300">|</span>
+                    <span className="flex items-center gap-1"><span className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center text-xs">2</span> ระบุขนาดที่ต้องการ</span>
+                    <span className="text-gray-300">|</span>
+                    <span className="flex items-center gap-1"><span className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center text-xs">3</span> กดคำนวณราคา</span>
+                    <span className="text-gray-300">|</span>
+                    <span className="flex items-center gap-1"><span className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center text-xs">4</span> เพิ่มสินค้า</span>
+                    <span className="text-gray-300">|</span>
+                    <span className="flex items-center gap-1"><span className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center text-xs">5</span> ส่งใบเสนอราคา</span>
+                </div>
+            </div>
+
             <div className="calculator-layout">
                 <style jsx>{`
                     .calculator-layout {
@@ -233,7 +247,7 @@ export default function CalculatorPage() {
                         boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
                         border: '1px solid #f0f0f0'
                     }}>
-                        <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', fontWeight: 600 }}>กรอกข้อมูล</h2>
+                        <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', fontWeight: 600 }}>เพิ่มสินค้า</h2>
 
                         {/* Category Selection */}
                         <div style={{ marginBottom: '1.5rem' }}>
@@ -269,7 +283,7 @@ export default function CalculatorPage() {
                                 <input
                                     type="number"
                                     value={width}
-                                    onChange={(e) => setWidth(Number(e.target.value))}
+                                    onChange={(e) => setWidth(e.target.value === '' ? '' : Number(e.target.value))}
                                     placeholder="เช่น 200"
                                     required
                                     style={{
@@ -287,7 +301,7 @@ export default function CalculatorPage() {
                                 <input
                                     type="number"
                                     value={height}
-                                    onChange={(e) => setHeight(Number(e.target.value))}
+                                    onChange={(e) => setHeight(e.target.value === '' ? '' : Number(e.target.value))}
                                     placeholder="เช่น 250"
                                     required
                                     style={{

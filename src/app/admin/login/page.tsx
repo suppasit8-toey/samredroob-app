@@ -13,6 +13,8 @@ export default function AdminLogin() {
 
     useEffect(() => {
         setIsClient(true);
+        let authListener: { unsubscribe: () => void } | null = null;
+
         const checkSession = async () => {
             if (!supabase) return;
 
@@ -23,18 +25,38 @@ export default function AdminLogin() {
             }
 
             // Listen for auth changes (e.g. login success)
-            const { data: { subscription } } = supabase.auth.onAuthStateChange((event: string, session: any) => {
+            const { data } = supabase.auth.onAuthStateChange((event: string, session: any) => {
                 if (event === 'SIGNED_IN') {
                     // Force a hard refresh if router.push doesn't work effectively (due to client state)
                     window.location.href = "/admin";
                 }
             });
-
-            return () => {
-                subscription.unsubscribe();
-            };
+            authListener = data.subscription;
         };
+
+        // Add handler for MetaMask connection errors (unhandled promise rejections)
+        const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+            const reason = event.reason;
+            // Check if it's the specific MetaMask error or related object
+            if (reason && (
+                (typeof reason === 'string' && reason.includes('MetaMask')) ||
+                (typeof reason === 'object' && reason?.message?.includes('Failed to connect to MetaMask')) ||
+                (typeof reason === 'object' && reason?.stack?.includes('chrome-extension://nkbihfbeogaeaoehlefnkodbefgpgknn'))
+            )) {
+                // Suppress the error in console to reduce noise, or just prevent it from crashing if it bubbled up
+                console.warn('Suppressing MetaMask connection error:', reason);
+                event.preventDefault();
+            }
+        };
+
+        window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
         checkSession();
+
+        return () => {
+            window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+            if (authListener) authListener.unsubscribe();
+        };
     }, [router]);
 
     if (!isClient) return null;

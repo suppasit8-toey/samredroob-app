@@ -9,9 +9,10 @@ interface ProductCardProps {
     price: string;
     image: string;
     category: string;
+    tags?: string[];
 }
 
-export default function ProductCard({ name, price, image, category }: ProductCardProps) {
+export default function ProductCard({ name, price, image, category, tags }: ProductCardProps) {
     return (
         <motion.div
             whileHover={{ y: -5 }}
@@ -23,7 +24,8 @@ export default function ProductCard({ name, price, image, category }: ProductCar
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '12px',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                height: '100%'
             }}
         >
             <div style={{
@@ -42,6 +44,7 @@ export default function ProductCard({ name, price, image, category }: ProductCar
                         objectFit: 'cover'
                     }}
                 />
+
                 <button style={{
                     position: 'absolute',
                     top: '10px',
@@ -61,7 +64,7 @@ export default function ProductCard({ name, price, image, category }: ProductCar
                 </button>
             </div>
 
-            <div>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <span style={{
                     fontSize: '0.75rem',
                     color: 'var(--color-secondary)',
@@ -80,12 +83,8 @@ export default function ProductCard({ name, price, image, category }: ProductCar
                 }}>
                     {name}
                 </h3>
-                <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginTop: '8px'
-                }}>
+
+                <div style={{ marginTop: 'auto', paddingTop: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontWeight: 700, fontSize: '1.1rem' }}>{price}</span>
                     <button style={{
                         backgroundColor: 'var(--color-primary)',

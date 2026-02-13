@@ -3,7 +3,13 @@
 import React from 'react';
 import { Search, SlidersHorizontal } from 'lucide-react';
 
-export default function SearchBar() {
+interface SearchBarProps {
+    value?: string;
+    onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    placeholder?: string;
+}
+
+export default function SearchBar({ value, onChange, placeholder = "ค้นหาสินค้า..." }: SearchBarProps) {
     return (
         <div style={{
             display: 'flex',
@@ -18,7 +24,9 @@ export default function SearchBar() {
             <Search size={24} color="var(--color-secondary)" />
             <input
                 type="text"
-                placeholder="ค้นหาสินค้า..."
+                value={value}
+                onChange={onChange}
+                placeholder={placeholder}
                 style={{
                     flex: 1,
                     border: 'none',

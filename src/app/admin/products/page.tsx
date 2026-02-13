@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -10,7 +11,9 @@ interface Product {
     name: string;
     category: string;
     price: string;
+
     image_url: string;
+    tags?: string[];
 }
 
 const CATEGORIES = [
@@ -40,6 +43,10 @@ export default function AdminProductsPage() {
         image_url: ''
     });
 
+    // Tag State
+    const [tagInput, setTagInput] = useState('');
+    const [tags, setTags] = useState<string[]>([]);
+
     useEffect(() => {
         fetchProducts();
     }, []);
@@ -53,6 +60,21 @@ export default function AdminProductsPage() {
         setLoading(false);
     };
 
+    const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement> | React.MouseEvent) => {
+        if (e.type === 'keydown' && (e as React.KeyboardEvent).key !== 'Enter') return;
+        e.preventDefault();
+
+        const newTag = tagInput.trim();
+        if (newTag && !tags.includes(newTag)) {
+            setTags([...tags, newTag]);
+            setTagInput('');
+        }
+    };
+
+    const handleRemoveTag = (tagToRemove: string) => {
+        setTags(tags.filter(tag => tag !== tagToRemove));
+    };
+
     const handleOpenModal = (product?: Product) => {
         if (product) {
             setEditingProduct(product);
@@ -62,6 +84,7 @@ export default function AdminProductsPage() {
                 price: product.price,
                 image_url: product.image_url || ''
             });
+            setTags(product.tags || []);
         } else {
             setEditingProduct(null);
             setFormData({
@@ -70,6 +93,7 @@ export default function AdminProductsPage() {
                 price: '',
                 image_url: ''
             });
+            setTags([]);
         }
         setIsModalOpen(true);
     };
@@ -101,7 +125,7 @@ export default function AdminProductsPage() {
                 // Update
                 const { error } = await supabase
                     .from('products')
-                    .update(formData)
+                    .update({ ...formData, tags })
                     .eq('id', editingProduct.id);
 
                 if (error) throw error;
@@ -109,7 +133,7 @@ export default function AdminProductsPage() {
                 // Create
                 const { error } = await supabase
                     .from('products')
-                    .insert([formData]);
+                    .insert([{ ...formData, tags }]);
 
                 if (error) throw error;
             }
@@ -124,7 +148,8 @@ export default function AdminProductsPage() {
 
     const filteredProducts = products.filter(p =>
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.category.toLowerCase().includes(searchTerm.toLowerCase())
+        p.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
     return (
@@ -150,7 +175,7 @@ export default function AdminProductsPage() {
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                     <input
                         type="text"
-                        placeholder="ค้นหาชื่อสินค้า หรือ หมวดหมู่..."
+                        placeholder="ค้นหาชื่อสินค้า, หมวดหมู่ หรือ Tags..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition"
@@ -159,13 +184,13 @@ export default function AdminProductsPage() {
                 <div className="flex items-center gap-2 bg-gray-50 p-1 rounded-xl border border-gray-100">
                     <button
                         onClick={() => setViewMode('grid')}
-                        className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white shadow text-black' : 'text-gray-400 hover:text-gray-600'}`}
+                        className={`p - 2 rounded - lg transition - all ${viewMode === 'grid' ? 'bg-white shadow text-black' : 'text-gray-400 hover:text-gray-600'} `}
                     >
                         <LayoutGrid size={20} />
                     </button>
                     <button
                         onClick={() => setViewMode('list')}
-                        className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white shadow text-black' : 'text-gray-400 hover:text-gray-600'}`}
+                        className={`p - 2 rounded - lg transition - all ${viewMode === 'list' ? 'bg-white shadow text-black' : 'text-gray-400 hover:text-gray-600'} `}
                     >
                         <List size={20} />
                     </button>
@@ -198,7 +223,7 @@ export default function AdminProductsPage() {
                                     {(() => {
                                         const cat = CATEGORIES.find(c => c.id === product.category);
                                         return (
-                                            <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold shadow-sm backdrop-blur-md ${cat?.color || 'bg-gray-100 text-gray-800'}`}>
+                                            <span className={`px - 2.5 py - 1 rounded - lg text - xs font - semibold shadow - sm backdrop - blur - md ${cat?.color || 'bg-gray-100 text-gray-800'} `}>
                                                 {cat?.name || product.category}
                                             </span>
                                         );
@@ -207,6 +232,13 @@ export default function AdminProductsPage() {
                             </div>
                             <div className="p-5">
                                 <h3 className="font-bold text-gray-900 mb-1 line-clamp-1">{product.name}</h3>
+                                {product.tags && product.tags.length > 0 && (
+                                    <div className="flex gap-1 mb-1 flex-wrap">
+                                        {product.tags.map((tag, idx) => (
+                                            <span key={idx} className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded-md font-medium border border-gray-200">{tag}</span>
+                                        ))}
+                                    </div>
+                                )}
                                 <p className="text-gray-900 font-semibold">{product.price}</p>
                             </div>
                         </div>
@@ -221,6 +253,7 @@ export default function AdminProductsPage() {
                                 <th className="p-4 pl-6 font-semibold text-gray-600">รูปภาพ</th>
                                 <th className="p-4 font-semibold text-gray-600">ชื่อสินค้า</th>
                                 <th className="p-4 font-semibold text-gray-600">หมวดหมู่</th>
+                                <th className="p-4 font-semibold text-gray-600">Tags</th>
                                 <th className="p-4 font-semibold text-gray-600">ราคา</th>
                                 <th className="p-4 pr-6 font-semibold text-gray-600 text-right">จัดการ</th>
                             </tr>
@@ -242,11 +275,23 @@ export default function AdminProductsPage() {
                                         {(() => {
                                             const cat = CATEGORIES.find(c => c.id === product.category);
                                             return (
-                                                <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${cat?.color || 'bg-gray-100 text-gray-800'}`}>
+                                                <span className={`px - 2.5 py - 1 rounded - lg text - xs font - semibold ${cat?.color || 'bg-gray-100 text-gray-800'} `}>
                                                     {cat?.name || product.category}
                                                 </span>
                                             );
                                         })()}
+                                    </td>
+                                    <td className="p-4">
+                                        <div className="flex gap-1 flex-wrap max-w-[200px]">
+                                            {product.tags && product.tags.slice(0, 3).map((tag, idx) => (
+                                                <span key={idx} className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded-md font-medium border border-gray-200">
+                                                    {tag}
+                                                </span>
+                                            ))}
+                                            {product.tags && product.tags.length > 3 && (
+                                                <span className="text-[10px] px-1.5 py-0.5 text-gray-400">+{product.tags.length - 3}</span>
+                                            )}
+                                        </div>
                                     </td>
                                     <td className="p-4 font-mono text-gray-600">{product.price}</td>
                                     <td className="p-4 pr-6 text-right">
@@ -329,6 +374,36 @@ export default function AdminProductsPage() {
                                             className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition"
                                             placeholder="https://..."
                                         />
+                                    </div>
+
+                                    {/* Tag Input */}
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">Tags (ป้ายกำกับ)</label>
+                                        <div className="flex gap-2 mb-2 flex-wrap">
+                                            {tags.map((tag, index) => (
+                                                <span key={index} className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm font-medium flex items-center gap-1">
+                                                    {tag}
+                                                    <button type="button" onClick={() => handleRemoveTag(tag)} className="hover:text-red-500 rounded-full p-0.5"><X size={14} /></button>
+                                                </span>
+                                            ))}
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="text"
+                                                value={tagInput}
+                                                onChange={(e) => setTagInput(e.target.value)}
+                                                onKeyDown={handleAddTag}
+                                                className="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition"
+                                                placeholder="พิมพ์ Tag แล้วกด Enter..."
+                                            />
+                                            <button
+                                                type="button"
+                                                onClick={handleAddTag}
+                                                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition font-medium"
+                                            >
+                                                เพิ่ม
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
 

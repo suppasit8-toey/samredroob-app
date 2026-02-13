@@ -12,7 +12,7 @@ const kanit = Kanit({
 });
 
 export const metadata: Metadata = {
-    title: "SAMREDROOB - ผ้าม่านและวอลเปเปอร์เกรดพรีเมียม",
+    title: "สำเร็จรูป-Samredroob - ผ้าม่านและวอลเปเปอร์เกรดพรีเมียม",
     description: "คำนวณราคาและเลือกชมสินค้าคุณภาพเยี่ยมของเรา",
 };
 

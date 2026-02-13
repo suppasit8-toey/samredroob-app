@@ -1,6 +1,7 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import BottomNav from "@/components/BottomNav";
+import AnalyticsTracker from "@/components/AnalyticsTracker";
 
 export default function ShopLayout({
     children,
@@ -9,6 +10,7 @@ export default function ShopLayout({
 }) {
     return (
         <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+            <AnalyticsTracker />
             <Header />
             <main style={{ flex: 1 }}>
                 {children}
