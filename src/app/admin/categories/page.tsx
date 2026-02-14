@@ -12,9 +12,12 @@ import {
     Save,
     ImageIcon,
     LayoutGrid,
-    List
+    List,
+    Upload,
+    Loader2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { CldUploadWidget, CloudinaryUploadWidgetResults } from 'next-cloudinary';
 
 export default function AdminCategoriesPage() {
     const [categories, setCategories] = useState<Category[]>([]);
@@ -23,6 +26,7 @@ export default function AdminCategoriesPage() {
     const [editingCategory, setEditingCategory] = useState<Category | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+    const [uploading, setUploading] = useState(false);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -308,32 +312,107 @@ export default function AdminCategoriesPage() {
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <div className="relative group">
-                                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 transition-colors group-focus-within:text-black">
-                                                URL รูปภาพปก
-                                            </label>
-                                            <input
-                                                type="text"
-                                                value={formData.image_url}
-                                                onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                                                className="w-full px-5 py-3.5 bg-gray-50 text-gray-900 font-medium rounded-xl border-2 border-transparent focus:border-black focus:bg-white focus:outline-none focus:ring-4 focus:ring-black/5 transition-all duration-300 placeholder-gray-400"
-                                                placeholder="https://..."
-                                            />
-                                        </div>
+                                    <div className="col-span-full">
+                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                                            รูปภาพปก
+                                        </label>
                                     </div>
                                 </div>
 
-                                {formData.image_url && (
-                                    <div className="p-4 bg-gray-50 rounded-2xl border border-dashed border-gray-200 flex items-center gap-4">
-                                        <div className="h-20 w-20 rounded-xl overflow-hidden shadow-sm bg-white shrink-0 border border-gray-100">
-                                            <img src={formData.image_url} alt="Preview" className="w-full h-full object-cover" />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-bold text-gray-900">ตัวอย่างรูปภาพ</p>
-                                            <p className="text-xs text-gray-500 mt-1 line-clamp-1 break-all">{formData.image_url}</p>
+                                {/* Image Upload Area */}
+                                {formData.image_url ? (
+                                    <div className="relative p-4 bg-gray-50 rounded-2xl border border-gray-200 group">
+                                        <div className="flex items-center gap-4">
+                                            <div className="h-24 w-24 rounded-xl overflow-hidden shadow-sm bg-white shrink-0 border border-gray-100">
+                                                <img src={formData.image_url} alt="Preview" className="w-full h-full object-cover" />
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-bold text-gray-900">อัปโหลดสำเร็จ ✓</p>
+                                                <p className="text-xs text-gray-500 mt-1 line-clamp-2 break-all">{formData.image_url}</p>
+                                                <div className="flex gap-2 mt-3">
+                                                    <CldUploadWidget
+                                                        uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}
+                                                        options={{
+                                                            maxFiles: 1,
+                                                            resourceType: 'image',
+                                                            folder: 'samredroob/categories',
+                                                            cropping: true,
+                                                        }}
+                                                        onSuccess={(result: CloudinaryUploadWidgetResults) => {
+                                                            const info = result?.info;
+                                                            if (typeof info !== 'string' && info?.secure_url) {
+                                                                setFormData(prev => ({ ...prev, image_url: info.secure_url }));
+                                                            }
+                                                            setUploading(false);
+                                                        }}
+                                                        onOpen={() => setUploading(true)}
+                                                        onClose={() => setUploading(false)}
+                                                    >
+                                                        {({ open }) => (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => open()}
+                                                                className="text-xs px-3 py-1.5 bg-white border border-gray-200 rounded-lg hover:bg-gray-100 transition text-gray-600 font-medium cursor-pointer"
+                                                            >
+                                                                เปลี่ยนรูป
+                                                            </button>
+                                                        )}
+                                                    </CldUploadWidget>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setFormData(prev => ({ ...prev, image_url: '' }))}
+                                                        className="text-xs px-3 py-1.5 bg-white border border-red-200 rounded-lg hover:bg-red-50 transition text-red-500 font-medium cursor-pointer"
+                                                    >
+                                                        ลบรูป
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
+                                ) : (
+                                    <CldUploadWidget
+                                        uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}
+                                        options={{
+                                            maxFiles: 1,
+                                            resourceType: 'image',
+                                            folder: 'samredroob/categories',
+                                            cropping: true,
+                                        }}
+                                        onSuccess={(result: CloudinaryUploadWidgetResults) => {
+                                            const info = result?.info;
+                                            if (typeof info !== 'string' && info?.secure_url) {
+                                                setFormData(prev => ({ ...prev, image_url: info.secure_url }));
+                                            }
+                                            setUploading(false);
+                                        }}
+                                        onOpen={() => setUploading(true)}
+                                        onClose={() => setUploading(false)}
+                                    >
+                                        {({ open }) => (
+                                            <button
+                                                type="button"
+                                                onClick={() => open()}
+                                                className="w-full p-8 border-2 border-dashed border-gray-200 rounded-2xl hover:border-black hover:bg-gray-50 transition-all duration-300 flex flex-col items-center justify-center gap-3 group cursor-pointer"
+                                            >
+                                                {uploading ? (
+                                                    <>
+                                                        <Loader2 size={32} className="text-gray-400 animate-spin" />
+                                                        <span className="text-sm text-gray-400 font-medium">กำลังอัปโหลด...</span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-black group-hover:text-white transition-all duration-300">
+                                                            <Upload size={24} className="text-gray-400 group-hover:text-white transition-colors" />
+                                                        </div>
+                                                        <div className="text-center">
+                                                            <p className="text-sm font-semibold text-gray-500 group-hover:text-black transition-colors">คลิกเพื่ออัปโหลดรูปภาพ</p>
+                                                            <p className="text-xs text-gray-400 mt-1">รองรับ JPG, PNG, WebP</p>
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </button>
+                                        )}
+                                    </CldUploadWidget>
                                 )}
 
                                 <div className="pt-6 flex justify-end gap-3 border-t border-gray-100 items-center">

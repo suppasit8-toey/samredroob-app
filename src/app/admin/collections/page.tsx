@@ -443,7 +443,7 @@ export default function AdminCollectionsPage() {
                 <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-                    className="py-2.5 px-4 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition min-w-[200px]"
+                    className="py-2.5 px-4 bg-gray-50 border border-gray-100 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition w-full md:w-auto md:min-w-[200px]"
                 >
                     <option value="all">ทุกหมวดหมู่</option>
                     {categories.map(cat => (
@@ -476,9 +476,9 @@ export default function AdminCollectionsPage() {
                         ))
                     ) : filteredCollections.map((collection) => (
                         <div key={collection.id} className="group bg-white rounded-2xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-300 relative">
-                            <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
-                                <button onClick={() => handleOpenModal(collection)} className="p-1.5 text-gray-400 hover:text-blue-600 bg-gray-50 rounded-lg cursor-pointer"><Edit size={16} /></button>
-                                <button onClick={() => handleDelete(collection.id)} className="p-1.5 text-gray-400 hover:text-red-600 bg-gray-50 rounded-lg cursor-pointer"><Trash2 size={16} /></button>
+                            <div className="absolute top-4 right-4 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                <button onClick={() => handleOpenModal(collection)} className="p-2 md:p-1.5 text-gray-400 hover:text-blue-600 bg-gray-50 rounded-lg cursor-pointer"><Edit size={16} /></button>
+                                <button onClick={() => handleDelete(collection.id)} className="p-2 md:p-1.5 text-gray-400 hover:text-red-600 bg-gray-50 rounded-lg cursor-pointer"><Trash2 size={16} /></button>
                             </div>
 
                             <div className="flex items-start gap-4 mb-4">
@@ -531,71 +531,115 @@ export default function AdminCollectionsPage() {
                 </div>
             ) : (
                 /* List View */
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-                    <table className="w-full text-left">
-                        <thead className="bg-gray-50 border-b border-gray-100">
-                            <tr>
-                                <th className="p-4 pl-6 font-semibold text-gray-600">ชื่อคอลเล็กชัน</th>
-                                <th className="p-4 font-semibold text-gray-600">หมวดหมู่</th>
-                                <th className="p-4 font-semibold text-gray-600">Tags</th>
-                                <th className="p-4 font-semibold text-gray-600">หน่วยขาย</th>
-                                <th className="p-4 font-semibold text-gray-600">ราคาปกติ</th>
-                                <th className="p-4 font-semibold text-gray-600">ราคา Platform</th>
-                                <th className="p-4 pr-6 font-semibold text-gray-600 text-right">จัดการ</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                            {filteredCollections.map((col) => (
-                                <tr key={col.id} className="hover:bg-gray-50 transition">
-                                    <td className="p-4 pl-6 font-bold text-gray-900">{col.name}</td>
-                                    {/* @ts-ignore */}
-                                    <td className="p-4 text-gray-600">{col.product_categories?.name}</td>
-                                    <td className="p-4">
-                                        <div className="flex gap-1 flex-wrap max-w-[200px]">
-                                            {col.tags && col.tags.slice(0, 3).map((tag, idx) => (
-                                                <span key={idx} className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded-md font-medium border border-gray-200">
-                                                    {tag}
-                                                </span>
-                                            ))}
-                                            {col.tags && col.tags.length > 3 && (
-                                                <span className="text-[10px] px-1.5 py-0.5 text-gray-400">+{col.tags.length - 3}</span>
-                                            )}
-                                        </div>
-                                    </td>
-                                    <td className="p-4">
-                                        <span className="px-2 py-1 bg-gray-100 rounded text-xs text-gray-700 font-medium">
-                                            {UNIT_OPTIONS.find(u => u.value === col.unit)?.label || col.unit}
-                                        </span>
-                                    </td>
-                                    <td className="p-4 font-mono font-medium">฿{col.price_per_unit.toLocaleString()}</td>
-                                    <td className="p-4 font-mono font-medium text-purple-700">
-                                        {col.price_per_unit_platform ? `฿${col.price_per_unit_platform.toLocaleString()}` : '-'}
-                                    </td>
-                                    <td className="p-4 pr-6 text-right">
-                                        <div className="flex justify-end gap-2">
-                                            <button onClick={() => handleOpenModal(col)} className="p-2 text-gray-400 hover:text-blue-600 transition cursor-pointer"><Edit size={18} /></button>
-                                            <button onClick={() => handleDelete(col.id)} className="p-2 text-gray-400 hover:text-red-600 transition cursor-pointer"><Trash2 size={18} /></button>
-                                        </div>
-                                    </td>
+                <>
+                    {/* Desktop Table */}
+                    <div className="hidden md:block bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                        <table className="w-full text-left">
+                            <thead className="bg-gray-50 border-b border-gray-100">
+                                <tr>
+                                    <th className="p-4 pl-6 font-semibold text-gray-600">ชื่อคอลเล็กชัน</th>
+                                    <th className="p-4 font-semibold text-gray-600">หมวดหมู่</th>
+                                    <th className="p-4 font-semibold text-gray-600">Tags</th>
+                                    <th className="p-4 font-semibold text-gray-600">หน่วยขาย</th>
+                                    <th className="p-4 font-semibold text-gray-600">ราคาปกติ</th>
+                                    <th className="p-4 font-semibold text-gray-600">ราคา Platform</th>
+                                    <th className="p-4 pr-6 font-semibold text-gray-600 text-right">จัดการ</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {filteredCollections.map((col) => (
+                                    <tr key={col.id} className="hover:bg-gray-50 transition">
+                                        <td className="p-4 pl-6 font-bold text-gray-900">{col.name}</td>
+                                        {/* @ts-ignore */}
+                                        <td className="p-4 text-gray-600">{col.product_categories?.name}</td>
+                                        <td className="p-4">
+                                            <div className="flex gap-1 flex-wrap max-w-[200px]">
+                                                {col.tags && col.tags.slice(0, 3).map((tag, idx) => (
+                                                    <span key={idx} className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded-md font-medium border border-gray-200">
+                                                        {tag}
+                                                    </span>
+                                                ))}
+                                                {col.tags && col.tags.length > 3 && (
+                                                    <span className="text-[10px] px-1.5 py-0.5 text-gray-400">+{col.tags.length - 3}</span>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td className="p-4">
+                                            <span className="px-2 py-1 bg-gray-100 rounded text-xs text-gray-700 font-medium">
+                                                {UNIT_OPTIONS.find(u => u.value === col.unit)?.label || col.unit}
+                                            </span>
+                                        </td>
+                                        <td className="p-4 font-mono font-medium">฿{col.price_per_unit.toLocaleString()}</td>
+                                        <td className="p-4 font-mono font-medium text-purple-700">
+                                            {col.price_per_unit_platform ? `฿${col.price_per_unit_platform.toLocaleString()}` : '-'}
+                                        </td>
+                                        <td className="p-4 pr-6 text-right">
+                                            <div className="flex justify-end gap-2">
+                                                <button onClick={() => handleOpenModal(col)} className="p-2 text-gray-400 hover:text-blue-600 transition cursor-pointer"><Edit size={18} /></button>
+                                                <button onClick={() => handleDelete(col.id)} className="p-2 text-gray-400 hover:text-red-600 transition cursor-pointer"><Trash2 size={18} /></button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Mobile Card List */}
+                    <div className="md:hidden space-y-3">
+                        {filteredCollections.map((col) => (
+                            <div key={col.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="flex-1 min-w-0">
+                                        <h3 className="font-bold text-gray-900 text-base truncate">{col.name}</h3>
+                                        {/* @ts-ignore */}
+                                        <span className="text-xs font-semibold px-2 py-0.5 bg-blue-50 text-blue-700 rounded-md inline-block mt-1">{col.product_categories?.name || 'Unknown'}</span>
+                                    </div>
+                                    <div className="flex gap-1 shrink-0">
+                                        <button onClick={() => handleOpenModal(col)} className="p-2 text-gray-400 hover:text-blue-600 bg-gray-50 rounded-lg cursor-pointer"><Edit size={16} /></button>
+                                        <button onClick={() => handleDelete(col.id)} className="p-2 text-gray-400 hover:text-red-600 bg-gray-50 rounded-lg cursor-pointer"><Trash2 size={16} /></button>
+                                    </div>
+                                </div>
+                                {col.tags && col.tags.length > 0 && (
+                                    <div className="flex gap-1 flex-wrap mt-2">
+                                        {col.tags.slice(0, 3).map((tag, idx) => (
+                                            <span key={idx} className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded-md font-medium border border-gray-200">{tag}</span>
+                                        ))}
+                                        {col.tags.length > 3 && (
+                                            <span className="text-[10px] px-1.5 py-0.5 text-gray-400">+{col.tags.length - 3}</span>
+                                        )}
+                                    </div>
+                                )}
+                                <div className="mt-3 pt-3 border-t border-gray-100 grid grid-cols-2 gap-2 text-sm">
+                                    <div>
+                                        <span className="text-gray-400 text-xs">ราคาปกติ</span>
+                                        <p className="font-bold font-mono text-gray-900">฿{col.price_per_unit.toLocaleString()}</p>
+                                    </div>
+                                    <div>
+                                        <span className="text-purple-400 text-xs">ราคา Platform</span>
+                                        <p className="font-bold font-mono text-purple-700">
+                                            {col.price_per_unit_platform ? `฿${col.price_per_unit_platform.toLocaleString()}` : '-'}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </>
             )}
 
             {/* Modal */}
             <AnimatePresence>
                 {isModalOpen && (
-                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+                    <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center md:p-4 bg-black/60 backdrop-blur-sm">
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col border border-gray-100"
+                            className="bg-white rounded-t-2xl md:rounded-2xl shadow-2xl w-full max-w-2xl max-h-[95vh] md:max-h-[90vh] flex flex-col border border-gray-100"
                         >
-                            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 shrink-0">
-                                <h2 className="text-xl font-bold text-gray-900">
+                            <div className="p-4 md:p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50 shrink-0">
+                                <h2 className="text-lg md:text-xl font-bold text-gray-900">
                                     {editingCollection ? 'แก้ไขคอลเล็กชัน' : 'เพิ่มคอลเล็กชันใหม่'}
                                 </h2>
                                 <button onClick={handleCloseModal} className="p-2 hover:bg-gray-200 rounded-full transition text-gray-500 cursor-pointer">
@@ -603,9 +647,9 @@ export default function AdminCollectionsPage() {
                                 </button>
                             </div>
 
-                            <form onSubmit={handleSubmit} className="p-6 space-y-6 overflow-y-auto custom-scrollbar">
+                            <form onSubmit={handleSubmit} className="p-4 md:p-6 space-y-5 md:space-y-6 overflow-y-auto custom-scrollbar">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="col-span-2">
+                                    <div className="col-span-1 md:col-span-2">
                                         <label className="block text-sm font-semibold text-gray-700 mb-1.5">ชื่อคอลเล็กชัน <span className="text-red-500">*</span></label>
                                         <input
                                             type="text"
@@ -618,7 +662,7 @@ export default function AdminCollectionsPage() {
                                     </div>
 
                                     {/* Tag Input */}
-                                    <div className="col-span-2">
+                                    <div className="col-span-1 md:col-span-2">
                                         <label className="block text-sm font-semibold text-gray-700 mb-1.5">Tags (ป้ายกำกับ)</label>
                                         <div className="flex gap-2 mb-2 flex-wrap">
                                             {tags.map((tag, index) => (
@@ -1039,17 +1083,17 @@ export default function AdminCollectionsPage() {
                                     <p className="text-xs text-gray-500">* กดที่ปุ่มสถานะเพื่อเปลี่ยนระหว่าง "มีของ" และ "หมด"</p>
                                 </div>
 
-                                <div className="pt-4 flex justify-end gap-3 border-t border-gray-100 mt-4">
+                                <div className="pt-4 flex flex-col-reverse sm:flex-row justify-end gap-3 border-t border-gray-100 mt-4">
                                     <button
                                         type="button"
                                         onClick={handleCloseModal}
-                                        className="px-5 py-2.5 text-gray-600 hover:bg-gray-100 rounded-xl transition font-medium cursor-pointer"
+                                        className="px-5 py-3 sm:py-2.5 text-gray-600 hover:bg-gray-100 rounded-xl transition font-medium cursor-pointer text-center"
                                     >
                                         ยกเลิก
                                     </button>
                                     <button
                                         type="submit"
-                                        className="px-6 py-2.5 bg-black text-white rounded-xl hover:bg-gray-800 transition flex items-center gap-2 font-medium shadow-lg shadow-black/10 cursor-pointer"
+                                        className="px-6 py-3 sm:py-2.5 bg-black text-white rounded-xl hover:bg-gray-800 transition flex items-center justify-center gap-2 font-medium shadow-lg shadow-black/10 cursor-pointer"
                                     >
                                         <Save size={18} />
                                         บันทึกข้อมูล

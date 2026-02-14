@@ -163,7 +163,105 @@ export default function CalculatorPage() {
     }
 
     return (
-        <div className="page-container" style={{ padding: '2rem 1rem', maxWidth: '1200px', margin: '0 auto', position: 'relative' }}>
+        <div className="page-container" style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative' }}>
+
+            <style jsx>{`
+                /* ===== Layout ===== */
+                .calculator-layout {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 1.5rem;
+                    padding: 0 1rem;
+                }
+                .results-grid, .results-container.grid {
+                    display: grid;
+                    grid-template-columns: 1fr;
+                    gap: 1.5rem;
+                }
+                .results-container.list {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 1rem;
+                }
+                .calc-submit:hover {
+                    transform: translateY(-1px) !important;
+                    box-shadow: 0 6px 20px rgba(0,0,0,0.25) !important;
+                }
+                .calc-submit:active {
+                    transform: translateY(0) !important;
+                }
+                .calc-input:focus {
+                    border-color: #111 !important;
+                    background: #fff !important;
+                    box-shadow: 0 0 0 3px rgba(0,0,0,0.06) !important;
+                }
+                .cat-card:hover {
+                    transform: translateY(-2px);
+                    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+                }
+
+                /* ===== Desktop ===== */
+                @media (min-width: 768px) {
+                    .calculator-layout {
+                        flex-direction: row;
+                        align-items: flex-start;
+                        gap: 2rem;
+                    }
+                    .input-section {
+                        width: 380px;
+                        position: sticky;
+                        top: 2rem;
+                    }
+                    .results-section {
+                        flex: 1;
+                    }
+                    .results-grid, .results-container.grid {
+                        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                    }
+                }
+
+                /* ===== Mobile ===== */
+                @media (max-width: 767px) {
+                    /* List View Mobile Optimizations */
+                    .result-item-list {
+                        flex-direction: column;
+                        align-items: stretch !important;
+                        gap: 0.75rem !important;
+                        padding: 1rem !important;
+                    }
+                    .result-info {
+                        flex: 1 1 auto !important;
+                        margin-bottom: 0.5rem;
+                    }
+                    .result-price {
+                        text-align: left !important;
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        background-color: #f9fafb;
+                        padding: 0.75rem;
+                        border-radius: 8px;
+                        margin: 0.5rem 0;
+                    }
+                    .result-price::before {
+                        content: "ราคารวม";
+                        font-size: 0.9rem;
+                        color: #666;
+                        font-weight: 500;
+                    }
+                    .result-actions {
+                        width: 100%;
+                        gap: 0.75rem !important;
+                        margin-top: 0.5rem;
+                    }
+                    .result-actions button {
+                        flex: 1;
+                        justify-content: center;
+                        padding: 0.75rem !important;
+                        height: 44px;
+                    }
+                }
+            `}</style>
 
             {/* Floating Cart Button */}
             {cartCount > 0 && (
@@ -181,228 +279,309 @@ export default function CalculatorPage() {
                 </Link>
             )}
 
-            <h1 className="page-title" style={{ textAlign: 'center', marginBottom: '2rem', fontSize: '2.5rem', fontFamily: 'var(--font-mitr)' }}>คำนวณราคา</h1>
+            {/* Hero Header */}
+            <div style={{
+                position: 'relative',
+                textAlign: 'center',
+                padding: '2.5rem 1.5rem 2.5rem',
+                overflow: 'hidden',
+            }}>
+                <div style={{
+                    position: 'absolute',
+                    inset: 0,
+                    background: 'linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 50%, #16213e 100%)',
+                    borderRadius: '0 0 2rem 2rem',
+                }} />
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                    <h1 style={{
+                        fontSize: '2.2rem',
+                        fontWeight: 700,
+                        color: 'white',
+                        fontFamily: 'var(--font-mitr)',
+                        margin: '0 0 0.4rem',
+                        letterSpacing: '-0.01em',
+                    }}>คำนวณราคา</h1>
+                    <p style={{
+                        color: 'rgba(255,255,255,0.5)',
+                        fontSize: '0.9rem',
+                        margin: 0,
+                        fontWeight: 400,
+                    }}>เลือกหมวดหมู่ ระบุขนาด แล้วเปรียบเทียบราคาได้ทันที</p>
+                </div>
+            </div>
 
-            <div className="steps-wrapper" style={{ textAlign: 'center', maxWidth: '800px', margin: '-1.5rem auto 2rem auto', color: '#666', lineHeight: '1.6' }}>
-                <div className="steps-container flex justify-center flex-wrap gap-4 text-sm bg-gray-50 inline-flex px-6 py-2 rounded-full border border-gray-100">
-                    <span className="flex items-center gap-1"><span className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center text-xs">1</span> เลือกหมวดหมู่</span>
-                    <span className="text-gray-300">|</span>
-                    <span className="flex items-center gap-1"><span className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center text-xs">2</span> ระบุขนาดที่ต้องการ</span>
-                    <span className="text-gray-300">|</span>
-                    <span className="flex items-center gap-1"><span className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center text-xs">3</span> กดคำนวณราคา</span>
-                    <span className="text-gray-300">|</span>
-                    <span className="flex items-center gap-1"><span className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center text-xs">4</span> เพิ่มสินค้า</span>
-                    <span className="text-gray-300">|</span>
-                    <span className="flex items-center gap-1"><span className="w-5 h-5 rounded-full bg-black text-white flex items-center justify-center text-xs">5</span> ส่งใบเสนอราคา</span>
+            {/* Steps Indicator */}
+            <div style={{
+                maxWidth: '680px',
+                margin: '-1rem auto 1.5rem',
+                position: 'relative',
+                zIndex: 2,
+                padding: '0 1rem',
+            }}>
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'white',
+                    borderRadius: '14px',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                    padding: '0.65rem 1rem',
+                    overflowX: 'auto',
+                    scrollbarWidth: 'none',
+                    gap: '0.2rem',
+                }}>
+                    {[
+                        { num: '1', label: 'เลือกหมวดหมู่' },
+                        { num: '2', label: 'ระบุขนาด' },
+                        { num: '3', label: 'คำนวณราคา' },
+                        { num: '4', label: 'เพิ่มสินค้า' },
+                        { num: '5', label: 'ส่งใบเสนอราคา' },
+                    ].map((step, i, arr) => (
+                        <React.Fragment key={step.num}>
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.3rem',
+                                flexShrink: 0,
+                            }}>
+                                <div style={{
+                                    width: '20px',
+                                    height: '20px',
+                                    borderRadius: '50%',
+                                    background: '#111',
+                                    color: 'white',
+                                    fontSize: '0.65rem',
+                                    fontWeight: 700,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    flexShrink: 0,
+                                }}>{step.num}</div>
+                                <span style={{
+                                    fontSize: '0.72rem',
+                                    color: '#555',
+                                    fontWeight: 500,
+                                    whiteSpace: 'nowrap',
+                                }}>{step.label}</span>
+                            </div>
+                            {i < arr.length - 1 && (
+                                <div style={{
+                                    width: '16px',
+                                    height: '1.5px',
+                                    background: '#ddd',
+                                    flexShrink: 0,
+                                    margin: '0 0.15rem',
+                                }} />
+                            )}
+                        </React.Fragment>
+                    ))}
                 </div>
             </div>
 
             <div className="calculator-layout">
-                <style jsx>{`
-                    .calculator-layout {
-                        display: flex;
-                        flex-direction: column;
-                        gap: 2rem;
-                    }
-                    .results-grid {
-                        display: grid;
-                        grid-template-columns: 1fr;
-                        gap: 1.5rem;
-                    }
-                    .results-container.grid {
-                        display: grid;
-                        grid-template-columns: 1fr;
-                        gap: 1.5rem;
-                    }
-                    .results-container.list {
-                        display: flex;
-                        flex-direction: column;
-                        gap: 1rem;
-                    }
-                    @media (min-width: 768px) {
-                        .calculator-layout {
-                            flex-direction: row;
-                            align-items: flex-start;
-                        }
-                        .input-section {
-                            width: 350px;
-                            position: sticky;
-                            top: 2rem;
-                        }
-                        .results-section {
-                            flex: 1;
-                        }
-                        .results-grid, .results-container.grid {
-                            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-                        }
-                    }
-                    @media (max-width: 768px) {
-                        .page-container {
-                            padding: 1.5rem 1rem !important;
-                        }
-                        .page-title {
-                            font-size: 1.75rem !important;
-                            margin-bottom: 1.5rem !important;
-                        }
-                        .steps-wrapper {
-                            margin: -1rem auto 1.5rem auto !important;
-                        }
-                        .steps-container {
-                            flex-wrap: nowrap !important;
-                            overflow-x: auto;
-                            justify-content: flex-start !important;
-                            padding: 0.5rem 1rem !important;
-                            width: 100%;
-                            -webkit-overflow-scrolling: touch;
-                            scrollbar-width: none;
-                        }
-                        .steps-container::-webkit-scrollbar {
-                            display: none;
-                        }
-                        .steps-container > span {
-                            white-space: nowrap;
-                            flex-shrink: 0;
-                        }
-                        
-                        /* List View Mobile Optimizations */
-                        .result-item-list {
-                            flex-direction: column;
-                            align-items: stretch !important;
-                            gap: 0.75rem !important;
-                            padding: 1rem !important;
-                        }
-                        .result-info {
-                            flex: 1 1 auto !important;
-                            margin-bottom: 0.5rem;
-                        }
-                        .result-price {
-                            text-align: left !important;
-                            display: flex;
-                            justify-content: space-between;
-                            align-items: center;
-                            background-color: #f9fafb;
-                            padding: 0.75rem;
-                            border-radius: 8px;
-                            margin: 0.5rem 0;
-                        }
-                        .result-price::before {
-                            content: "ราคารวม";
-                            font-size: 0.9rem;
-                            color: #666;
-                            font-weight: 500;
-                        }
-                        .result-actions {
-                            width: 100%;
-                            gap: 0.75rem !important;
-                            margin-top: 0.5rem;
-                        }
-                        .result-actions button {
-                            flex: 1;
-                            justify-content: center;
-                            padding: 0.75rem !important;
-                            height: 44px; /* Touch friendly */
-                        }
-                    }
-                `}</style>
 
                 {/* Input Section */}
                 <div className="input-section">
                     <form onSubmit={handleCalculate} style={{
-                        backgroundColor: 'white',
-                        padding: '2rem',
-                        borderRadius: '16px',
-                        boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
-                        border: '1px solid #f0f0f0'
+                        background: 'white',
+                        padding: '1.75rem',
+                        borderRadius: '20px',
+                        boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
+                        border: '1px solid #eee',
                     }}>
-                        <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem', fontWeight: 600 }}>เพิ่มสินค้า</h2>
+                        <h2 style={{
+                            fontSize: '1.15rem',
+                            fontWeight: 700,
+                            margin: '0 0 1.25rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            color: '#111',
+                        }}>
+                            <CalcIcon size={20} />
+                            เพิ่มสินค้า
+                        </h2>
 
                         {/* Category Selection */}
                         <div style={{ marginBottom: '1.5rem' }}>
-                            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: '#666' }}>หมวดหมู่สินค้า</label>
-                            <select
-                                value={selectedCategoryId}
-                                onChange={(e) => {
-                                    setSelectedCategoryId(e.target.value);
-                                    setResults(null); // Clear results on category change
-                                    setSelectedTags([]); // Reset tags on category change
-                                }}
-                                style={{
-                                    width: '100%',
-                                    padding: '0.75rem',
-                                    border: '1px solid #e5e5e5',
-                                    borderRadius: '8px',
-                                    fontSize: '1rem',
-                                    fontFamily: 'var(--font-mitr)',
-                                    backgroundColor: '#fff'
-                                }}
-                            >
-                                <option value="">-- กรุณาเลือกหมวดหมู่ --</option>
-                                {categories.map(c => (
-                                    <option key={c.id} value={c.id}>
-                                        {c.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div style={{ marginBottom: '1.5rem' }}>
-                            <div style={{ marginBottom: '1rem' }}>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: '#666' }}>ความกว้าง (ซม.)</label>
-                                <input
-                                    type="number"
-                                    value={width}
-                                    onChange={(e) => setWidth(e.target.value === '' ? '' : Number(e.target.value))}
-                                    placeholder="เช่น 200"
-                                    required
-                                    style={{
-                                        width: '100%',
-                                        padding: '0.75rem',
-                                        border: '1px solid #e5e5e5',
-                                        borderRadius: '8px',
-                                        fontSize: '1rem',
-                                        fontFamily: 'var(--font-mitr)'
-                                    }}
-                                />
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: '#666' }}>ความสูง (ซม.)</label>
-                                <input
-                                    type="number"
-                                    value={height}
-                                    onChange={(e) => setHeight(e.target.value === '' ? '' : Number(e.target.value))}
-                                    placeholder="เช่น 250"
-                                    required
-                                    style={{
-                                        width: '100%',
-                                        padding: '0.75rem',
-                                        border: '1px solid #e5e5e5',
-                                        borderRadius: '8px',
-                                        fontSize: '1rem',
-                                        fontFamily: 'var(--font-mitr)'
-                                    }}
-                                />
-                            </div>
-                        </div>
-
-                        <button
-                            type="submit"
-                            style={{
-                                width: '100%',
-                                padding: '1rem',
-                                backgroundColor: 'black',
-                                color: 'white',
+                            <label style={{
+                                display: 'block',
+                                marginBottom: '0.5rem',
                                 fontWeight: 600,
-                                borderRadius: '8px',
-                                display: 'flex',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                gap: '0.5rem',
-                                transition: 'all 0.2s',
-                                cursor: 'pointer',
-                                border: 'none',
-                                fontSize: '1rem'
-                            }}
-                        >
+                                fontSize: '0.82rem',
+                                color: '#555',
+                                textTransform: 'uppercase' as const,
+                                letterSpacing: '0.03em',
+                            }}>หมวดหมู่สินค้า</label>
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: 'repeat(2, 1fr)',
+                                gap: '0.6rem',
+                            }}>
+                                {categories.map(c => {
+                                    const isSelected = selectedCategoryId === c.id.toString();
+                                    return (
+                                        <button
+                                            key={c.id}
+                                            type="button"
+                                            className="cat-card"
+                                            style={{
+                                                position: 'relative',
+                                                overflow: 'hidden',
+                                                borderRadius: '14px',
+                                                border: isSelected ? '2px solid #111' : '2px solid transparent',
+                                                padding: 0,
+                                                cursor: 'pointer',
+                                                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                aspectRatio: '16/10',
+                                                display: 'flex',
+                                                alignItems: 'flex-end',
+                                                background: '#f0f0f0',
+                                                boxShadow: isSelected ? '0 4px 16px rgba(0,0,0,0.18)' : 'none',
+                                                transform: isSelected ? 'scale(1.02)' : 'none',
+                                            }}
+                                            onClick={() => {
+                                                setSelectedCategoryId(isSelected ? '' : c.id.toString());
+                                                setResults(null);
+                                                setSelectedTags([]);
+                                            }}
+                                        >
+                                            {c.image_url ? (
+                                                <img
+                                                    src={c.image_url}
+                                                    alt={c.name}
+                                                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                                                />
+                                            ) : (
+                                                <div style={{
+                                                    position: 'absolute', inset: 0,
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                    background: isSelected ? 'linear-gradient(135deg, #1a1a2e, #16213e)' : 'linear-gradient(135deg, #e8e8e8, #d5d5d5)',
+                                                    transition: 'all 0.3s',
+                                                }}>
+                                                    <span style={{ fontSize: '1.5rem', opacity: 0.25 }}>📷</span>
+                                                </div>
+                                            )}
+                                            {/* Gradient overlay */}
+                                            <div style={{
+                                                position: 'absolute', inset: 0,
+                                                background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.15) 55%, rgba(0,0,0,0.05) 100%)',
+                                            }} />
+                                            {/* Name */}
+                                            <span style={{
+                                                position: 'relative', zIndex: 1, width: '100%',
+                                                padding: '0.5rem 0.65rem',
+                                                color: 'white', fontWeight: 600, fontSize: '0.8rem',
+                                                textAlign: 'left', lineHeight: 1.3,
+                                                fontFamily: 'var(--font-mitr)',
+                                                textShadow: '0 1px 4px rgba(0,0,0,0.5)',
+                                            }}>
+                                                {c.name}
+                                            </span>
+                                            {/* Checkmark */}
+                                            {isSelected && (
+                                                <div style={{
+                                                    position: 'absolute', top: 6, right: 6,
+                                                    width: 24, height: 24, borderRadius: '50%',
+                                                    background: '#111', display: 'flex',
+                                                    alignItems: 'center', justifyContent: 'center',
+                                                    zIndex: 2, boxShadow: '0 2px 6px rgba(0,0,0,0.35)',
+                                                }}>
+                                                    <Check size={14} color="white" />
+                                                </div>
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                            {selectedCategoryId && (
+                                <p style={{ marginTop: '0.4rem', fontSize: '0.75rem', color: '#aaa', textAlign: 'center' }}>
+                                    กดอีกครั้งเพื่อยกเลิกการเลือก
+                                </p>
+                            )}
+                        </div>
+
+                        {/* Dimensions */}
+                        <div style={{ marginBottom: '1.5rem' }}>
+                            <label style={{
+                                display: 'block',
+                                marginBottom: '0.5rem',
+                                fontWeight: 600,
+                                fontSize: '0.82rem',
+                                color: '#555',
+                                textTransform: 'uppercase' as const,
+                                letterSpacing: '0.03em',
+                            }}>ขนาดที่ต้องการ</label>
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: '1fr 1fr',
+                                gap: '0.75rem',
+                            }}>
+                                <div style={{ position: 'relative' }}>
+                                    <input
+                                        type="number"
+                                        value={width}
+                                        onChange={(e) => setWidth(e.target.value === '' ? '' : Number(e.target.value))}
+                                        placeholder="กว้าง"
+                                        required
+                                        className="calc-input"
+                                        style={{
+                                            width: '100%',
+                                            padding: '0.85rem 3rem 0.85rem 1rem',
+                                            border: '1.5px solid #e5e5e5',
+                                            borderRadius: '12px',
+                                            fontSize: '1rem',
+                                            fontFamily: 'var(--font-mitr)',
+                                            background: '#fafafa',
+                                            transition: 'all 0.2s',
+                                            outline: 'none',
+                                        }}
+                                    />
+                                    <span style={{ position: 'absolute', right: '0.85rem', top: '50%', transform: 'translateY(-50%)', fontSize: '0.8rem', color: '#999', fontWeight: 500 }}>ซม.</span>
+                                </div>
+                                <div style={{ position: 'relative' }}>
+                                    <input
+                                        type="number"
+                                        value={height}
+                                        onChange={(e) => setHeight(e.target.value === '' ? '' : Number(e.target.value))}
+                                        placeholder="สูง"
+                                        required
+                                        className="calc-input"
+                                        style={{
+                                            width: '100%',
+                                            padding: '0.85rem 3rem 0.85rem 1rem',
+                                            border: '1.5px solid #e5e5e5',
+                                            borderRadius: '12px',
+                                            fontSize: '1rem',
+                                            fontFamily: 'var(--font-mitr)',
+                                            background: '#fafafa',
+                                            transition: 'all 0.2s',
+                                            outline: 'none',
+                                        }}
+                                    />
+                                    <span style={{ position: 'absolute', right: '0.85rem', top: '50%', transform: 'translateY(-50%)', fontSize: '0.8rem', color: '#999', fontWeight: 500 }}>ซม.</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" className="calc-submit" style={{
+                            width: '100%',
+                            padding: '1rem',
+                            background: 'linear-gradient(135deg, #111 0%, #333 100%)',
+                            color: 'white',
+                            fontWeight: 700,
+                            borderRadius: '14px',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            cursor: 'pointer',
+                            border: 'none',
+                            fontSize: '1rem',
+                            transition: 'all 0.25s',
+                            boxShadow: '0 4px 14px rgba(0,0,0,0.15)',
+                            fontFamily: 'var(--font-mitr)',
+                        }}>
                             <CalcIcon size={20} /> คำนวณราคา
                         </button>
                     </form>
@@ -495,29 +674,6 @@ export default function CalculatorPage() {
                                 )}
                             </div>
 
-                            {/* Search Input */}
-                            <div style={{ marginBottom: '1rem' }}>
-                                <div style={{ position: 'relative' }}>
-                                    <input
-                                        type="text"
-                                        placeholder="ค้นหาชื่อ..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        style={{
-                                            width: '100%',
-                                            padding: '0.75rem 1rem 0.75rem 2.5rem',
-                                            borderRadius: '12px',
-                                            border: '1px solid #e5e5e5',
-                                            fontSize: '1rem',
-                                            fontFamily: 'var(--font-mitr)',
-                                            outline: 'none'
-                                        }}
-                                    />
-                                    <div style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }}>
-                                        <Search size={18} />
-                                    </div>
-                                </div>
-                            </div>
 
                             {/* Tag Chips */}
                             {(() => {
@@ -850,21 +1006,12 @@ export default function CalculatorPage() {
                             </div>
                         </>
                     ) : (
-                        <div style={{
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            height: '100%',
-                            minHeight: '300px',
-                            backgroundColor: '#f8f9fa',
-                            borderRadius: '16px',
-                            border: '2px dashed #e5e5e5',
-                            color: '#888'
-                        }}>
-                            <CalcIcon size={48} style={{ opacity: 0.2, marginBottom: '1rem' }} />
-                            <p style={{ fontSize: '1.1rem', fontWeight: 500 }}>กรอกขนาดเพื่อเปรียบเทียบราคา</p>
-                            <p style={{ fontSize: '0.9rem', opacity: 0.7 }}>ระบบจะคำนวณราคาสินค้าทั้งหมดในหมวดหมู่นี้ให้ทันที</p>
+                        <div className="empty-state">
+                            <div className="empty-state-icon">
+                                <CalcIcon size={28} style={{ color: '#bbb' }} />
+                            </div>
+                            <p style={{ fontSize: '1.1rem', fontWeight: 600, color: '#555', margin: '0 0 0.35rem' }}>กรอกขนาดเพื่อเปรียบเทียบราคา</p>
+                            <p style={{ fontSize: '0.85rem', color: '#999', margin: 0 }}>เลือกหมวดหมู่ → ระบุขนาด → กดคำนวณ</p>
                         </div>
                     )}
                 </div>
