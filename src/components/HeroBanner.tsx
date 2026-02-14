@@ -81,7 +81,7 @@ export default function HeroBanner() {
                             <Sparkles size={14} className="text-yellow-400" />
                             <span>Authentic Premium Quality</span>
                         </div>
-                        <h1 className="text-3xl md:text-5xl font-bold font-[family-name:var(--font-mitr)] mb-4 leading-tight drop-shadow-md whitespace-nowrap">
+                        <h1 className="text-2xl md:text-5xl font-bold font-[family-name:var(--font-mitr)] mb-4 leading-tight drop-shadow-md">
                             {slide.title}
                         </h1>
                         <p className="text-base md:text-xl text-white/90 mb-6 md:mb-8 font-light drop-shadow-sm max-w-lg">

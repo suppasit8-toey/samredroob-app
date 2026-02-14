@@ -34,6 +34,7 @@ export default function CalculatorPage() {
 
     // Catalog Modal State
     const [activeCatalog, setActiveCatalog] = useState<{ url: string; title: string } | null>(null);
+    const [showCategoryModal, setShowCategoryModal] = useState(false);
 
     useEffect(() => {
         const initData = async () => {
@@ -326,16 +327,15 @@ export default function CalculatorPage() {
                     borderRadius: '14px',
                     boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
                     padding: '0.65rem 1rem',
-                    overflowX: 'auto',
-                    scrollbarWidth: 'none',
                     gap: '0.2rem',
+                    overflow: 'hidden',
                 }}>
                     {[
-                        { num: '1', label: 'เลือกหมวดหมู่' },
-                        { num: '2', label: 'ระบุขนาด' },
-                        { num: '3', label: 'คำนวณราคา' },
-                        { num: '4', label: 'เพิ่มสินค้า' },
-                        { num: '5', label: 'ส่งใบเสนอราคา' },
+                        { num: '1', label: 'เลือกหมวดหมู่', short: 'หมวดหมู่' },
+                        { num: '2', label: 'ระบุขนาด', short: 'ขนาด' },
+                        { num: '3', label: 'คำนวณราคา', short: 'คำนวณ' },
+                        { num: '4', label: 'เพิ่มสินค้า', short: 'เพิ่ม' },
+                        { num: '5', label: 'ส่งใบเสนอราคา', short: 'ส่ง' },
                     ].map((step, i, arr) => (
                         <React.Fragment key={step.num}>
                             <div style={{
@@ -357,12 +357,18 @@ export default function CalculatorPage() {
                                     justifyContent: 'center',
                                     flexShrink: 0,
                                 }}>{step.num}</div>
-                                <span style={{
+                                <span className="hidden sm:inline" style={{
                                     fontSize: '0.72rem',
                                     color: '#555',
                                     fontWeight: 500,
                                     whiteSpace: 'nowrap',
                                 }}>{step.label}</span>
+                                <span className="inline sm:hidden" style={{
+                                    fontSize: '0.62rem',
+                                    color: '#555',
+                                    fontWeight: 500,
+                                    whiteSpace: 'nowrap',
+                                }}>{step.short}</span>
                             </div>
                             {i < arr.length - 1 && (
                                 <div style={{
@@ -402,7 +408,7 @@ export default function CalculatorPage() {
                             เพิ่มสินค้า
                         </h2>
 
-                        {/* Category Selection */}
+                        {/* Category Selection - Trigger Button */}
                         <div style={{ marginBottom: '1.5rem' }}>
                             <label style={{
                                 display: 'block',
@@ -413,93 +419,162 @@ export default function CalculatorPage() {
                                 textTransform: 'uppercase' as const,
                                 letterSpacing: '0.03em',
                             }}>หมวดหมู่สินค้า</label>
-                            <div style={{
-                                display: 'grid',
-                                gridTemplateColumns: 'repeat(2, 1fr)',
-                                gap: '0.6rem',
-                            }}>
-                                {categories.map(c => {
-                                    const isSelected = selectedCategoryId === c.id.toString();
-                                    return (
-                                        <button
-                                            key={c.id}
-                                            type="button"
-                                            className="cat-card"
-                                            style={{
-                                                position: 'relative',
-                                                overflow: 'hidden',
-                                                borderRadius: '14px',
-                                                border: isSelected ? '2px solid #111' : '2px solid transparent',
-                                                padding: 0,
-                                                cursor: 'pointer',
-                                                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                                                aspectRatio: '16/10',
-                                                display: 'flex',
-                                                alignItems: 'flex-end',
-                                                background: '#f0f0f0',
-                                                boxShadow: isSelected ? '0 4px 16px rgba(0,0,0,0.18)' : 'none',
-                                                transform: isSelected ? 'scale(1.02)' : 'none',
-                                            }}
-                                            onClick={() => {
-                                                setSelectedCategoryId(isSelected ? '' : c.id.toString());
-                                                setResults(null);
-                                                setSelectedTags([]);
-                                            }}
-                                        >
-                                            {c.image_url ? (
-                                                <img
-                                                    src={c.image_url}
-                                                    alt={c.name}
-                                                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-                                                />
-                                            ) : (
-                                                <div style={{
-                                                    position: 'absolute', inset: 0,
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                    background: isSelected ? 'linear-gradient(135deg, #1a1a2e, #16213e)' : 'linear-gradient(135deg, #e8e8e8, #d5d5d5)',
-                                                    transition: 'all 0.3s',
-                                                }}>
-                                                    <span style={{ fontSize: '1.5rem', opacity: 0.25 }}>📷</span>
-                                                </div>
-                                            )}
-                                            {/* Gradient overlay */}
-                                            <div style={{
-                                                position: 'absolute', inset: 0,
-                                                background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.15) 55%, rgba(0,0,0,0.05) 100%)',
-                                            }} />
-                                            {/* Name */}
-                                            <span style={{
-                                                position: 'relative', zIndex: 1, width: '100%',
-                                                padding: '0.5rem 0.65rem',
-                                                color: 'white', fontWeight: 600, fontSize: '0.8rem',
-                                                textAlign: 'left', lineHeight: 1.3,
-                                                fontFamily: 'var(--font-mitr)',
-                                                textShadow: '0 1px 4px rgba(0,0,0,0.5)',
-                                            }}>
-                                                {c.name}
-                                            </span>
-                                            {/* Checkmark */}
-                                            {isSelected && (
-                                                <div style={{
-                                                    position: 'absolute', top: 6, right: 6,
-                                                    width: 24, height: 24, borderRadius: '50%',
-                                                    background: '#111', display: 'flex',
-                                                    alignItems: 'center', justifyContent: 'center',
-                                                    zIndex: 2, boxShadow: '0 2px 6px rgba(0,0,0,0.35)',
-                                                }}>
-                                                    <Check size={14} color="white" />
-                                                </div>
-                                            )}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                            {selectedCategoryId && (
-                                <p style={{ marginTop: '0.4rem', fontSize: '0.75rem', color: '#aaa', textAlign: 'center' }}>
-                                    กดอีกครั้งเพื่อยกเลิกการเลือก
-                                </p>
-                            )}
+                            <button
+                                type="button"
+                                onClick={() => setShowCategoryModal(true)}
+                                style={{
+                                    width: '100%',
+                                    padding: '0.85rem 1rem',
+                                    borderRadius: '14px',
+                                    border: selectedCategoryId ? '2px solid #111' : '2px solid #e5e5e5',
+                                    background: selectedCategoryId ? '#fafafa' : 'white',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    gap: '0.75rem',
+                                    transition: 'all 0.2s',
+                                    fontFamily: 'var(--font-mitr)',
+                                }}
+                            >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                    {selectedCategoryId ? (
+                                        <>
+                                            {(() => {
+                                                const cat = categories.find(c => c.id.toString() === selectedCategoryId);
+                                                return cat ? (
+                                                    <>
+                                                        {cat.image_url && (
+                                                            <img src={cat.image_url} alt={cat.name} style={{
+                                                                width: '40px', height: '40px', borderRadius: '10px',
+                                                                objectFit: 'cover', flexShrink: 0,
+                                                            }} />
+                                                        )}
+                                                        <span style={{ fontWeight: 600, fontSize: '0.95rem', color: '#111' }}>{cat.name}</span>
+                                                    </>
+                                                ) : null;
+                                            })()}
+                                        </>
+                                    ) : (
+                                        <span style={{ color: '#aaa', fontSize: '0.95rem' }}>กดเพื่อเลือกหมวดหมู่</span>
+                                    )}
+                                </div>
+                                <div style={{
+                                    width: '32px', height: '32px', borderRadius: '10px',
+                                    background: selectedCategoryId ? '#111' : '#f0f0f0',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    flexShrink: 0, transition: 'all 0.2s',
+                                }}>
+                                    {selectedCategoryId ? (
+                                        <Check size={16} color="white" />
+                                    ) : (
+                                        <span style={{ fontSize: '1.1rem', color: '#888', lineHeight: 1 }}>+</span>
+                                    )}
+                                </div>
+                            </button>
                         </div>
+
+                        {/* Category Selection Modal */}
+                        {showCategoryModal && (
+                            <div style={{
+                                position: 'fixed', inset: 0, zIndex: 9999,
+                                background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+                                display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+                            }} onClick={() => setShowCategoryModal(false)}>
+                                <div
+                                    style={{
+                                        background: 'white',
+                                        borderRadius: '24px 24px 0 0',
+                                        padding: '1.5rem',
+                                        width: '100%',
+                                        maxWidth: '500px',
+                                        maxHeight: '80vh',
+                                        overflowY: 'auto',
+                                        animation: 'slideUp 0.3s ease-out',
+                                    }}
+                                    onClick={(e) => e.stopPropagation()}
+                                >
+                                    {/* Handle */}
+                                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+                                        <div style={{ width: '40px', height: '4px', borderRadius: '2px', background: '#ddd' }} />
+                                    </div>
+                                    <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', textAlign: 'center' }}>เลือกหมวดหมู่สินค้า</h3>
+                                    <div style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: 'repeat(2, 1fr)',
+                                        gap: '0.6rem',
+                                    }}>
+                                        {categories.map(c => {
+                                            const isSelected = selectedCategoryId === c.id.toString();
+                                            return (
+                                                <button
+                                                    key={c.id}
+                                                    type="button"
+                                                    style={{
+                                                        position: 'relative',
+                                                        overflow: 'hidden',
+                                                        borderRadius: '14px',
+                                                        border: isSelected ? '2px solid #111' : '2px solid transparent',
+                                                        padding: 0,
+                                                        cursor: 'pointer',
+                                                        transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                        aspectRatio: '16/10',
+                                                        display: 'flex',
+                                                        alignItems: 'flex-end',
+                                                        background: '#f0f0f0',
+                                                        boxShadow: isSelected ? '0 4px 16px rgba(0,0,0,0.18)' : 'none',
+                                                        transform: isSelected ? 'scale(1.02)' : 'none',
+                                                    }}
+                                                    onClick={() => {
+                                                        setSelectedCategoryId(isSelected ? '' : c.id.toString());
+                                                        setResults(null);
+                                                        setSelectedTags([]);
+                                                        setShowCategoryModal(false);
+                                                    }}
+                                                >
+                                                    {c.image_url ? (
+                                                        <img src={c.image_url} alt={c.name}
+                                                            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                                                        />
+                                                    ) : (
+                                                        <div style={{
+                                                            position: 'absolute', inset: 0,
+                                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                            background: isSelected ? 'linear-gradient(135deg, #1a1a2e, #16213e)' : 'linear-gradient(135deg, #e8e8e8, #d5d5d5)',
+                                                        }}>
+                                                            <span style={{ fontSize: '1.5rem', opacity: 0.25 }}>📷</span>
+                                                        </div>
+                                                    )}
+                                                    <div style={{
+                                                        position: 'absolute', inset: 0,
+                                                        background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.15) 55%, rgba(0,0,0,0.05) 100%)',
+                                                    }} />
+                                                    <span style={{
+                                                        position: 'relative', zIndex: 1, width: '100%',
+                                                        padding: '0.5rem 0.65rem',
+                                                        color: 'white', fontWeight: 600, fontSize: '0.8rem',
+                                                        textAlign: 'left', lineHeight: 1.3,
+                                                        fontFamily: 'var(--font-mitr)',
+                                                        textShadow: '0 1px 4px rgba(0,0,0,0.5)',
+                                                    }}>{c.name}</span>
+                                                    {isSelected && (
+                                                        <div style={{
+                                                            position: 'absolute', top: 6, right: 6,
+                                                            width: 24, height: 24, borderRadius: '50%',
+                                                            background: '#111', display: 'flex',
+                                                            alignItems: 'center', justifyContent: 'center',
+                                                            zIndex: 2, boxShadow: '0 2px 6px rgba(0,0,0,0.35)',
+                                                        }}>
+                                                            <Check size={14} color="white" />
+                                                        </div>
+                                                    )}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Dimensions */}
                         <div style={{ marginBottom: '1.5rem' }}>
