@@ -78,7 +78,9 @@ export default function AdminLayout({
     const navItems = [
         { name: 'ภาพรวม', href: '/admin', icon: <LayoutDashboard size={20} /> },
         { name: 'หมวดหมู่สินค้า', href: '/admin/categories', icon: <List size={20} /> },
+        { name: 'แบรนด์', href: '/admin/brands', icon: <List size={20} /> }, // Using List icon for now, or Tag
         { name: 'คอลเลกชัน', href: '/admin/collections', icon: <FolderOpen size={20} /> },
+        { name: 'สร้างใบเสนอราคา', href: '/admin/quotations/create', icon: <Package size={20} /> },
         { name: 'ตั้งค่าราคา', href: '/admin/pricing', icon: <Calculator size={20} /> },
     ];
 
@@ -142,8 +144,8 @@ export default function AdminLayout({
                                     if (window.innerWidth < 768) setIsSidebarOpen(false);
                                 }}
                                 className={`group flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 ${isActive
-                                        ? "bg-black text-white shadow-md shadow-black/10"
-                                        : "text-gray-600 hover:bg-gray-50 hover:text-black"
+                                    ? "bg-black text-white shadow-md shadow-black/10"
+                                    : "text-gray-600 hover:bg-gray-50 hover:text-black"
                                     }`}
                             >
                                 <div className="flex items-center gap-3">

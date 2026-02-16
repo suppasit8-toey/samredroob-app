@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
 import Link from 'next/link';
-import { Trash2, ArrowLeft, Send, Store, ShoppingBag, Info, BookOpen, Images, ChevronDown, ChevronUp } from 'lucide-react';
+import { Trash2, ArrowLeft, Send, Store, ShoppingBag, Info, BookOpen, Images, ChevronDown, ChevronUp, Plus, Minus } from 'lucide-react';
 import { calculatePrice } from '@/utils/pricing';
 import { supabase } from '@/lib/supabase';
 import { ProductVariant } from '@/lib/types';
@@ -17,6 +17,7 @@ export default function QuotationPage() {
     const [variantsMap, setVariantsMap] = useState<Record<number, ProductVariant[]>>({});
     const [catalogMap, setCatalogMap] = useState<Record<number, string | null>>({});
     const [portfolioMap, setPortfolioMap] = useState<Record<number, string | null>>({});
+    const [brandMap, setBrandMap] = useState<Record<number, { name: string; logo_url?: string } | null>>({});
 
     // Modal State
     const [showModal, setShowModal] = useState(false);
@@ -63,18 +64,37 @@ export default function QuotationPage() {
                 // Also fetch fresh collection details (for catalog_url and portfolio_url)
                 const { data: collections, error: colError } = await supabase
                     .from('product_collections')
-                    .select('id, catalog_url, portfolio_url')
+                    .select(`
+                        id,
+                        catalog_url,
+                        portfolio_url,
+                        product_brands (
+                            name,
+                            logo_url
+                        )
+                    `)
                     .in('id', collectionIds);
 
                 if (!colError && collections) {
                     const cMap: Record<number, string | null> = {};
                     const pMap: Record<number, string | null> = {};
-                    collections.forEach(c => {
+                    const bMap: Record<number, { name: string; logo_url?: string } | null> = {};
+
+                    collections.forEach((c: any) => {
                         cMap[c.id] = c.catalog_url || null;
                         pMap[c.id] = c.portfolio_url || null;
+                        if (c.product_brands) {
+                            bMap[c.id] = {
+                                name: c.product_brands.name,
+                                logo_url: c.product_brands.logo_url
+                            };
+                        } else {
+                            bMap[c.id] = null;
+                        }
                     });
                     setCatalogMap(cMap);
                     setPortfolioMap(pMap);
+                    setBrandMap(bMap);
                 }
             } catch (err) {
                 console.error('Error fetching variants:', err);
@@ -105,9 +125,10 @@ export default function QuotationPage() {
         }
 
         const res = calculatePrice(item.collection, item.width, item.height, priceToUse);
+        const qty = item.quantity || 1;
         return {
             ...item,
-            currentTotal: res.total,
+            currentTotal: res.total * qty,
             currentBreakdown: res.breakdown,
             unitPrice: priceToUse
         };
@@ -339,104 +360,215 @@ export default function QuotationPage() {
                                         <th style={{ padding: '1.25rem', fontWeight: 600, color: '#444' }}>สินค้า</th>
                                         <th style={{ padding: '1.25rem', fontWeight: 600, color: '#444' }}>รหัสสินค้า</th>
                                         <th style={{ padding: '1.25rem', fontWeight: 600, color: '#444' }}>ขนาด (กxส)</th>
+                                        <th style={{ padding: '1.25rem', fontWeight: 600, color: '#444', textAlign: 'center' }}>จำนวน</th>
                                         <th style={{ padding: '1.25rem', fontWeight: 600, color: '#444', textAlign: 'right' }}>ราคาประเมิน</th>
                                         <th style={{ padding: '1.25rem', fontWeight: 600, color: '#444', width: '50px' }}></th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {calculatedItems.map((item) => {
-                                        const isError = item.currentTotal === 0;
-                                        const collectionVariants = variantsMap[item.collection.id] || [];
+                                    {/* Group items by collection for Batch Selection */}
+                                    {(() => {
+                                        // Grouping logic
+                                        const groups: Record<number, typeof calculatedItems> = {};
+                                        calculatedItems.forEach(item => {
+                                            if (!groups[item.collection.id]) {
+                                                groups[item.collection.id] = [];
+                                            }
+                                            groups[item.collection.id].push(item);
+                                        });
 
-                                        return (
-                                            <tr key={item.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
-                                                <td style={{ padding: '1.25rem' }}>
-                                                    <div style={{ fontWeight: 600, fontSize: '1.1rem' }}>{item.collection.name}</div>
-                                                    <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '0.5rem' }}>
-                                                        {item.unitPrice} บาท/{item.collection.unit}
-                                                    </div>
+                                        return Object.entries(groups).map(([collectionIdStr, groupItems]) => {
+                                            const collectionId = Number(collectionIdStr);
+                                            const collectionVariants = variantsMap[collectionId] || [];
+                                            const isMultiple = groupItems.length > 1;
+                                            const firstItem = groupItems[0]; // For collection name/info
 
-                                                    {isError && (
-                                                        <div style={{ fontSize: '0.8rem', color: '#ef4444', marginTop: '0.25rem' }}>
-                                                            {item.currentBreakdown}
-                                                        </div>
+                                            return (
+                                                <React.Fragment key={collectionId}>
+                                                    {/* Collection Group Header (Only if multiple items) */}
+                                                    {isMultiple && (
+                                                        <tr style={{ backgroundColor: '#f8fafc', borderBottom: '1px solid #e5e5e5' }}>
+                                                            <td colSpan={6} style={{ padding: '1rem 1.25rem' }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                                            <span style={{ fontSize: '1.2rem' }}>📦</span>
+                                                                            {brandMap[collectionId] && (
+                                                                                <span className="flex items-center gap-1 text-xs font-semibold text-gray-700 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200">
+                                                                                    {brandMap[collectionId]?.logo_url && <img src={brandMap[collectionId]!.logo_url} className="w-4 h-4 object-contain" alt="" />}
+                                                                                    {brandMap[collectionId]?.name}
+                                                                                </span>
+                                                                            )}
+                                                                            <span style={{ fontWeight: 600, fontSize: '1rem', color: '#1e293b' }}>
+                                                                                {firstItem.collection.name} ({groupItems.length} รายการ)
+                                                                            </span>
+                                                                        </div>
+                                                                        {catalogMap[collectionId] && (
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => setViewingCatalogUrl(catalogMap[collectionId]!)}
+                                                                                className="text-blue-600 hover:text-blue-800 text-xs font-medium flex items-center gap-1 bg-blue-50 px-2 py-1 rounded"
+                                                                            >
+                                                                                <BookOpen size={12} /> ดู Catalog
+                                                                            </button>
+                                                                        )}
+                                                                    </div>
+
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                                                        <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 500 }}>เลือกพร้อมกันทั้งกลุ่ม:</span>
+                                                                        <select
+                                                                            onChange={(e) => {
+                                                                                const variantId = Number(e.target.value);
+                                                                                const variant = collectionVariants.find(v => v.id === variantId);
+                                                                                // Update all items in this group
+                                                                                if (updateItem) {
+                                                                                    groupItems.forEach(item => {
+                                                                                        updateItem(item.id, { selectedVariant: variant });
+                                                                                    });
+                                                                                }
+                                                                            }}
+                                                                            className="text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer px-3 py-1.5"
+                                                                            style={{ minWidth: '180px' }}
+                                                                        >
+                                                                            <option value="">-- เปลี่ยนทั้งหมด --</option>
+                                                                            {collectionVariants.map(variant => (
+                                                                                <option key={variant.id} value={variant.id}>
+                                                                                    {variant.name}{variant.description ? ` - ${variant.description}` : ''}
+                                                                                </option>
+                                                                            ))}
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
                                                     )}
 
+                                                    {/* Items Rows */}
+                                                    {groupItems.map((item, index) => {
+                                                        const isError = item.currentTotal === 0;
+                                                        // If multiple, show simplified item name (since group header handles collection name)
+                                                        // Actually, keep full name for clarity or use "Item X" logic? 
+                                                        // Let's keep item name but maybe indent slightly if grouped?
 
-                                                </td>
-                                                <td style={{ padding: '1.25rem' }}>
-                                                    {/* Variant Selection */}
-                                                    {collectionVariants.length > 0 ? (
-                                                        <select
-                                                            value={item.selectedVariant?.id || ''}
-                                                            onChange={(e) => {
-                                                                const variantId = Number(e.target.value);
-                                                                const variant = collectionVariants.find(v => v.id === variantId);
-                                                                if (updateItem) {
-                                                                    updateItem(item.id, { selectedVariant: variant });
-                                                                }
-                                                            }}
-                                                            className="w-full text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black/5 cursor-pointer px-2 py-1.5"
-                                                            style={{ minWidth: '120px' }}
-                                                        >
-                                                            <option value="">-- เลือก --</option>
-                                                            {collectionVariants.map(variant => (
-                                                                <option key={variant.id} value={variant.id}>
-                                                                    {variant.name}{variant.description ? ` - ${variant.description}` : ''}
-                                                                </option>
-                                                            ))}
-                                                        </select>
-                                                    ) : (
-                                                        <span className="text-gray-400 text-sm">-</span>
-                                                    )}
+                                                        return (
+                                                            <tr key={item.id} style={{ borderBottom: '1px solid #f0f0f0', backgroundColor: isMultiple ? '#ffffff' : undefined }}>
+                                                                <td style={{ padding: '1.25rem', paddingLeft: isMultiple ? '2.5rem' : '1.25rem' }}>
+                                                                    <div style={{ fontWeight: 600, fontSize: '1rem', color: isMultiple ? '#334155' : '#111' }}>
+                                                                        {brandMap[item.collection.id] && (
+                                                                            <span className="inline-flex items-center gap-1 mr-2 px-1.5 py-0.5 rounded text-xs bg-gray-100 text-gray-500 font-normal border border-gray-200">
+                                                                                {brandMap[item.collection.id]?.logo_url && <img src={brandMap[item.collection.id]!.logo_url} className="w-3 h-3 object-contain" alt="" />}
+                                                                                {brandMap[item.collection.id]?.name}
+                                                                            </span>
+                                                                        )}
+                                                                        {item.collection.name}
+                                                                    </div>
+                                                                    <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '0.5rem' }}>
+                                                                        {item.unitPrice} บาท/{item.collection.unit}
+                                                                    </div>
+                                                                    {isError && (
+                                                                        <div style={{ fontSize: '0.8rem', color: '#ef4444', marginTop: '0.25rem' }}>
+                                                                            {item.currentBreakdown}
+                                                                        </div>
+                                                                    )}
+                                                                </td>
+                                                                <td style={{ padding: '1.25rem' }}>
+                                                                    {/* Variant Selection */}
+                                                                    {collectionVariants.length > 0 ? (
+                                                                        <select
+                                                                            value={item.selectedVariant?.id || ''}
+                                                                            onChange={(e) => {
+                                                                                const variantId = Number(e.target.value);
+                                                                                const variant = collectionVariants.find(v => v.id === variantId);
+                                                                                if (updateItem) {
+                                                                                    updateItem(item.id, { selectedVariant: variant });
+                                                                                }
+                                                                            }}
+                                                                            className="w-full text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black/5 cursor-pointer px-2 py-1.5"
+                                                                            style={{ minWidth: '120px' }}
+                                                                        >
+                                                                            <option value="">-- เลือก --</option>
+                                                                            {collectionVariants.map(variant => (
+                                                                                <option key={variant.id} value={variant.id}>
+                                                                                    {variant.name}{variant.description ? ` - ${variant.description}` : ''}
+                                                                                </option>
+                                                                            ))}
+                                                                        </select>
+                                                                    ) : (
+                                                                        <span className="text-gray-400 text-sm">-</span>
+                                                                    )}
 
-                                                    <div className="flex flex-col gap-2 mt-3">
-                                                        {catalogMap[item.collection.id] && (
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setViewingCatalogUrl(catalogMap[item.collection.id]!)}
-                                                                className="w-full py-1.5 px-3 rounded text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-800 flex items-center justify-center gap-2 font-medium transition-colors"
-                                                            >
-                                                                <BookOpen size={14} /> ดูแคตตาล็อก
-                                                            </button>
-                                                        )}
-                                                        {portfolioMap[item.collection.id] && (
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setViewingCatalogUrl(portfolioMap[item.collection.id]!)}
-                                                                className="w-full py-1.5 px-3 rounded text-xs bg-purple-50 text-purple-600 hover:bg-purple-100 hover:text-purple-800 flex items-center justify-center gap-2 font-medium transition-colors"
-                                                            >
-                                                                <Images size={14} /> ดูตัวอย่างผลงาน
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                                <td style={{ padding: '1.25rem', color: '#666' }}>
-                                                    {item.width} x {item.height} ซม.
-                                                </td>
-                                                <td style={{ padding: '1.25rem', textAlign: 'right', fontWeight: 600, fontSize: '1.1rem' }}>
-                                                    {isError ? (
-                                                        <span style={{ color: '#ef4444' }}>เกินเงื่อนไข</span>
-                                                    ) : (
-                                                        `฿${item.currentTotal.toLocaleString()}`
-                                                    )}
-                                                </td>
-                                                <td style={{ padding: '1.25rem', textAlign: 'center' }}>
-                                                    <button
-                                                        onClick={() => removeFromCart(item.id)}
-                                                        style={{ color: '#ef4444', border: 'none', background: 'none', cursor: 'pointer' }}
-                                                        title="ลบรายการ"
-                                                    >
-                                                        <Trash2 size={18} />
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        )
-                                    })}
+                                                                    {/* Show catalog button individually ONLY if not grouped (grouped handles it in header) */}
+                                                                    {!isMultiple && (
+                                                                        <div className="flex flex-col gap-2 mt-3">
+                                                                            {catalogMap[item.collection.id] && (
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() => setViewingCatalogUrl(catalogMap[item.collection.id]!)}
+                                                                                    className="w-full py-1.5 px-3 rounded text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-800 flex items-center justify-center gap-2 font-medium transition-colors"
+                                                                                >
+                                                                                    <BookOpen size={14} /> ดูแคตตาล็อก
+                                                                                </button>
+                                                                            )}
+                                                                            {portfolioMap[item.collection.id] && (
+                                                                                <button
+                                                                                    type="button"
+                                                                                    onClick={() => setViewingCatalogUrl(portfolioMap[item.collection.id]!)}
+                                                                                    className="w-full py-1.5 px-3 rounded text-xs bg-purple-50 text-purple-600 hover:bg-purple-100 hover:text-purple-800 flex items-center justify-center gap-2 font-medium transition-colors"
+                                                                                >
+                                                                                    <Images size={14} /> ดูตัวอย่างผลงาน
+                                                                                </button>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
+                                                                </td>
+                                                                <td style={{ padding: '1.25rem', color: '#666' }}>
+                                                                    {item.width} x {item.height} ซม.
+                                                                </td>
+                                                                <td style={{ padding: '1.25rem', textAlign: 'center' }}>
+                                                                    <div className="flex items-center justify-center gap-2">
+                                                                        <button
+                                                                            onClick={() => updateItem && updateItem(item.id, { quantity: Math.max(1, (item.quantity || 1) - 1) })}
+                                                                            className="p-1 rounded-md hover:bg-gray-100 text-gray-500 disabled:opacity-30"
+                                                                            disabled={(item.quantity || 1) <= 1}
+                                                                        >
+                                                                            <Minus size={16} />
+                                                                        </button>
+                                                                        <span className="w-8 text-center font-medium">{item.quantity || 1}</span>
+                                                                        <button
+                                                                            onClick={() => updateItem && updateItem(item.id, { quantity: (item.quantity || 1) + 1 })}
+                                                                            className="p-1 rounded-md hover:bg-gray-100 text-gray-500"
+                                                                        >
+                                                                            <Plus size={16} />
+                                                                        </button>
+                                                                    </div>
+                                                                </td>
+                                                                <td style={{ padding: '1.25rem', textAlign: 'right', fontWeight: 600, fontSize: '1.1rem' }}>
+                                                                    {isError ? (
+                                                                        <span style={{ color: '#ef4444' }}>เกินเงื่อนไข</span>
+                                                                    ) : (
+                                                                        `฿${item.currentTotal.toLocaleString()}`
+                                                                    )}
+                                                                </td>
+                                                                <td style={{ padding: '1.25rem', textAlign: 'center' }}>
+                                                                    <button
+                                                                        onClick={() => removeFromCart(item.id)}
+                                                                        style={{ color: '#ef4444', border: 'none', background: 'none', cursor: 'pointer' }}
+                                                                        title="ลบรายการ"
+                                                                    >
+                                                                        <Trash2 size={18} />
+                                                                    </button>
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                </React.Fragment>
+                                            );
+                                        });
+                                    })()}
                                 </tbody>
                                 <tfoot style={{ backgroundColor: '#f9fafb', borderTop: '1px solid #e5e5e5' }}>
                                     <tr>
-                                        <td colSpan={3} style={{ padding: '1.5rem', textAlign: 'right', fontWeight: 600, fontSize: '1.2rem' }}>
+                                        <td colSpan={4} style={{ padding: '1.5rem', textAlign: 'right', fontWeight: 600, fontSize: '1.2rem' }}>
                                             ราคารวมทั้งหมด ({priceMode === 'platform' ? 'Platform' : 'หน้าร้าน'})
                                         </td>
                                         <td style={{ padding: '1.5rem', textAlign: 'right', fontWeight: 700, fontSize: '1.5rem', color: 'black' }}>
@@ -445,7 +577,7 @@ export default function QuotationPage() {
                                         <td></td>
                                     </tr>
                                     <tr>
-                                        <td colSpan={5} style={{ padding: '0.75rem 1.5rem', textAlign: 'right', color: '#ff4d4f', fontSize: '0.9rem', borderTop: '1px dashed #e5e5e5' }}>
+                                        <td colSpan={6} style={{ padding: '0.75rem 1.5rem', textAlign: 'right', color: '#ff4d4f', fontSize: '0.9rem', borderTop: '1px dashed #e5e5e5' }}>
                                             * ราคาเฉพาะค่าสินค้า ยังไม่รวมค่าจัดส่งและค่าติดตั้ง
                                         </td>
                                     </tr>
@@ -455,94 +587,178 @@ export default function QuotationPage() {
 
                         {/* Mobile Card View */}
                         <div className="md:hidden flex flex-col gap-4">
-                            {calculatedItems.map((item) => {
-                                const isError = item.currentTotal === 0;
-                                const collectionVariants = variantsMap[item.collection.id] || [];
+                            {(() => {
+                                // Mobile Grouping Logic
+                                const groups: Record<number, typeof calculatedItems> = {};
+                                calculatedItems.forEach(item => {
+                                    if (!groups[item.collection.id]) {
+                                        groups[item.collection.id] = [];
+                                    }
+                                    groups[item.collection.id].push(item);
+                                });
 
-                                return (
-                                    <div key={item.id} className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm relative">
-                                        <div className="flex justify-between items-start mb-2 pr-8">
-                                            <div className="font-semibold text-lg">{item.collection.name}</div>
-                                        </div>
-                                        <button
-                                            onClick={() => removeFromCart(item.id)}
-                                            className="absolute top-4 right-4 text-red-500 p-1 bg-red-50 rounded-full"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
+                                return Object.entries(groups).map(([collectionIdStr, groupItems]) => {
+                                    const collectionId = Number(collectionIdStr);
+                                    const collectionVariants = variantsMap[collectionId] || [];
+                                    const isMultiple = groupItems.length > 1;
+                                    const firstItem = groupItems[0];
 
-                                        <div className="text-sm text-gray-500 mb-3">
-                                            {item.width} x {item.height} ซม. • {item.unitPrice} บาท/{item.collection.unit}
-                                        </div>
-
-                                        {/* Variant Selection */}
-                                        <div className="mb-3">
-                                            <label className="text-xs font-semibold text-gray-500 mb-1 block">เลือกสเปค/วัสดุ</label>
-                                            {collectionVariants.length > 0 ? (
-                                                <select
-                                                    value={item.selectedVariant?.id || ''}
-                                                    onChange={(e) => {
-                                                        const variantId = Number(e.target.value);
-                                                        const variant = collectionVariants.find(v => v.id === variantId);
-                                                        if (updateItem) {
-                                                            updateItem(item.id, { selectedVariant: variant });
-                                                        }
-                                                    }}
-                                                    className="w-full text-sm bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-black/5"
-                                                >
-                                                    <option value="">-- เลือก --</option>
-                                                    {collectionVariants.map(variant => (
-                                                        <option key={variant.id} value={variant.id}>
-                                                            {variant.name}{variant.description ? ` - ${variant.description}` : ''}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            ) : (
-                                                <div className="text-sm text-gray-400">-</div>
+                                    return (
+                                        <div key={collectionId} className="flex flex-col gap-3">
+                                            {isMultiple && (
+                                                <div className="bg-gray-50 rounded-xl p-3 border border-gray-200">
+                                                    <div className="flex items-center gap-1">
+                                                        <span className="text-lg">📦</span>
+                                                        {brandMap[collectionId] && (
+                                                            <span className="flex items-center gap-1 text-xs font-semibold px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded border border-gray-200">
+                                                                {brandMap[collectionId]?.logo_url && <img src={brandMap[collectionId]!.logo_url} className="w-4 h-4 object-contain" alt="" />}
+                                                                {brandMap[collectionId]?.name}
+                                                            </span>
+                                                        )}
+                                                        <span className="font-semibold text-gray-700 text-sm">
+                                                            {firstItem.collection.name} ({groupItems.length})
+                                                        </span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-xs text-gray-500 whitespace-nowrap">เปลี่ยนทั้งกลุ่ม:</span>
+                                                        <select
+                                                            onChange={(e) => {
+                                                                const variantId = Number(e.target.value);
+                                                                const variant = collectionVariants.find(v => v.id === variantId);
+                                                                if (updateItem) {
+                                                                    groupItems.forEach(item => {
+                                                                        updateItem(item.id, { selectedVariant: variant });
+                                                                    });
+                                                                }
+                                                            }}
+                                                            className="w-full text-xs bg-white border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                        >
+                                                            <option value="">-- เลือก --</option>
+                                                            {collectionVariants.map(variant => (
+                                                                <option key={variant.id} value={variant.id}>
+                                                                    {variant.name}
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                </div>
                                             )}
-                                        </div>
 
-                                        {/* Action Buttons */}
-                                        <div className="grid grid-cols-2 gap-2 mb-3">
-                                            {catalogMap[item.collection.id] && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setViewingCatalogUrl(catalogMap[item.collection.id]!)}
-                                                    className="py-1.5 px-3 rounded text-xs bg-blue-50 text-blue-600 font-medium flex items-center justify-center gap-1"
-                                                >
-                                                    <BookOpen size={14} /> ดู Catalog
-                                                </button>
-                                            )}
-                                            {portfolioMap[item.collection.id] && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setViewingCatalogUrl(portfolioMap[item.collection.id]!)}
-                                                    className="py-1.5 px-3 rounded text-xs bg-purple-50 text-purple-600 font-medium flex items-center justify-center gap-1"
-                                                >
-                                                    <Images size={14} /> ดูตัวอย่าง
-                                                </button>
-                                            )}
-                                        </div>
+                                            {groupItems.map(item => {
+                                                const isError = item.currentTotal === 0;
+                                                return (
+                                                    <div key={item.id} className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm relative">
+                                                        <div className="flex justify-between items-start mb-2 pr-8">
+                                                            <div>
+                                                                {brandMap[item.collection.id] && (
+                                                                    <div className="flex items-center gap-1 text-xs font-medium text-gray-500 mb-0.5">
+                                                                        {brandMap[item.collection.id]?.logo_url && <img src={brandMap[item.collection.id]!.logo_url} className="w-3 h-3 object-contain" alt="" />}
+                                                                        {brandMap[item.collection.id]?.name}
+                                                                    </div>
+                                                                )}
+                                                                <div className="font-semibold text-lg leading-tight">{item.collection.name}</div>
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => removeFromCart(item.id)}
+                                                            className="absolute top-4 right-4 text-red-500 p-1 bg-red-50 rounded-full"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
 
-                                        {/* Price and Error */}
-                                        <div className="flex justify-between items-end border-t border-gray-50 pt-3 mt-1">
-                                            <div className="text-xs text-gray-400">ราคารวม ({priceMode === 'platform' ? 'Platform' : 'หน้าร้าน'})</div>
-                                            <div className="text-xl font-bold text-gray-900">
-                                                {isError ? (
-                                                    <span className="text-red-500 text-base">เกินเงื่อนไข</span>
-                                                ) : (
-                                                    `฿${item.currentTotal.toLocaleString()}`
-                                                )}
-                                            </div>
+                                                        <div className="text-sm text-gray-500 mb-3 flex items-center justify-between">
+                                                            <span>{item.width} x {item.height} ซม. • {item.unitPrice} บาท/{item.collection.unit}</span>
+
+                                                            <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-1 border border-gray-200">
+                                                                <button
+                                                                    onClick={() => updateItem && updateItem(item.id, { quantity: Math.max(1, (item.quantity || 1) - 1) })}
+                                                                    className="p-1 rounded bg-white hover:bg-gray-100 text-gray-500 shadow-sm disabled:opacity-50"
+                                                                    disabled={(item.quantity || 1) <= 1}
+                                                                >
+                                                                    <Minus size={14} />
+                                                                </button>
+                                                                <span className="w-6 text-center text-sm font-medium">{item.quantity || 1}</span>
+                                                                <button
+                                                                    onClick={() => updateItem && updateItem(item.id, { quantity: (item.quantity || 1) + 1 })}
+                                                                    className="p-1 rounded bg-white hover:bg-gray-100 text-gray-500 shadow-sm"
+                                                                >
+                                                                    <Plus size={14} />
+                                                                </button>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Variant Selection */}
+                                                        <div className="mb-3">
+                                                            <label className="text-xs font-semibold text-gray-500 mb-1 block">เลือกสเปค/วัสดุ</label>
+                                                            {collectionVariants.length > 0 ? (
+                                                                <select
+                                                                    value={item.selectedVariant?.id || ''}
+                                                                    onChange={(e) => {
+                                                                        const variantId = Number(e.target.value);
+                                                                        const variant = collectionVariants.find(v => v.id === variantId);
+                                                                        if (updateItem) {
+                                                                            updateItem(item.id, { selectedVariant: variant });
+                                                                        }
+                                                                    }}
+                                                                    className="w-full text-sm bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-black/5"
+                                                                >
+                                                                    <option value="">-- เลือก --</option>
+                                                                    {collectionVariants.map(variant => (
+                                                                        <option key={variant.id} value={variant.id}>
+                                                                            {variant.name}{variant.description ? ` - ${variant.description}` : ''}
+                                                                        </option>
+                                                                    ))}
+                                                                </select>
+                                                            ) : (
+                                                                <div className="text-sm text-gray-400">-</div>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Action Buttons (Show if not multiple, or just keep them?) - keeping for mobile convenience */}
+                                                        <div className="grid grid-cols-2 gap-2 mb-3">
+                                                            {catalogMap[item.collection.id] && (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setViewingCatalogUrl(catalogMap[item.collection.id]!)}
+                                                                    className="py-1.5 px-3 rounded text-xs bg-blue-50 text-blue-600 font-medium flex items-center justify-center gap-1"
+                                                                >
+                                                                    <BookOpen size={14} /> ดู Catalog
+                                                                </button>
+                                                            )}
+                                                            {portfolioMap[item.collection.id] && (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setViewingCatalogUrl(portfolioMap[item.collection.id]!)}
+                                                                    className="py-1.5 px-3 rounded text-xs bg-purple-50 text-purple-600 font-medium flex items-center justify-center gap-1"
+                                                                >
+                                                                    <Images size={14} /> ดูตัวอย่าง
+                                                                </button>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Price and Error */}
+                                                        <div className="flex justify-between items-end border-t border-gray-50 pt-3 mt-1">
+                                                            <div className="text-xs text-gray-400">ราคารวม ({priceMode === 'platform' ? 'Platform' : 'หน้าร้าน'})</div>
+                                                            <div className="text-xl font-bold text-gray-900">
+                                                                {isError ? (
+                                                                    <span className="text-red-500 text-base">เกินเงื่อนไข</span>
+                                                                ) : (
+                                                                    `฿${item.currentTotal.toLocaleString()}`
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                        {isError && (
+                                                            <div className="text-xs text-red-500 mt-1">
+                                                                {item.currentBreakdown}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
-                                        {isError && (
-                                            <div className="text-xs text-red-500 mt-1">
-                                                {item.currentBreakdown}
-                                            </div>
-                                        )}
-                                    </div>
-                                );
-                            })}
+                                    );
+                                });
+                            })()}
 
                             {/* Mobile Total */}
                             <div className="bg-gray-50 rounded-xl p-4 flex flex-col gap-2 border border-gray-100">

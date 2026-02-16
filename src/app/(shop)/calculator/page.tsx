@@ -31,6 +31,7 @@ export default function CalculatorPage() {
     const [selectedTags, setSelectedTags] = useState<string[]>([]); // Changed to array for multi-select
     const [results, setResults] = useState<CalculationResult[] | null>(null);
     const [addedItems, setAddedItems] = useState<Set<string>>(new Set());
+    const [mobileTab, setMobileTab] = useState<'form' | 'result'>('form');
 
     // Catalog Modal State
     const [activeCatalog, setActiveCatalog] = useState<{ url: string; title: string } | null>(null);
@@ -134,6 +135,11 @@ export default function CalculatorPage() {
     const handleCalculate = (e: React.FormEvent) => {
         e.preventDefault();
         setAddedItems(new Set());
+
+        // Switch to result view on mobile
+        setMobileTab('result');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+
         // Instruction: Set priceMode to 'shop' at the start of handleCalculate to ensure "calculate normal price first".
         // If priceMode is 'platform', setting it to 'shop' will trigger the useEffect to perform calculation.
         // If priceMode is already 'shop', the useEffect won't trigger, so we call performCalculation directly.
@@ -223,16 +229,19 @@ export default function CalculatorPage() {
 
                 /* ===== Mobile ===== */
                 @media (max-width: 767px) {
+                    .mobile-hidden {
+                        display: none !important;
+                    }
                     /* List View Mobile Optimizations */
                     .result-item-list {
                         flex-direction: column;
                         align-items: stretch !important;
-                        gap: 0.75rem !important;
-                        padding: 1rem !important;
+                        gap: 0.5rem !important;
+                        padding: 0.5rem !important;
                     }
                     .result-info {
                         flex: 1 1 auto !important;
-                        margin-bottom: 0.5rem;
+                        margin-bottom: 0.25rem;
                     }
                     .result-price {
                         text-align: left !important;
@@ -240,20 +249,20 @@ export default function CalculatorPage() {
                         justify-content: space-between;
                         align-items: center;
                         background-color: #f9fafb;
-                        padding: 0.75rem;
-                        border-radius: 8px;
-                        margin: 0.5rem 0;
+                        padding: 0.5rem;
+                        border-radius: 6px;
+                        margin: 0.25rem 0;
                     }
                     .result-price::before {
                         content: "ราคารวม";
-                        font-size: 0.9rem;
+                        font-size: 0.8rem;
                         color: #666;
                         font-weight: 500;
                     }
                     .result-actions {
                         width: 100%;
-                        gap: 0.75rem !important;
-                        margin-top: 0.5rem;
+                        gap: 0.5rem !important;
+                        margin-top: 0.25rem;
                     }
                     .result-actions button {
                         flex: 1;
@@ -301,7 +310,7 @@ export default function CalculatorPage() {
                         fontFamily: 'var(--font-mitr)',
                         margin: '0 0 0.4rem',
                         letterSpacing: '-0.01em',
-                    }}>คำนวณราคา</h1>
+                    }}>คำนวณราคาสั่งผลิต</h1>
                     <p style={{
                         color: 'rgba(255,255,255,0.5)',
                         fontSize: '0.9rem',
@@ -387,7 +396,8 @@ export default function CalculatorPage() {
             <div className="calculator-layout">
 
                 {/* Input Section */}
-                <div className="input-section">
+                {/* Input Section */}
+                <div className={`input-section ${mobileTab === 'result' ? 'mobile-hidden' : ''}`}>
                     <form onSubmit={handleCalculate} style={{
                         background: 'white',
                         padding: '1.75rem',
@@ -528,6 +538,7 @@ export default function CalculatorPage() {
                                                     onClick={() => {
                                                         setSelectedCategoryId(isSelected ? '' : c.id.toString());
                                                         setResults(null);
+                                                        setMobileTab('form');
                                                         setSelectedTags([]);
                                                         setShowCategoryModal(false);
                                                     }}
@@ -663,81 +674,106 @@ export default function CalculatorPage() {
                 </div>
 
                 {/* Results Section */}
-                <div className="results-section">
+                {/* Results Section */}
+                <div className={`results-section ${mobileTab === 'form' ? 'mobile-hidden' : ''}`}>
+                    {/* Mobile Back Button */}
+                    <div className="md:hidden mb-4">
+                        <button
+                            onClick={() => setMobileTab('form')}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '0.4rem',
+                                width: '100%',
+                                padding: '0.6rem',
+                                backgroundColor: 'white',
+                                border: '1px solid #e5e5e5',
+                                borderRadius: '10px',
+                                fontSize: '0.9rem',
+                                fontWeight: 600,
+                                color: '#333',
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.03)',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            <ArrowRight size={16} style={{ transform: 'rotate(180deg)' }} /> กลับไปแก้ไขข้อมูล
+                        </button>
+                    </div>
                     {results ? (
                         <>
                             <div style={{ marginBottom: '1.5rem' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
-                                    <h2 style={{ fontSize: '1.5rem', fontWeight: 600 }}>
-                                        ผลลัพธ์การคำนวณ ({results.length} รายการ)
+                                    <h2 style={{ fontSize: '1.25rem', fontWeight: 600, margin: 0 }}>
+                                        ผลลัพธ์ ({results.length})
                                     </h2>
                                     <button
-                                        onClick={() => setResults(null)}
+                                        onClick={() => { setResults(null); setMobileTab('form'); }}
                                         style={{
                                             display: 'flex',
                                             alignItems: 'center',
-                                            gap: '0.5rem',
+                                            gap: '0.4rem',
                                             color: '#666',
-                                            fontSize: '0.9rem',
-                                            padding: '0.5rem 1rem',
+                                            fontSize: '0.8rem',
+                                            padding: '0.4rem 0.8rem',
                                             borderRadius: '20px',
                                             backgroundColor: '#f5f5f5',
                                             border: 'none',
                                             cursor: 'pointer'
                                         }}
                                     >
-                                        <RefreshCw size={14} /> ล้างค่าใหม่
+                                        <RefreshCw size={12} /> ล้างค่าใหม่
                                     </button>
                                 </div>
 
                                 {/* Price Mode Toggle (Moved here) */}
-                                <div style={{ backgroundColor: 'white', padding: '1rem', borderRadius: '12px', border: '1px solid #f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+                                <div style={{ backgroundColor: 'white', padding: '0.75rem 0.5rem', borderRadius: '10px', border: '1px solid #f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                        <span style={{ fontWeight: 600, color: '#333' }}>ราคาสำหรับ:</span>
+                                        <span style={{ fontWeight: 600, color: '#333', fontSize: '0.9rem' }}>ราคาสำหรับ:</span>
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                        <div style={{ display: 'flex', gap: '0.5rem', backgroundColor: '#f5f5f5', padding: '0.25rem', borderRadius: '8px' }}>
+                                        <div style={{ display: 'flex', gap: '0.25rem', backgroundColor: '#f5f5f5', padding: '0.2rem', borderRadius: '8px' }}>
                                             <button
                                                 type="button"
                                                 onClick={() => setPriceMode('shop')}
                                                 style={{
-                                                    padding: '0.5rem 1rem',
+                                                    padding: '0.4rem 0.8rem',
                                                     borderRadius: '6px',
                                                     border: 'none',
                                                     backgroundColor: priceMode === 'shop' ? 'white' : 'transparent',
                                                     color: priceMode === 'shop' ? 'black' : '#666',
                                                     boxShadow: priceMode === 'shop' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
                                                     fontWeight: 600,
-                                                    fontSize: '0.9rem',
+                                                    fontSize: '0.85rem',
                                                     display: 'flex',
                                                     alignItems: 'center',
-                                                    gap: '0.4rem',
+                                                    gap: '0.3rem',
                                                     cursor: 'pointer',
                                                     transition: 'all 0.2s'
                                                 }}
                                             >
-                                                <Store size={16} /> หน้าร้าน
+                                                <Store size={14} /> หน้าร้าน
                                             </button>
                                             <button
                                                 type="button"
                                                 onClick={() => setPriceMode('platform')}
                                                 style={{
-                                                    padding: '0.5rem 1rem',
+                                                    padding: '0.4rem 0.8rem',
                                                     borderRadius: '6px',
                                                     border: 'none',
                                                     backgroundColor: priceMode === 'platform' ? 'white' : 'transparent',
                                                     color: priceMode === 'platform' ? '#f97316' : '#666',
                                                     boxShadow: priceMode === 'platform' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
                                                     fontWeight: 600,
-                                                    fontSize: '0.9rem',
+                                                    fontSize: '0.85rem',
                                                     display: 'flex',
                                                     alignItems: 'center',
-                                                    gap: '0.4rem',
+                                                    gap: '0.3rem',
                                                     cursor: 'pointer',
                                                     transition: 'all 0.2s'
                                                 }}
                                             >
-                                                <ShoppingBag size={16} /> แพลตฟอร์ม
+                                                <ShoppingBag size={14} /> แพลตฟอร์ม
                                             </button>
                                         </div>
                                     </div>

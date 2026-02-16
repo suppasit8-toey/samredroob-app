@@ -6,6 +6,13 @@ export interface Category {
     created_at?: string;
 }
 
+export interface Brand {
+    id: number;
+    name: string;
+    logo_url?: string;
+    created_at?: string;
+}
+
 export interface ProductCollection {
     id: number;
     name: string;
@@ -15,6 +22,7 @@ export interface ProductCollection {
     price_per_unit_platform?: number;
     calculation_method?: string;
     created_at?: string;
+    brand_id?: number;
 
     // Constraints
     min_width?: number;
@@ -34,6 +42,7 @@ export interface ProductCollection {
 
     // Joined fields (optional)
     product_categories?: Category;
+    product_brands?: Brand;
     tags?: string[];
 }
 

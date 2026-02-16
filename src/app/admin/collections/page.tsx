@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { ProductCollection, Category, ProductVariant } from '@/lib/types';
+import { ProductCollection, Category, Brand, ProductVariant } from '@/lib/types';
 import {
     Plus,
     Edit,
@@ -18,7 +18,10 @@ import {
     Ruler,
     Link2,
     ImageIcon,
-    Upload
+    Upload,
+    Copy,
+    ChevronDown,
+    ChevronUp
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -46,6 +49,7 @@ const CALC_METHODS = [
 export default function AdminCollectionsPage() {
     const [collections, setCollections] = useState<ProductCollection[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
+    const [brands, setBrands] = useState<Brand[]>([]);
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingCollection, setEditingCollection] = useState<ProductCollection | null>(null);
@@ -62,6 +66,10 @@ export default function AdminCollectionsPage() {
     const [variantsLoading, setVariantsLoading] = useState(false);
     const [newVariantCode, setNewVariantCode] = useState('');
     const [newVariantDescription, setNewVariantDescription] = useState('');
+
+    // UI State
+    const [isConstraintsExpanded, setIsConstraintsExpanded] = useState(false);
+
     const [formData, setFormData] = useState({
         name: '',
         category_id: 0,
@@ -80,7 +88,8 @@ export default function AdminCollectionsPage() {
         height_step: '',
         area_rounding: '',
         catalog_url: '',
-        portfolio_url: ''
+        portfolio_url: '',
+        brand_id: ''
     });
 
     // Constraint Toggle State
@@ -98,24 +107,44 @@ export default function AdminCollectionsPage() {
     });
 
     useEffect(() => {
-        fetchData();
+        fetchCollections();
+        fetchCategories();
+        fetchBrands();
     }, []);
 
-    const fetchData = async () => {
+    const fetchBrands = async () => {
         if (!supabase) return;
-        setLoading(true);
+        const { data, error } = await supabase
+            .from('product_brands')
+            .select('*')
+            .order('name', { ascending: true });
 
-        // Fetch Categories for dropdown
-        const { data: catData } = await supabase
+        if (error) {
+            console.error('Error fetching brands:', error);
+        } else {
+            setBrands(data || []);
+        }
+    };
+
+    const fetchCategories = async () => {
+        if (!supabase) return;
+        const { data: catData, error } = await supabase
             .from('product_categories')
             .select('*')
             .order('name');
-        setCategories(catData || []);
+        if (error) console.error('Error fetching categories:', error);
+        else setCategories(catData || []);
+    };
 
-        // Fetch Collections with Category info
+    const fetchCollections = async () => {
+        if (!supabase) return;
+        setLoading(true);
+
+        // Fetch Collections with Category and Brand info
         const { data: colData, error } = await supabase
             .from('product_collections')
-            .select('*, product_categories(name)')
+            // Using single line to avoid build parsing issues
+            .select('*, product_categories(id, name), product_brands(id, name, logo_url)')
             .order('id', { ascending: false });
 
         if (error) console.error('Error fetching collections:', error);
@@ -248,7 +277,8 @@ export default function AdminCollectionsPage() {
                 // @ts-ignore
                 catalog_url: collection.catalog_url || '',
                 // @ts-ignore
-                portfolio_url: collection.portfolio_url || ''
+                portfolio_url: collection.portfolio_url || '',
+                brand_id: collection.brand_id?.toString() || ''
             });
 
             setTags(collection.tags || []);
@@ -299,7 +329,8 @@ export default function AdminCollectionsPage() {
                 height_step: '',
                 area_rounding: '',
                 catalog_url: '',
-                portfolio_url: ''
+                portfolio_url: '',
+                brand_id: ''
             });
             setTags([]);
             setVariants([]);
@@ -325,6 +356,66 @@ export default function AdminCollectionsPage() {
         setEditingCollection(null);
     };
 
+    const handleDuplicate = (collection: ProductCollection) => {
+        // Set default category related values
+        // const defaultCategory = categories.length > 0 ? categories[0].id : 0;
+
+        setEditingCollection(null); // Treat as new
+        setFormData({
+            name: `${collection.name} (Copy)`,
+            category_id: collection.category_id,
+            unit: collection.unit,
+            price_per_unit: collection.price_per_unit?.toString() || '',
+            price_per_unit_platform: collection.price_per_unit_platform?.toString() || '',
+            calculation_method: collection.calculation_method || 'area',
+            min_width: collection.min_width?.toString() || '',
+            max_width: collection.max_width?.toString() || '',
+            max_height: collection.max_height?.toString() || '',
+            min_area: collection.min_area?.toString() || '',
+            area_factor: collection.area_factor?.toString() || '',
+            min_billable_width: collection.min_billable_width?.toString() || '',
+            min_billable_height: collection.min_billable_height?.toString() || '',
+            width_step: collection.width_step?.toString() || '',
+            height_step: collection.height_step?.toString() || '',
+            area_rounding: collection.area_rounding?.toString() || '',
+            catalog_url: collection.catalog_url || '',
+            portfolio_url: collection.portfolio_url || '',
+            brand_id: collection.brand_id?.toString() || ''
+        });
+
+        setTags(collection.tags || []);
+
+        // Variants are NOT copied automatically.
+        setVariants([]);
+        setNewVariantCode('');
+
+        // Set enabled states based on values to ensure fields are shown
+        setEnabledConstraints({
+            // @ts-ignore
+            min_width: !!collection.min_width,
+            // @ts-ignore
+            max_width: !!collection.max_width,
+            // @ts-ignore
+            max_height: !!collection.max_height,
+            // @ts-ignore
+            min_area: !!collection.min_area,
+            // @ts-ignore
+            area_factor: !!collection.area_factor,
+            // @ts-ignore
+            min_billable_width: !!collection.min_billable_width,
+            // @ts-ignore
+            min_billable_height: !!collection.min_billable_height,
+            // @ts-ignore
+            width_step: !!collection.width_step,
+            // @ts-ignore
+            height_step: !!collection.height_step,
+            // @ts-ignore
+            area_rounding: !!collection.area_rounding
+        });
+
+        setIsModalOpen(true);
+    };
+
     const handleDelete = async (id: number) => {
         if (!supabase) return;
         if (!confirm('คุณแน่ใจหรือไม่ที่จะลบคอลเล็กชันนี้?')) return;
@@ -334,7 +425,7 @@ export default function AdminCollectionsPage() {
             alert('เกิดข้อผิดพลาดในการลบข้อมูล');
             console.error(error);
         } else {
-            fetchData();
+            fetchCollections();
         }
     };
 
@@ -348,7 +439,7 @@ export default function AdminCollectionsPage() {
                 category_id: Number(formData.category_id),
                 unit: formData.unit,
                 price_per_unit: Number(formData.price_per_unit),
-                price_per_unit_platform: formData.price_per_unit_platform ? Number(formData.price_per_unit_platform) : 0,
+                price_per_unit_platform: formData.price_per_unit_platform ? Number(formData.price_per_unit_platform) : null,
                 calculation_method: formData.calculation_method,
 
                 // Save value only if enabled, otherwise null
@@ -364,6 +455,7 @@ export default function AdminCollectionsPage() {
                 area_rounding: enabledConstraints.area_rounding && formData.area_rounding ? Number(formData.area_rounding) : null,
                 catalog_url: formData.catalog_url || null,
                 portfolio_url: formData.portfolio_url || null,
+                brand_id: formData.brand_id ? Number(formData.brand_id) : null,
                 tags: tags
             };
 
@@ -385,7 +477,7 @@ export default function AdminCollectionsPage() {
             }
 
             handleCloseModal();
-            fetchData();
+            fetchCollections();
         } catch (error) {
             console.error('Error saving collection full object:', JSON.stringify(error, null, 2));
             // @ts-ignore
@@ -403,6 +495,8 @@ export default function AdminCollectionsPage() {
         const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             // @ts-ignore
             c.product_categories?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            // @ts-ignore
+            c.product_brands?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             c.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
 
         const matchesCategory = selectedCategory === 'all' || c.category_id === selectedCategory;
@@ -453,13 +547,15 @@ export default function AdminCollectionsPage() {
                 <div className="flex items-center gap-2 bg-gray-50 p-1 rounded-xl border border-gray-100">
                     <button
                         onClick={() => setViewMode('grid')}
-                        className={`p-2 rounded-lg transition-all cursor-pointer ${viewMode === 'grid' ? 'bg-white shadow text-black' : 'text-gray-400 hover:text-gray-600'}`}
+                        className={`p-2 rounded-lg transition-all cursor-pointer ${viewMode === 'grid' ? 'bg-white shadow text-black' : 'text-gray-400 hover:text-gray-600'
+                            }`}
                     >
                         <LayoutGrid size={20} />
                     </button>
                     <button
                         onClick={() => setViewMode('list')}
-                        className={`p-2 rounded-lg transition-all cursor-pointer ${viewMode === 'list' ? 'bg-white shadow text-black' : 'text-gray-400 hover:text-gray-600'}`}
+                        className={`p-2 rounded-lg transition-all cursor-pointer ${viewMode === 'list' ? 'bg-white shadow text-black' : 'text-gray-400 hover:text-gray-600'
+                            }`}
                     >
                         <List size={20} />
                     </button>
@@ -477,6 +573,7 @@ export default function AdminCollectionsPage() {
                     ) : filteredCollections.map((collection) => (
                         <div key={collection.id} className="group bg-white rounded-2xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-all duration-300 relative">
                             <div className="absolute top-4 right-4 flex gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                <button onClick={() => handleDuplicate(collection)} className="p-2 md:p-1.5 text-gray-400 hover:text-green-600 bg-gray-50 rounded-lg cursor-pointer" title="คัดลอก"><Copy size={16} /></button>
                                 <button onClick={() => handleOpenModal(collection)} className="p-2 md:p-1.5 text-gray-400 hover:text-blue-600 bg-gray-50 rounded-lg cursor-pointer"><Edit size={16} /></button>
                                 <button onClick={() => handleDelete(collection.id)} className="p-2 md:p-1.5 text-gray-400 hover:text-red-600 bg-gray-50 rounded-lg cursor-pointer"><Trash2 size={16} /></button>
                             </div>
@@ -487,8 +584,18 @@ export default function AdminCollectionsPage() {
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-lg text-gray-900 leading-tight mb-1 line-clamp-1">{collection.name}</h3>
-                                    {/* @ts-ignore */}
-                                    <span className="text-xs font-semibold px-2 py-0.5 bg-blue-50 text-blue-700 rounded-md">{collection.product_categories?.name || 'Unknown Category'}</span>
+                                    <div className="flex gap-2 mb-1">
+                                        {collection.product_brands && (
+                                            <span className="text-xs font-semibold px-2 py-0.5 bg-gray-100 text-gray-700 rounded-md border border-gray-200 flex items-center gap-1">
+                                                {/* @ts-ignore */}
+                                                {collection.product_brands.logo_url && <img src={collection.product_brands.logo_url} className="w-3 h-3 object-contain" />}
+                                                {/* @ts-ignore */}
+                                                {collection.product_brands.name}
+                                            </span>
+                                        )}
+                                        {/* @ts-ignore */}
+                                        <span className="text-xs font-semibold px-2 py-0.5 bg-blue-50 text-blue-700 rounded-md">{collection.product_categories?.name || 'Unknown Category'}</span>
+                                    </div>
                                     {collection.tags && collection.tags.length > 0 && (
                                         <div className="flex gap-1 mt-1 flex-wrap">
                                             {collection.tags.map((tag, idx) => (
@@ -538,6 +645,7 @@ export default function AdminCollectionsPage() {
                             <thead className="bg-gray-50 border-b border-gray-100">
                                 <tr>
                                     <th className="p-4 pl-6 font-semibold text-gray-600">ชื่อคอลเล็กชัน</th>
+                                    <th className="p-4 font-semibold text-gray-600">แบรนด์</th>
                                     <th className="p-4 font-semibold text-gray-600">หมวดหมู่</th>
                                     <th className="p-4 font-semibold text-gray-600">Tags</th>
                                     <th className="p-4 font-semibold text-gray-600">หน่วยขาย</th>
@@ -550,6 +658,8 @@ export default function AdminCollectionsPage() {
                                 {filteredCollections.map((col) => (
                                     <tr key={col.id} className="hover:bg-gray-50 transition">
                                         <td className="p-4 pl-6 font-bold text-gray-900">{col.name}</td>
+                                        {/* @ts-ignore */}
+                                        <td className="p-4 text-gray-600">{col.product_brands?.name || '-'}</td>
                                         {/* @ts-ignore */}
                                         <td className="p-4 text-gray-600">{col.product_categories?.name}</td>
                                         <td className="p-4">
@@ -571,10 +681,11 @@ export default function AdminCollectionsPage() {
                                         </td>
                                         <td className="p-4 font-mono font-medium">฿{col.price_per_unit.toLocaleString()}</td>
                                         <td className="p-4 font-mono font-medium text-purple-700">
-                                            {col.price_per_unit_platform ? `฿${col.price_per_unit_platform.toLocaleString()}` : '-'}
+                                            {col.price_per_unit_platform ? `฿${col.price_per_unit_platform.toLocaleString()} ` : '-'}
                                         </td>
                                         <td className="p-4 pr-6 text-right">
                                             <div className="flex justify-end gap-2">
+                                                <button onClick={() => handleDuplicate(col)} className="p-2 text-gray-400 hover:text-green-600 transition cursor-pointer" title="คัดลอก"><Copy size={18} /></button>
                                                 <button onClick={() => handleOpenModal(col)} className="p-2 text-gray-400 hover:text-blue-600 transition cursor-pointer"><Edit size={18} /></button>
                                                 <button onClick={() => handleDelete(col.id)} className="p-2 text-gray-400 hover:text-red-600 transition cursor-pointer"><Trash2 size={18} /></button>
                                             </div>
@@ -592,10 +703,21 @@ export default function AdminCollectionsPage() {
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="flex-1 min-w-0">
                                         <h3 className="font-bold text-gray-900 text-base truncate">{col.name}</h3>
-                                        {/* @ts-ignore */}
-                                        <span className="text-xs font-semibold px-2 py-0.5 bg-blue-50 text-blue-700 rounded-md inline-block mt-1">{col.product_categories?.name || 'Unknown'}</span>
+                                        <div className="flex gap-2 mt-1">
+                                            {col.product_brands && (
+                                                <span className="text-xs font-semibold px-2 py-0.5 bg-gray-100 text-gray-700 rounded-md border border-gray-200 flex items-center gap-1">
+                                                    {/* @ts-ignore */}
+                                                    {col.product_brands.logo_url && <img src={col.product_brands.logo_url} className="w-3 h-3 object-contain" />}
+                                                    {/* @ts-ignore */}
+                                                    {col.product_brands.name}
+                                                </span>
+                                            )}
+                                            {/* @ts-ignore */}
+                                            <span className="text-xs font-semibold px-2 py-0.5 bg-blue-50 text-blue-700 rounded-md">{col.product_categories?.name || 'Unknown'}</span>
+                                        </div>
                                     </div>
                                     <div className="flex gap-1 shrink-0">
+                                        <button onClick={() => handleDuplicate(col)} className="p-2 text-gray-400 hover:text-green-600 bg-gray-50 rounded-lg cursor-pointer"><Copy size={16} /></button>
                                         <button onClick={() => handleOpenModal(col)} className="p-2 text-gray-400 hover:text-blue-600 bg-gray-50 rounded-lg cursor-pointer"><Edit size={16} /></button>
                                         <button onClick={() => handleDelete(col.id)} className="p-2 text-gray-400 hover:text-red-600 bg-gray-50 rounded-lg cursor-pointer"><Trash2 size={16} /></button>
                                     </div>
@@ -618,7 +740,7 @@ export default function AdminCollectionsPage() {
                                     <div>
                                         <span className="text-purple-400 text-xs">ราคา Platform</span>
                                         <p className="font-bold font-mono text-purple-700">
-                                            {col.price_per_unit_platform ? `฿${col.price_per_unit_platform.toLocaleString()}` : '-'}
+                                            {col.price_per_unit_platform ? `฿${col.price_per_unit_platform.toLocaleString()} ` : '-'}
                                         </p>
                                     </div>
                                 </div>
@@ -659,6 +781,20 @@ export default function AdminCollectionsPage() {
                                             className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition"
                                             placeholder="เช่น ม่านจีบ รุ่น Premium UV"
                                         />
+                                    </div>
+
+                                    <div className="col-span-1 md:col-span-2">
+                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">Brand (ยี่ห้อ)</label>
+                                        <select
+                                            value={formData.brand_id}
+                                            onChange={(e) => setFormData({ ...formData, brand_id: e.target.value })}
+                                            className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition appearance-none cursor-pointer"
+                                        >
+                                            <option value="">-- ไม่ระบุ --</option>
+                                            {brands.map(brand => (
+                                                <option key={brand.id} value={brand.id}>{brand.name}</option>
+                                            ))}
+                                        </select>
                                     </div>
 
                                     {/* Tag Input */}
@@ -764,115 +900,161 @@ export default function AdminCollectionsPage() {
 
                                 {/* Rail Width Calculation Constraints */}
                                 {formData.calculation_method === 'rail_width' && (
-                                    <div className="p-6 bg-[#FAFAFA] rounded-2xl border border-dashed border-gray-200 space-y-6">
-                                        <div className="flex items-center gap-3 mb-2">
-                                            <div className="p-2 bg-gradient-to-br from-purple-100 to-purple-50 rounded-lg text-purple-700 shadow-sm">
-                                                <Ruler size={20} />
+                                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden transition-all duration-300">
+                                        <div
+                                            className="p-6 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors"
+                                            onClick={() => setIsConstraintsExpanded(!isConstraintsExpanded)}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 bg-gradient-to-br from-purple-100 to-purple-50 rounded-lg text-purple-700 shadow-sm">
+                                                    <Ruler size={20} />
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-bold text-gray-900 text-base">เงื่อนไขการคำนวณราง</h3>
+                                                    <p className="text-xs text-gray-500">
+                                                        {isConstraintsExpanded ? 'คลิกเพื่อซ่อนเงื่อนไข' : 'คลิกเพื่อกำหนดเงื่อนไขเพิ่มเติม'}
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <h3 className="font-bold text-gray-900 text-base">เงื่อนไขการคำนวณราง</h3>
-                                                <p className="text-xs text-gray-500">กำหนดเงื่อนไขสำหรับรางม่าน</p>
+                                            <div className={`transition-transform duration-300 ${isConstraintsExpanded ? 'rotate-180' : ''}`}>
+                                                <ChevronDown size={20} className="text-gray-400" />
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                            {[
-                                                { id: 'min_billable_width', label: 'ความกว้างขั้นต่ำคิดราคา', placeholder: '1.00', unit: 'เมตร', isHighlight: true },
-                                                { id: 'width_step', label: 'คิดราคาทุกๆ (Step)', placeholder: '0.10', unit: 'เมตร', isHighlight: true },
-                                                { id: 'max_height', label: 'ความสูงสูงสุด (Max Height)', placeholder: '3.00', unit: 'เมตร' },
-                                            ].map((field) => (
-                                                <div key={field.id} className={`group relative transition-all duration-300 ${!enabledConstraints[field.id as keyof typeof enabledConstraints] ? 'opacity-40' : ''}`}>
-                                                    <div className="flex justify-between items-center mb-2">
-                                                        <label className={`block text-[10px] font-bold uppercase tracking-widest transition-colors ${field.isHighlight && enabledConstraints[field.id as keyof typeof enabledConstraints] ? 'text-orange-500' : 'text-gray-400 group-focus-within:text-black'}`}>
-                                                            {field.label}
-                                                        </label>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => setEnabledConstraints(prev => ({ ...prev, [field.id]: !prev[field.id as keyof typeof enabledConstraints] }))}
-                                                            className={`relative w-9 h-5 rounded-full transition-colors duration-200 ease-in-out focus:outline-none cursor-pointer ${enabledConstraints[field.id as keyof typeof enabledConstraints] ? (field.isHighlight ? 'bg-orange-500' : 'bg-black') : 'bg-gray-300'}`}
-                                                        >
-                                                            <div className={`absolute top-0.5 left-0.5 bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ${enabledConstraints[field.id as keyof typeof enabledConstraints] ? 'translate-x-4' : 'translate-x-0'}`} />
-                                                        </button>
+                                        <AnimatePresence>
+                                            {isConstraintsExpanded && (
+                                                <motion.div
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: 'auto', opacity: 1 }}
+                                                    exit={{ height: 0, opacity: 0 }}
+                                                    transition={{ duration: 0.3 }}
+                                                >
+                                                    <div className="p-6 pt-0 border-t border-gray-50">
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-6">
+                                                            {[
+                                                                { id: 'min_billable_width', label: 'ความกว้างขั้นต่ำคิดราคา', placeholder: '1.00', unit: 'เมตร', isHighlight: true },
+                                                                { id: 'width_step', label: 'คิดราคาทุกๆ (Step)', placeholder: '0.10', unit: 'เมตร', isHighlight: true },
+                                                                { id: 'max_height', label: 'ความสูงสูงสุด (Max Height)', placeholder: '3.00', unit: 'เมตร' },
+                                                            ].map((field) => (
+                                                                <div key={field.id} className={`group relative transition-all duration-300 ${!enabledConstraints[field.id as keyof typeof enabledConstraints] ? 'opacity-40' : ''}`}>
+                                                                    <div className="flex justify-between items-center mb-2">
+                                                                        <label className={`block text-[10px] font-bold uppercase tracking-widest transition-colors ${field.isHighlight && enabledConstraints[field.id as keyof typeof enabledConstraints] ? 'text-orange-500' : 'text-gray-400 group-focus-within:text-black'}`}>
+                                                                            {field.label}
+                                                                        </label>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => setEnabledConstraints(prev => ({ ...prev, [field.id]: !prev[field.id as keyof typeof enabledConstraints] }))}
+                                                                            className={`relative w-9 h-5 rounded-full transition-colors duration-200 ease-in-out focus:outline-none cursor-pointer ${enabledConstraints[field.id as keyof typeof enabledConstraints] ? (field.isHighlight ? 'bg-orange-500' : 'bg-black') : 'bg-gray-300'}`}
+                                                                        >
+                                                                            <div className={`absolute top-0.5 left-0.5 bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ${enabledConstraints[field.id as keyof typeof enabledConstraints] ? 'translate-x-4' : 'translate-x-0'}`} />
+                                                                        </button>
+                                                                    </div>
+                                                                    <div className="relative">
+                                                                        <input
+                                                                            type="number"
+                                                                            step="0.01"
+                                                                            // @ts-ignore
+                                                                            value={formData[field.id] || ''}
+                                                                            // @ts-ignore
+                                                                            onChange={(e) => setFormData({ ...formData, [field.id]: e.target.value })}
+                                                                            disabled={!enabledConstraints[field.id as keyof typeof enabledConstraints]}
+                                                                            className={`w-full pl-4 pr-14 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all shadow-sm text-sm font-bold font-mono disabled:cursor-not-allowed disabled:bg-gray-100 ${field.isHighlight && enabledConstraints[field.id as keyof typeof enabledConstraints] ? 'border-orange-200 text-orange-900 bg-orange-50/30' : 'border-gray-200 text-gray-900 bg-white'}`}
+                                                                            placeholder={enabledConstraints[field.id as keyof typeof enabledConstraints] ? field.placeholder : '-'}
+                                                                        />
+                                                                        <span className={`absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold ${field.isHighlight && enabledConstraints[field.id as keyof typeof enabledConstraints] ? 'text-orange-400' : 'text-gray-400'}`}>
+                                                                            {field.unit}
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
                                                     </div>
-                                                    <div className="relative">
-                                                        <input
-                                                            type="number"
-                                                            step="0.01"
-                                                            // @ts-ignore
-                                                            value={formData[field.id] || ''}
-                                                            // @ts-ignore
-                                                            onChange={(e) => setFormData({ ...formData, [field.id]: e.target.value })}
-                                                            disabled={!enabledConstraints[field.id as keyof typeof enabledConstraints]}
-                                                            className={`w-full pl-4 pr-14 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all shadow-sm text-sm font-bold font-mono disabled:cursor-not-allowed disabled:bg-gray-100 ${field.isHighlight && enabledConstraints[field.id as keyof typeof enabledConstraints] ? 'border-orange-200 text-orange-900 bg-orange-50/30' : 'border-gray-200 text-gray-900 bg-white'}`}
-                                                            placeholder={enabledConstraints[field.id as keyof typeof enabledConstraints] ? field.placeholder : '-'}
-                                                        />
-                                                        <span className={`absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold ${field.isHighlight && enabledConstraints[field.id as keyof typeof enabledConstraints] ? 'text-orange-400' : 'text-gray-400'}`}>
-                                                            {field.unit}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
                                     </div>
                                 )}
 
                                 {/* Area Calculation Constraints - Toggleable */}
                                 {(formData.calculation_method === 'area' || formData.calculation_method === 'area_sq_yard') && (
-                                    <div className="p-6 bg-[#FAFAFA] rounded-2xl border border-dashed border-gray-200 space-y-6">
-                                        <div className="flex items-center gap-3 mb-2">
-                                            <div className="p-2 bg-gradient-to-br from-blue-100 to-blue-50 rounded-lg text-blue-700 shadow-sm">
-                                                <Ruler size={20} />
+                                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden transition-all duration-300">
+                                        <div
+                                            className="p-6 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors"
+                                            onClick={() => setIsConstraintsExpanded(!isConstraintsExpanded)}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 bg-gradient-to-br from-blue-100 to-blue-50 rounded-lg text-blue-700 shadow-sm">
+                                                    <Ruler size={20} />
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-bold text-gray-900 text-base">เงื่อนไขการคำนวณพื้นที่</h3>
+                                                    <p className="text-xs text-gray-500">
+                                                        {isConstraintsExpanded ? 'คลิกเพื่อซ่อนเงื่อนไข' : 'คลิกเพื่อกำหนดเงื่อนไขเพิ่มเติม'}
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <h3 className="font-bold text-gray-900 text-base">เงื่อนไขการคำนวณพื้นที่</h3>
-                                                <p className="text-xs text-gray-500">เลือกเปิดใช้งานเงื่อนไขที่ต้องการ</p>
+                                            <div className={`transition-transform duration-300 ${isConstraintsExpanded ? 'rotate-180' : ''}`}>
+                                                <ChevronDown size={20} className="text-gray-400" />
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                            {[
-                                                { id: 'min_width', label: 'ความกว้างต่ำสุด (Min Width)', placeholder: '0.45', unit: 'เมตร' },
-                                                { id: 'max_width', label: 'ความกว้างสูงสุด (Max Width)', placeholder: '2.40', unit: 'เมตร' },
-                                                { id: 'max_height', label: 'ความสูงสูงสุด (Max Height)', placeholder: '3.00', unit: 'เมตร' },
-                                                { id: 'min_billable_width', label: 'ความกว้างขั้นต่ำคิดราคา', placeholder: '1.00', unit: 'เมตร', isHighlight: true },
-                                                { id: 'min_billable_height', label: 'ความสูงขั้นต่ำคิดราคา', placeholder: '2.00', unit: 'เมตร', isHighlight: true },
-                                                { id: 'height_step', label: 'คิดความสูงทุกๆ (Step)', placeholder: '0.20', unit: 'เมตร', isHighlight: true },
-                                                { id: 'min_area', label: 'พื้นที่ขั้นต่ำ (Min Area)', placeholder: '2.5', unit: formData.unit === 'sq_yard' ? 'ตร.หลา' : 'ตร.ม.' },
-                                                { id: 'area_factor', label: 'ตัวคูณพื้นที่ (Factor)', placeholder: '1.20', unit: 'X' },
-                                                { id: 'area_rounding', label: 'ปัดเศษพื้นที่ขึ้นเป็น (Rounding)', placeholder: '0.50', unit: formData.unit === 'sq_yard' ? 'ตร.หลา' : 'ตร.ม.', isHighlight: true },
-                                            ].map((field) => (
-                                                <div key={field.id} className={`group relative transition-all duration-300 ${!enabledConstraints[field.id as keyof typeof enabledConstraints] ? 'opacity-40' : ''}`}>
-                                                    <div className="flex justify-between items-center mb-2">
-                                                        <label className={`block text-[10px] font-bold uppercase tracking-widest transition-colors ${field.isHighlight && enabledConstraints[field.id as keyof typeof enabledConstraints] ? 'text-orange-500' : 'text-gray-400 group-focus-within:text-black'}`}>
-                                                            {field.label}
-                                                        </label>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => setEnabledConstraints(prev => ({ ...prev, [field.id]: !prev[field.id as keyof typeof enabledConstraints] }))}
-                                                            className={`relative w-9 h-5 rounded-full transition-colors duration-200 ease-in-out focus:outline-none cursor-pointer ${enabledConstraints[field.id as keyof typeof enabledConstraints] ? (field.isHighlight ? 'bg-orange-500' : 'bg-black') : 'bg-gray-300'}`}
-                                                        >
-                                                            <div className={`absolute top-0.5 left-0.5 bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ${enabledConstraints[field.id as keyof typeof enabledConstraints] ? 'translate-x-4' : 'translate-x-0'}`} />
-                                                        </button>
+                                        <AnimatePresence>
+                                            {isConstraintsExpanded && (
+                                                <motion.div
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: 'auto', opacity: 1 }}
+                                                    exit={{ height: 0, opacity: 0 }}
+                                                    transition={{ duration: 0.3 }}
+                                                >
+                                                    <div className="p-6 pt-0 border-t border-gray-50">
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-6">
+                                                            {[
+                                                                { id: 'min_width', label: 'ความกว้างต่ำสุด (Min Width)', placeholder: '0.45', unit: 'เมตร' },
+                                                                { id: 'max_width', label: 'ความกว้างสูงสุด (Max Width)', placeholder: '2.40', unit: 'เมตร' },
+                                                                { id: 'max_height', label: 'ความสูงสูงสุด (Max Height)', placeholder: '3.00', unit: 'เมตร' },
+                                                                { id: 'min_billable_width', label: 'ความกว้างขั้นต่ำคิดราคา', placeholder: '1.00', unit: 'เมตร', isHighlight: true },
+                                                                { id: 'min_billable_height', label: 'ความสูงขั้นต่ำคิดราคา', placeholder: '2.00', unit: 'เมตร', isHighlight: true },
+                                                                { id: 'height_step', label: 'คิดความสูงทุกๆ (Step)', placeholder: '0.20', unit: 'เมตร', isHighlight: true },
+                                                                { id: 'min_area', label: 'พื้นที่ขั้นต่ำ (Min Area)', placeholder: '2.5', unit: formData.unit === 'sq_yard' ? 'ตร.หลา' : 'ตร.ม.' },
+                                                                { id: 'area_factor', label: 'ตัวคูณพื้นที่ (Factor)', placeholder: '1.20', unit: 'X' },
+                                                                { id: 'area_rounding', label: 'ปัดเศษพื้นที่ขึ้นเป็น (Rounding)', placeholder: '0.50', unit: formData.unit === 'sq_yard' ? 'ตร.หลา' : 'ตร.ม.', isHighlight: true },
+                                                            ].map((field) => (
+                                                                <div key={field.id} className={`group relative transition-all duration-300 ${!enabledConstraints[field.id as keyof typeof enabledConstraints] ? 'opacity-40' : ''}`}>
+                                                                    <div className="flex justify-between items-center mb-2">
+                                                                        <label className={`block text-[10px] font-bold uppercase tracking-widest transition-colors ${field.isHighlight && enabledConstraints[field.id as keyof typeof enabledConstraints] ? 'text-orange-500' : 'text-gray-400 group-focus-within:text-black'}`}>
+                                                                            {field.label}
+                                                                        </label>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => setEnabledConstraints(prev => ({ ...prev, [field.id]: !prev[field.id as keyof typeof enabledConstraints] }))}
+                                                                            className={`relative w-9 h-5 rounded-full transition-colors duration-200 ease-in-out focus:outline-none cursor-pointer ${enabledConstraints[field.id as keyof typeof enabledConstraints] ? (field.isHighlight ? 'bg-orange-500' : 'bg-black') : 'bg-gray-300'}`}
+                                                                        >
+                                                                            <div className={`absolute top-0.5 left-0.5 bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ${enabledConstraints[field.id as keyof typeof enabledConstraints] ? 'translate-x-4' : 'translate-x-0'}`} />
+                                                                        </button>
+                                                                    </div>
+                                                                    <div className="relative">
+                                                                        <input
+                                                                            type="number"
+                                                                            step="0.01"
+                                                                            // @ts-ignore
+                                                                            value={formData[field.id] || ''}
+                                                                            // @ts-ignore
+                                                                            onChange={(e) => setFormData({ ...formData, [field.id]: e.target.value })}
+                                                                            disabled={!enabledConstraints[field.id as keyof typeof enabledConstraints]}
+                                                                            className={`w-full pl-4 pr-14 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all shadow-sm text-sm font-bold font-mono disabled:cursor-not-allowed disabled:bg-gray-100 ${field.isHighlight && enabledConstraints[field.id as keyof typeof enabledConstraints] ? 'border-orange-200 text-orange-900 bg-orange-50/30' : 'border-gray-200 text-gray-900 bg-white'}`}
+                                                                            placeholder={enabledConstraints[field.id as keyof typeof enabledConstraints] ? field.placeholder : '-'}
+                                                                        />
+                                                                        <span className={`absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold ${field.isHighlight && enabledConstraints[field.id as keyof typeof enabledConstraints] ? 'text-orange-400' : 'text-gray-400'}`}>
+                                                                            {field.unit}
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
                                                     </div>
-                                                    <div className="relative">
-                                                        <input
-                                                            type="number"
-                                                            step="0.01"
-                                                            // @ts-ignore
-                                                            value={formData[field.id] || ''}
-                                                            // @ts-ignore
-                                                            onChange={(e) => setFormData({ ...formData, [field.id]: e.target.value })}
-                                                            disabled={!enabledConstraints[field.id as keyof typeof enabledConstraints]}
-                                                            className={`w-full pl-4 pr-14 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all shadow-sm text-sm font-bold font-mono disabled:cursor-not-allowed disabled:bg-gray-100 ${field.isHighlight && enabledConstraints[field.id as keyof typeof enabledConstraints] ? 'border-orange-200 text-orange-900 bg-orange-50/30' : 'border-gray-200 text-gray-900 bg-white'}`}
-                                                            placeholder={enabledConstraints[field.id as keyof typeof enabledConstraints] ? field.placeholder : '-'}
-                                                        />
-                                                        <span className={`absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold ${field.isHighlight && enabledConstraints[field.id as keyof typeof enabledConstraints] ? 'text-orange-400' : 'text-gray-400'}`}>
-                                                            {field.unit}
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
                                     </div>
                                 )}
 
@@ -953,7 +1135,7 @@ export default function AdminCollectionsPage() {
                                                             if (!supabase || !e.target.files || e.target.files.length === 0) return;
                                                             const file = e.target.files[0];
                                                             const fileExt = file.name.split('.').pop();
-                                                            const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+                                                            const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}.${fileExt} `;
 
                                                             try {
                                                                 const { error: uploadError } = await supabase.storage
@@ -1045,11 +1227,11 @@ export default function AdminCollectionsPage() {
                                         ) : (
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 p-2">
                                                 {variants.map((variant) => (
-                                                    <div key={variant.id} className={`flex items-center justify-between p-2 rounded-lg border ${variant.in_stock ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-200'}`}>
+                                                    <div key={variant.id} className={`flex items - center justify - between p - 2 rounded - lg border ${variant.in_stock ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-200'} `}>
                                                         <div className="flex flex-col overflow-hidden mr-2">
                                                             <div className="flex items-center gap-2">
-                                                                <div className={`w-2 h-2 rounded-full shrink-0 ${variant.in_stock ? 'bg-green-500' : 'bg-red-500'}`} />
-                                                                <span className={`text-sm font-medium truncate ${variant.in_stock ? 'text-gray-900' : 'text-gray-400 line-through'}`}>
+                                                                <div className={`w - 2 h - 2 rounded - full shrink - 0 ${variant.in_stock ? 'bg-green-500' : 'bg-red-500'} `} />
+                                                                <span className={`text - sm font - medium truncate ${variant.in_stock ? 'text-gray-900' : 'text-gray-400 line-through'} `}>
                                                                     {variant.name}
                                                                 </span>
                                                             </div>
@@ -1063,7 +1245,7 @@ export default function AdminCollectionsPage() {
                                                             <button
                                                                 type="button"
                                                                 onClick={() => handleToggleVariantStock(variant.id, variant.in_stock ?? true)}
-                                                                className={`text-[10px] px-2 py-1 rounded border transition cursor-pointer ${variant.in_stock ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100' : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'}`}
+                                                                className={`text - [10px] px - 2 py - 1 rounded border transition cursor - pointer ${variant.in_stock ? 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100' : 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100'} `}
                                                             >
                                                                 {variant.in_stock ? 'มีของ' : 'หมด'}
                                                             </button>
