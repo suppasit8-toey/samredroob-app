@@ -44,7 +44,28 @@ const CALC_METHODS = [
     { value: 'rail_width', label: 'คำนวณตามความกว้างราง' },
     { value: 'box', label: 'คำนวณตามจำนวน (กล่อง/ม้วน)' },
     { value: 'fixed', label: 'ราคาคงที่ (ต่อชิ้น/ชุด)' },
+    { value: 'width_range', label: 'Step ราคาตามความกว้าง' },
 ];
+
+
+const renderCollectionPrice = (col: ProductCollection, isPlatform = false) => {
+    if (col.calculation_method === 'width_range' && Array.isArray(col.price_data)) {
+        const prices = col.price_data
+            .map((step: any) => isPlatform ? Number(step.price_platform || 0) : Number(step.price))
+            .filter((p: number) => p > 0); // Filter out 0 or invalid prices
+
+        if (prices.length > 0) {
+            const min = Math.min(...prices);
+            const max = Math.max(...prices);
+            return min === max
+                ? `฿${min.toLocaleString()}`
+                : `฿${min.toLocaleString()} - ฿${max.toLocaleString()}`;
+        }
+    }
+
+    const price = isPlatform ? col.price_per_unit_platform : col.price_per_unit;
+    return price ? `฿${price.toLocaleString()}` : '-';
+};
 
 export default function AdminCollectionsPage() {
     const [collections, setCollections] = useState<ProductCollection[]>([]);
@@ -89,7 +110,8 @@ export default function AdminCollectionsPage() {
         area_rounding: '',
         catalog_url: '',
         portfolio_url: '',
-        brand_id: ''
+        brand_id: '',
+        price_data: [] as any[] // For width_range steps
     });
 
     // Constraint Toggle State
@@ -168,23 +190,37 @@ export default function AdminCollectionsPage() {
     };
 
     const handleAddVariant = async () => {
-        if (!editingCollection || !newVariantCode.trim() || !supabase) return;
+        if (!newVariantCode.trim() || !supabase) return;
 
         try {
-            const { error } = await supabase
-                .from('product_variants')
-                .insert([{
-                    collection_id: editingCollection.id,
-                    name: newVariantCode.trim(),
-                    description: newVariantDescription.trim() || null,
-                    in_stock: true
-                }]);
+            if (editingCollection) {
+                // Edit Mode - Add to DB immediately
+                const { error } = await supabase
+                    .from('product_variants')
+                    .insert([{
+                        collection_id: editingCollection.id,
+                        name: newVariantCode.trim(),
+                        description: newVariantDescription.trim() || null,
+                        in_stock: true
+                    }]);
 
-            if (error) throw error;
+                if (error) throw error;
+                fetchVariants(editingCollection.id);
+            } else {
+                // Create Mode - Add to local state with temp ID
+                const newVariant: ProductVariant = {
+                    id: -(Date.now()), // Temp ID
+                    collection_id: 0,
+                    name: newVariantCode.trim(),
+                    description: newVariantDescription.trim() || undefined,
+                    in_stock: true,
+                    created_at: new Date().toISOString()
+                };
+                setVariants([...variants, newVariant]);
+            }
 
             setNewVariantCode('');
             setNewVariantDescription('');
-            fetchVariants(editingCollection.id);
         } catch (error) {
             console.error('Error adding variant:', error);
             alert('ไม่สามารถเพิ่มรหัสสินค้าได้');
@@ -192,7 +228,15 @@ export default function AdminCollectionsPage() {
     };
 
     const handleDeleteVariant = async (id: number) => {
-        if (!supabase || !confirm('ต้องการลบรหัสสินค้านี้?')) return;
+        if (!confirm('ต้องการลบรหัสสินค้านี้?')) return;
+
+        if (id < 0) {
+            // Local delete
+            setVariants(variants.filter(v => v.id !== id));
+            return;
+        }
+
+        if (!supabase) return;
 
         try {
             const { error } = await supabase
@@ -210,6 +254,11 @@ export default function AdminCollectionsPage() {
     };
 
     const handleToggleVariantStock = async (id: number, currentStatus: boolean) => {
+        if (id < 0) {
+            setVariants(variants.map(v => v.id === id ? { ...v, in_stock: !v.in_stock } : v));
+            return;
+        }
+
         if (!supabase) return;
 
         try {
@@ -278,7 +327,8 @@ export default function AdminCollectionsPage() {
                 catalog_url: collection.catalog_url || '',
                 // @ts-ignore
                 portfolio_url: collection.portfolio_url || '',
-                brand_id: collection.brand_id?.toString() || ''
+                brand_id: collection.brand_id?.toString() || '',
+                price_data: collection.price_data || []
             });
 
             setTags(collection.tags || []);
@@ -330,7 +380,8 @@ export default function AdminCollectionsPage() {
                 area_rounding: '',
                 catalog_url: '',
                 portfolio_url: '',
-                brand_id: ''
+                brand_id: '',
+                price_data: []
             });
             setTags([]);
             setVariants([]);
@@ -354,9 +405,11 @@ export default function AdminCollectionsPage() {
     const handleCloseModal = () => {
         setIsModalOpen(false);
         setEditingCollection(null);
+        setVariants([]);
+        setFormData(prev => ({ ...prev, price_data: [] }));
     };
 
-    const handleDuplicate = (collection: ProductCollection) => {
+    const handleDuplicate = async (collection: ProductCollection) => {
         // Set default category related values
         // const defaultCategory = categories.length > 0 ? categories[0].id : 0;
 
@@ -380,13 +433,27 @@ export default function AdminCollectionsPage() {
             area_rounding: collection.area_rounding?.toString() || '',
             catalog_url: collection.catalog_url || '',
             portfolio_url: collection.portfolio_url || '',
-            brand_id: collection.brand_id?.toString() || ''
+            brand_id: collection.brand_id?.toString() || '',
+            price_data: collection.price_data || []
         });
 
         setTags(collection.tags || []);
 
-        // Variants are NOT copied automatically.
-        setVariants([]);
+        // Fetch variants from the original collection to copy
+        const { data: sourceVariants } = await supabase!.from('product_variants').select('*').eq('collection_id', collection.id);
+        if (sourceVariants && sourceVariants.length > 0) {
+            // Map to variants with temporary negative IDs and mark as 'new' (though we don't have a special field, negative ID implies new)
+            const variantsToCopy = sourceVariants.map((v, index) => ({
+                ...v,
+                id: -(index + 1), // Temporary ID
+                collection_id: 0, // Not yet assigned
+                created_at: new Date().toISOString()
+            }));
+            setVariants(variantsToCopy);
+        } else {
+            setVariants([]);
+        }
+
         setNewVariantCode('');
 
         // Set enabled states based on values to ensure fields are shown
@@ -456,7 +523,8 @@ export default function AdminCollectionsPage() {
                 catalog_url: formData.catalog_url || null,
                 portfolio_url: formData.portfolio_url || null,
                 brand_id: formData.brand_id ? Number(formData.brand_id) : null,
-                tags: tags
+                tags: tags,
+                price_data: formData.price_data // Save price steps
             };
 
             if (editingCollection) {
@@ -469,11 +537,34 @@ export default function AdminCollectionsPage() {
                 if (error) throw error;
             } else {
                 // Create
-                const { error } = await supabase
+                const { data: newCollection, error } = await supabase
                     .from('product_collections')
-                    .insert([dataToSave]);
+                    .insert([dataToSave])
+                    .select()
+                    .single();
 
                 if (error) throw error;
+
+                // Handle Variants (from local state)
+                if (newCollection && variants.length > 0) {
+                    const variantsToInsert = variants.map(v => ({
+                        collection_id: newCollection.id,
+                        name: v.name,
+                        description: v.description,
+                        in_stock: v.in_stock !== undefined ? v.in_stock : true,
+                    }));
+
+                    const { error: variantError } = await supabase
+                        .from('product_variants')
+                        .insert(variantsToInsert);
+
+                    if (variantError) {
+                        console.error('Error copying variants:', variantError);
+                        alert('สร้างคอลเล็กชันสำเร็จ แต่บันทึกรหัสสินค้าไม่สำเร็จ');
+                    }
+                }
+
+
             }
 
             handleCloseModal();
@@ -613,14 +704,12 @@ export default function AdminCollectionsPage() {
                                 </div>
                                 <div className="flex items-center justify-between text-sm">
                                     <span className="text-gray-500 flex items-center gap-1.5"><DollarSign size={14} /> ราคาปกติ</span>
-                                    <span className="font-bold text-gray-900">฿{collection.price_per_unit.toLocaleString()}</span>
+                                    <span className="font-bold text-gray-900">{renderCollectionPrice(collection)}</span>
                                 </div>
-                                {(collection.price_per_unit_platform ?? 0) > 0 && (
-                                    <div className="flex items-center justify-between text-sm">
-                                        <span className="text-purple-500 flex items-center gap-1.5"><DollarSign size={14} /> ราคา Platform</span>
-                                        <span className="font-bold text-purple-700">฿{collection.price_per_unit_platform?.toLocaleString()}</span>
-                                    </div>
-                                )}
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="text-purple-500 flex items-center gap-1.5"><DollarSign size={14} /> ราคา Platform</span>
+                                    <span className="font-bold text-purple-700">{renderCollectionPrice(collection, true)}</span>
+                                </div>
                             </div>
                         </div>
                     ))}
@@ -679,9 +768,9 @@ export default function AdminCollectionsPage() {
                                                 {UNIT_OPTIONS.find(u => u.value === col.unit)?.label || col.unit}
                                             </span>
                                         </td>
-                                        <td className="p-4 font-mono font-medium">฿{col.price_per_unit.toLocaleString()}</td>
+                                        <td className="p-4 font-mono font-medium">{renderCollectionPrice(col)}</td>
                                         <td className="p-4 font-mono font-medium text-purple-700">
-                                            {col.price_per_unit_platform ? `฿${col.price_per_unit_platform.toLocaleString()} ` : '-'}
+                                            {renderCollectionPrice(col, true)}
                                         </td>
                                         <td className="p-4 pr-6 text-right">
                                             <div className="flex justify-end gap-2">
@@ -735,12 +824,12 @@ export default function AdminCollectionsPage() {
                                 <div className="mt-3 pt-3 border-t border-gray-100 grid grid-cols-2 gap-2 text-sm">
                                     <div>
                                         <span className="text-gray-400 text-xs">ราคาปกติ</span>
-                                        <p className="font-bold font-mono text-gray-900">฿{col.price_per_unit.toLocaleString()}</p>
+                                        <p className="font-bold font-mono text-gray-900">{renderCollectionPrice(col)}</p>
                                     </div>
                                     <div>
                                         <span className="text-purple-400 text-xs">ราคา Platform</span>
                                         <p className="font-bold font-mono text-purple-700">
-                                            {col.price_per_unit_platform ? `฿${col.price_per_unit_platform.toLocaleString()} ` : '-'}
+                                            {renderCollectionPrice(col, true)}
                                         </p>
                                     </div>
                                 </div>
@@ -975,6 +1064,8 @@ export default function AdminCollectionsPage() {
                                     </div>
                                 )}
 
+
+
                                 {/* Area Calculation Constraints - Toggleable */}
                                 {(formData.calculation_method === 'area' || formData.calculation_method === 'area_sq_yard') && (
                                     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden transition-all duration-300">
@@ -1058,6 +1149,84 @@ export default function AdminCollectionsPage() {
                                     </div>
                                 )}
 
+
+                                {/* Width Range Constraints */}
+                                {formData.calculation_method === 'width_range' && (
+                                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden transition-all duration-300">
+                                        <div
+                                            className="p-6 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors"
+                                            onClick={() => setIsConstraintsExpanded(!isConstraintsExpanded)}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 bg-gradient-to-br from-orange-100 to-orange-50 rounded-lg text-orange-700 shadow-sm">
+                                                    <Ruler size={20} />
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-bold text-gray-900 text-base">เงื่อนไขจำกัดขนาด</h3>
+                                                    <p className="text-xs text-gray-500">
+                                                        {isConstraintsExpanded ? 'คลิกเพื่อซ่อนเงื่อนไข' : 'คลิกเพื่อกำหนดเงื่อนไขเพิ่มเติม'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <div className={`transition-transform duration-300 ${isConstraintsExpanded ? 'rotate-180' : ''}`}>
+                                                <ChevronDown size={20} className="text-gray-400" />
+                                            </div>
+                                        </div>
+
+                                        <AnimatePresence>
+                                            {isConstraintsExpanded && (
+                                                <motion.div
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: 'auto', opacity: 1 }}
+                                                    exit={{ height: 0, opacity: 0 }}
+                                                    transition={{ duration: 0.3 }}
+                                                >
+                                                    <div className="p-6 pt-0 border-t border-gray-50">
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-6">
+                                                            {[
+                                                                { id: 'min_width', label: 'ความกว้างต่ำสุด (Min Width)', placeholder: '0.00', unit: 'เมตร', isHighlight: true },
+                                                                { id: 'max_width', label: 'ความกว้างสูงสุด (Max Width)', placeholder: '0.00', unit: 'เมตร', isHighlight: true },
+                                                                { id: 'max_height', label: 'ความสูงสูงสุด (Max Height)', placeholder: '3.00', unit: 'เมตร' },
+                                                            ].map((field) => (
+                                                                <div key={field.id} className={`group relative transition-all duration-300 ${!enabledConstraints[field.id as keyof typeof enabledConstraints] ? 'opacity-40' : ''}`}>
+                                                                    <div className="flex justify-between items-center mb-2">
+                                                                        <label className={`block text-[10px] font-bold uppercase tracking-widest transition-colors ${field.isHighlight && enabledConstraints[field.id as keyof typeof enabledConstraints] ? 'text-orange-500' : 'text-gray-400 group-focus-within:text-black'}`}>
+                                                                            {field.label}
+                                                                        </label>
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={() => setEnabledConstraints(prev => ({ ...prev, [field.id]: !prev[field.id as keyof typeof enabledConstraints] }))}
+                                                                            className={`relative w-9 h-5 rounded-full transition-colors duration-200 ease-in-out focus:outline-none cursor-pointer ${enabledConstraints[field.id as keyof typeof enabledConstraints] ? (field.isHighlight ? 'bg-orange-500' : 'bg-black') : 'bg-gray-300'}`}
+                                                                        >
+                                                                            <div className={`absolute top-0.5 left-0.5 bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200 ${enabledConstraints[field.id as keyof typeof enabledConstraints] ? 'translate-x-4' : 'translate-x-0'}`} />
+                                                                        </button>
+                                                                    </div>
+                                                                    <div className="relative">
+                                                                        <input
+                                                                            type="number"
+                                                                            step="0.01"
+                                                                            // @ts-ignore
+                                                                            value={formData[field.id] || ''}
+                                                                            // @ts-ignore
+                                                                            onChange={(e) => setFormData({ ...formData, [field.id]: e.target.value })}
+                                                                            disabled={!enabledConstraints[field.id as keyof typeof enabledConstraints]}
+                                                                            className={`w-full pl-4 pr-14 py-3 border rounded-xl focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent transition-all shadow-sm text-sm font-bold font-mono disabled:cursor-not-allowed disabled:bg-gray-100 ${field.isHighlight && enabledConstraints[field.id as keyof typeof enabledConstraints] ? 'border-orange-200 text-orange-900 bg-orange-50/30' : 'border-gray-200 text-gray-900 bg-white'}`}
+                                                                            placeholder={enabledConstraints[field.id as keyof typeof enabledConstraints] ? field.placeholder : '-'}
+                                                                        />
+                                                                        <span className={`absolute right-4 top-1/2 -translate-y-1/2 text-xs font-bold ${field.isHighlight && enabledConstraints[field.id as keyof typeof enabledConstraints] ? 'text-orange-400' : 'text-gray-400'}`}>
+                                                                            {field.unit}
+                                                                        </span>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
+                                )}
+
                                 <div className="p-6 bg-[#FAFAFA] rounded-2xl border border-dashed border-gray-200 space-y-6">
                                     <h3 className="font-semibold text-gray-900 flex items-center gap-2">
                                         <DollarSign size={18} className="text-green-600" />
@@ -1076,37 +1245,161 @@ export default function AdminCollectionsPage() {
                                                 ))}
                                             </select>
                                         </div>
-                                        <div>
-                                            <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">ราคาขายปกติ</label>
-                                            <div className="relative">
-                                                <input
-                                                    type="number"
-                                                    required
-                                                    min="0"
-                                                    value={formData.price_per_unit}
-                                                    onChange={(e) => setFormData({ ...formData, price_per_unit: e.target.value })}
-                                                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition text-sm font-mono"
-                                                    placeholder="0.00"
-                                                />
-                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">บาท</span>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">ราคาขายโปรฯ (Platform)</label>
-                                            <div className="relative">
-                                                <input
-                                                    type="number"
-                                                    min="0"
-                                                    value={formData.price_per_unit_platform}
-                                                    onChange={(e) => setFormData({ ...formData, price_per_unit_platform: e.target.value })}
-                                                    className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition text-sm font-mono text-purple-700"
-                                                    placeholder="0.00"
-                                                />
-                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">บาท</span>
-                                            </div>
-                                        </div>
+
+                                        {formData.calculation_method !== 'width_range' && (
+                                            <>
+                                                <div>
+                                                    <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">ราคาขายปกติ</label>
+                                                    <div className="relative">
+                                                        <input
+                                                            type="number"
+                                                            required
+                                                            min="0"
+                                                            value={formData.price_per_unit}
+                                                            onChange={(e) => setFormData({ ...formData, price_per_unit: e.target.value })}
+                                                            className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition text-sm font-mono"
+                                                            placeholder="0.00"
+                                                        />
+                                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">บาท</span>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">ราคาขายโปรฯ (Platform)</label>
+                                                    <div className="relative">
+                                                        <input
+                                                            type="number"
+                                                            min="0"
+                                                            value={formData.price_per_unit_platform}
+                                                            onChange={(e) => setFormData({ ...formData, price_per_unit_platform: e.target.value })}
+                                                            className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition text-sm font-mono text-purple-700"
+                                                            placeholder="0.00"
+                                                        />
+                                                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">บาท</span>
+                                                    </div>
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
-                                    <p className="text-xs text-gray-500 mt-2">* ราคา Platform คือราคาที่ใช้คำนวณเมื่อลูกค้าสั่งซื้อผ่านหน้าเว็บ (ถ้าไม่ใส่จะใช้ราคาปกติ)</p>
+
+                                    {formData.calculation_method === 'width_range' && (
+                                        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden transition-all duration-300 mt-4">
+                                            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-2 bg-gradient-to-br from-green-100 to-green-50 rounded-lg text-green-700 shadow-sm">
+                                                        <DollarSign size={20} />
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="font-bold text-gray-900 text-base">กำหนดราคาตามช่วงความกว้าง</h3>
+                                                        <p className="text-xs text-gray-500">กำหนดช่วงความกว้างและราคาสำหรับแต่ละช่วง</p>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const newSteps = [...(formData.price_data || [])];
+                                                        newSteps.push({ min_width: '', max_width: '', price: '' });
+                                                        setFormData({ ...formData, price_data: newSteps });
+                                                    }}
+                                                    className="px-3 py-1.5 bg-black text-white text-xs font-medium rounded-lg hover:bg-gray-800 transition flex items-center gap-1"
+                                                >
+                                                    <Plus size={14} /> เพิ่มช่วงราคา
+                                                </button>
+                                            </div>
+
+                                            <div className="p-6 bg-gray-50/50">
+                                                {(formData.price_data || []).length === 0 ? (
+                                                    <div className="text-center py-8 text-gray-400 text-sm border-2 border-dashed border-gray-200 rounded-xl">
+                                                        ยังไม่มีการกำหนดช่วงราคา
+                                                    </div>
+                                                ) : (
+                                                    <div className="space-y-3">
+                                                        <div className="grid grid-cols-12 gap-2 text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 px-2">
+                                                            <div className="col-span-3">ความกว้างเริ่มต้น (ม.)</div>
+                                                            <div className="col-span-3">ถึงความกว้าง (ม.)</div>
+                                                            <div className="col-span-3">ราคา (บาท)</div>
+                                                            <div className="col-span-2 text-orange-600">ราคา Platform</div>
+                                                            <div className="col-span-1"></div>
+                                                        </div>
+                                                        {(formData.price_data || []).map((step: any, index: number) => (
+                                                            <div key={index} className="grid grid-cols-12 gap-2 items-center">
+                                                                <div className="col-span-3">
+                                                                    <input
+                                                                        type="number"
+                                                                        step="0.01"
+                                                                        placeholder="0.00"
+                                                                        value={step.min_width}
+                                                                        onChange={(e) => {
+                                                                            const newSteps = [...(formData.price_data || [])];
+                                                                            newSteps[index].min_width = e.target.value;
+                                                                            setFormData({ ...formData, price_data: newSteps });
+                                                                        }}
+                                                                        className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition text-sm text-center"
+                                                                    />
+                                                                </div>
+                                                                <div className="col-span-3">
+                                                                    <input
+                                                                        type="number"
+                                                                        step="0.01"
+                                                                        placeholder="0.00"
+                                                                        value={step.max_width}
+                                                                        onChange={(e) => {
+                                                                            const newSteps = [...(formData.price_data || [])];
+                                                                            newSteps[index].max_width = e.target.value;
+                                                                            setFormData({ ...formData, price_data: newSteps });
+                                                                        }}
+                                                                        className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition text-sm text-center"
+                                                                    />
+                                                                </div>
+                                                                <div className="col-span-3">
+                                                                    <input
+                                                                        type="number"
+                                                                        placeholder="0.00"
+                                                                        value={step.price}
+                                                                        onChange={(e) => {
+                                                                            const newSteps = [...(formData.price_data || [])];
+                                                                            newSteps[index].price = e.target.value;
+                                                                            setFormData({ ...formData, price_data: newSteps });
+                                                                        }}
+                                                                        className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition text-sm text-right font-mono"
+                                                                    />
+                                                                </div>
+                                                                <div className="col-span-2">
+                                                                    <input
+                                                                        type="number"
+                                                                        placeholder="0.00"
+                                                                        value={step.price_platform || ''}
+                                                                        onChange={(e) => {
+                                                                            const newSteps = [...(formData.price_data || [])];
+                                                                            newSteps[index].price_platform = e.target.value;
+                                                                            setFormData({ ...formData, price_data: newSteps });
+                                                                        }}
+                                                                        className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition text-sm text-right font-mono text-orange-600"
+                                                                    />
+                                                                </div>
+                                                                <div className="col-span-1 flex justify-center">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            const newSteps = [...(formData.price_data || [])];
+                                                                            newSteps.splice(index, 1);
+                                                                            setFormData({ ...formData, price_data: newSteps });
+                                                                        }}
+                                                                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
+                                                                    >
+                                                                        <Trash2 size={16} />
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {formData.calculation_method !== 'width_range' && (
+                                        <p className="text-xs text-gray-500 mt-2">* ราคา Platform คือราคาที่ใช้คำนวณเมื่อลูกค้าสั่งซื้อผ่านหน้าเว็บ (ถ้าไม่ใส่จะใช้ราคาปกติ)</p>
+                                    )}
                                 </div>
 
                                 <div className="p-6 bg-[#FAFAFA] rounded-2xl border border-dashed border-gray-200 space-y-4">

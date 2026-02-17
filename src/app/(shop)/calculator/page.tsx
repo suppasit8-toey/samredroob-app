@@ -56,7 +56,7 @@ export default function CalculatorPage() {
                 // Fetch Collections
                 const { data: colData, error: colError } = await supabase
                     .from('product_collections')
-                    .select('*')
+                    .select('*, product_brands (id, name, logo_url)')
                     .order('name');
 
                 if (colError) throw colError;
@@ -89,7 +89,7 @@ export default function CalculatorPage() {
                     }
                 }
 
-                const res = calculatePrice(collection, Number(width), Number(height), priceToUse);
+                const res = calculatePrice(collection, Number(width), Number(height), priceToUse, priceMode === 'platform');
                 return {
                     collection,
                     total: res.total,
@@ -496,110 +496,7 @@ export default function CalculatorPage() {
                             </button>
                         </div>
 
-                        {/* Category Selection Modal */}
-                        {showCategoryModal && (
-                            <div style={{
-                                position: 'fixed', inset: 0, zIndex: 9999,
-                                background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
-                                display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-                            }} onClick={() => setShowCategoryModal(false)}>
-                                <div
-                                    style={{
-                                        background: 'white',
-                                        borderRadius: '24px 24px 0 0',
-                                        padding: '1.5rem',
-                                        width: '100%',
-                                        maxWidth: '500px',
-                                        maxHeight: '80vh',
-                                        overflowY: 'auto',
-                                        animation: 'slideUp 0.3s ease-out',
-                                    }}
-                                    onClick={(e) => e.stopPropagation()}
-                                >
-                                    {/* Handle */}
-                                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
-                                        <div style={{ width: '40px', height: '4px', borderRadius: '2px', background: '#ddd' }} />
-                                    </div>
-                                    <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', textAlign: 'center' }}>
-                                        {language === 'th' ? 'เลือกหมวดหมู่สินค้า' : 'Select Product Category'}
-                                    </h3>
-                                    <div style={{
-                                        display: 'grid',
-                                        gridTemplateColumns: 'repeat(2, 1fr)',
-                                        gap: '0.6rem',
-                                    }}>
-                                        {categories.map(c => {
-                                            const isSelected = selectedCategoryId === c.id.toString();
-                                            return (
-                                                <button
-                                                    key={c.id}
-                                                    type="button"
-                                                    style={{
-                                                        position: 'relative',
-                                                        overflow: 'hidden',
-                                                        borderRadius: '14px',
-                                                        border: isSelected ? '2px solid #111' : '2px solid transparent',
-                                                        padding: 0,
-                                                        cursor: 'pointer',
-                                                        transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                                                        aspectRatio: '16/10',
-                                                        display: 'flex',
-                                                        alignItems: 'flex-end',
-                                                        background: '#f0f0f0',
-                                                        boxShadow: isSelected ? '0 4px 16px rgba(0,0,0,0.18)' : 'none',
-                                                        transform: isSelected ? 'scale(1.02)' : 'none',
-                                                    }}
-                                                    onClick={() => {
-                                                        setSelectedCategoryId(isSelected ? '' : c.id.toString());
-                                                        setResults(null);
-                                                        setMobileTab('form');
-                                                        setSelectedTags([]);
-                                                        setShowCategoryModal(false);
-                                                    }}
-                                                >
-                                                    {c.image_url ? (
-                                                        <img src={c.image_url} alt={c.name}
-                                                            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-                                                        />
-                                                    ) : (
-                                                        <div style={{
-                                                            position: 'absolute', inset: 0,
-                                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                            background: isSelected ? 'linear-gradient(135deg, #1a1a2e, #16213e)' : 'linear-gradient(135deg, #e8e8e8, #d5d5d5)',
-                                                        }}>
-                                                            <span style={{ fontSize: '1.5rem', opacity: 0.25 }}>📷</span>
-                                                        </div>
-                                                    )}
-                                                    <div style={{
-                                                        position: 'absolute', inset: 0,
-                                                        background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.15) 55%, rgba(0,0,0,0.05) 100%)',
-                                                    }} />
-                                                    <span style={{
-                                                        position: 'relative', zIndex: 1, width: '100%',
-                                                        padding: '0.5rem 0.65rem',
-                                                        color: 'white', fontWeight: 600, fontSize: '0.8rem',
-                                                        textAlign: 'left', lineHeight: 1.3,
-                                                        fontFamily: 'var(--font-mitr)',
-                                                        textShadow: '0 1px 4px rgba(0,0,0,0.5)',
-                                                    }}>{c.name}</span>
-                                                    {isSelected && (
-                                                        <div style={{
-                                                            position: 'absolute', top: 6, right: 6,
-                                                            width: 24, height: 24, borderRadius: '50%',
-                                                            background: '#111', display: 'flex',
-                                                            alignItems: 'center', justifyContent: 'center',
-                                                            zIndex: 2, boxShadow: '0 2px 6px rgba(0,0,0,0.35)',
-                                                        }}>
-                                                            <Check size={14} color="white" />
-                                                        </div>
-                                                    )}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+
 
                         {/* Dimensions */}
                         <div style={{ marginBottom: '1.5rem' }}>
@@ -950,15 +847,22 @@ export default function CalculatorPage() {
                                                 }}>
                                                     {/* 1. Name & Breakdown */}
                                                     <div className="result-info" style={{ flex: '1 1 300px' }}>
-                                                        <div style={{ flex: '1', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#1a1a1a', margin: 0 }}>
-                                                                {item.collection.name}
-                                                            </h3>
-                                                            {isBestValue && (
-                                                                <span style={{ fontSize: '0.7rem', padding: '0.2rem 0.6rem', backgroundColor: '#DCFCE7', color: '#166534', borderRadius: '12px', fontWeight: 700 }}>
-                                                                    {language === 'th' ? 'คุ้มสุด' : 'Best Value'}
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', marginBottom: '0.2rem' }}>
+                                                            {item.collection.product_brands && (
+                                                                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                                                    {item.collection.product_brands.name}
                                                                 </span>
                                                             )}
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                                                <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#1a1a1a', margin: 0 }}>
+                                                                    {item.collection.name}
+                                                                </h3>
+                                                                {isBestValue && (
+                                                                    <span style={{ fontSize: '0.7rem', padding: '0.2rem 0.6rem', backgroundColor: '#DCFCE7', color: '#166534', borderRadius: '12px', fontWeight: 700 }}>
+                                                                        {language === 'th' ? 'คุ้มสุด' : 'Best Value'}
+                                                                    </span>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                         <div style={{ fontSize: '0.8rem', color: '#666' }}>
                                                             {language === 'th' ? 'ราคาต่อหน่วย' : 'Unit Price'}: {displayUnitPrice} {language === 'th' ? 'บาท' : 'THB'}/{item.collection.unit}
@@ -1042,23 +946,31 @@ export default function CalculatorPage() {
                                                 opacity: isError ? 0.8 : 1
                                             }}>
                                                 <div style={{ padding: '1.5rem', flex: 1 }}>
-                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-                                                        <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#1a1a1a', lineHeight: 1.4 }}>
-                                                            {item.collection.name}
-                                                        </h3>
-                                                        {isBestValue && (
-                                                            <span style={{
-                                                                fontSize: '0.7rem',
-                                                                padding: '0.2rem 0.6rem',
-                                                                backgroundColor: '#DCFCE7',
-                                                                color: '#166534',
-                                                                borderRadius: '12px',
-                                                                fontWeight: 700,
-                                                                whiteSpace: 'nowrap'
-                                                            }}>
-                                                                {language === 'th' ? 'คุ้มค่าที่สุด' : 'Best Value'}
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem', marginBottom: '1rem' }}>
+                                                        {item.collection.product_brands && (
+                                                            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                                                {item.collection.product_brands.name}
                                                             </span>
                                                         )}
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, color: '#1a1a1a', lineHeight: 1.4 }}>
+                                                                {item.collection.name}
+                                                            </h3>
+                                                            {isBestValue && (
+                                                                <span style={{
+                                                                    fontSize: '0.7rem',
+                                                                    padding: '0.2rem 0.6rem',
+                                                                    backgroundColor: '#DCFCE7',
+                                                                    color: '#166534',
+                                                                    borderRadius: '12px',
+                                                                    fontWeight: 700,
+                                                                    whiteSpace: 'nowrap',
+                                                                    marginLeft: '0.5rem'
+                                                                }}>
+                                                                    {language === 'th' ? 'คุ้มค่าที่สุด' : 'Best Value'}
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </div>
 
                                                     <div style={{ marginBottom: '1rem' }}>
@@ -1155,6 +1067,111 @@ export default function CalculatorPage() {
                     )}
                 </div>
             </div>
+
+            {/* Category Selection Modal */}
+            {showCategoryModal && (
+                <div style={{
+                    position: 'fixed', inset: 0, zIndex: 9999,
+                    background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+                    display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+                }} onClick={() => setShowCategoryModal(false)}>
+                    <div
+                        style={{
+                            background: 'white',
+                            borderRadius: '24px 24px 0 0',
+                            padding: '1.5rem',
+                            width: '100%',
+                            maxWidth: '500px',
+                            maxHeight: '80vh',
+                            overflowY: 'auto',
+                            animation: 'slideUp 0.3s ease-out',
+                        }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        {/* Handle */}
+                        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+                            <div style={{ width: '40px', height: '4px', borderRadius: '2px', background: '#ddd' }} />
+                        </div>
+                        <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', textAlign: 'center' }}>
+                            {language === 'th' ? 'เลือกหมวดหมู่สินค้า' : 'Select Product Category'}
+                        </h3>
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(2, 1fr)',
+                            gap: '0.6rem',
+                        }}>
+                            {categories.map(c => {
+                                const isSelected = selectedCategoryId === c.id.toString();
+                                return (
+                                    <button
+                                        key={c.id}
+                                        type="button"
+                                        style={{
+                                            position: 'relative',
+                                            overflow: 'hidden',
+                                            borderRadius: '14px',
+                                            border: isSelected ? '2px solid #111' : '2px solid transparent',
+                                            padding: 0,
+                                            cursor: 'pointer',
+                                            transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                                            aspectRatio: '16/10',
+                                            display: 'flex',
+                                            alignItems: 'flex-end',
+                                            background: '#f0f0f0',
+                                            boxShadow: isSelected ? '0 4px 16px rgba(0,0,0,0.18)' : 'none',
+                                            transform: isSelected ? 'scale(1.02)' : 'none',
+                                        }}
+                                        onClick={() => {
+                                            setSelectedCategoryId(isSelected ? '' : c.id.toString());
+                                            setResults(null);
+                                            setMobileTab('form');
+                                            setSelectedTags([]);
+                                            setShowCategoryModal(false);
+                                        }}
+                                    >
+                                        {c.image_url ? (
+                                            <img src={c.image_url} alt={c.name}
+                                                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                                            />
+                                        ) : (
+                                            <div style={{
+                                                position: 'absolute', inset: 0,
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                background: isSelected ? 'linear-gradient(135deg, #1a1a2e, #16213e)' : 'linear-gradient(135deg, #e8e8e8, #d5d5d5)',
+                                            }}>
+                                                <span style={{ fontSize: '1.5rem', opacity: 0.25 }}>📷</span>
+                                            </div>
+                                        )}
+                                        <div style={{
+                                            position: 'absolute', inset: 0,
+                                            background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.15) 55%, rgba(0,0,0,0.05) 100%)',
+                                        }} />
+                                        <span style={{
+                                            position: 'relative', zIndex: 1, width: '100%',
+                                            padding: '0.5rem 0.65rem',
+                                            color: 'white', fontWeight: 600, fontSize: '0.8rem',
+                                            textAlign: 'left', lineHeight: 1.3,
+                                            fontFamily: 'var(--font-mitr)',
+                                            textShadow: '0 1px 4px rgba(0,0,0,0.5)',
+                                        }}>{c.name}</span>
+                                        {isSelected && (
+                                            <div style={{
+                                                position: 'absolute', top: 6, right: 6,
+                                                width: 24, height: 24, borderRadius: '50%',
+                                                background: '#111', display: 'flex',
+                                                alignItems: 'center', justifyContent: 'center',
+                                                zIndex: 2, boxShadow: '0 2px 6px rgba(0,0,0,0.35)',
+                                            }}>
+                                                <Check size={14} color="white" />
+                                            </div>
+                                        )}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Catalog Modal */}
             <CatalogModal

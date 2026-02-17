@@ -4,7 +4,8 @@ export const calculatePrice = (
     collection: ProductCollection,
     widthCm: number,
     heightCm: number,
-    priceOverride?: number // Optional override (e.g., for platform pricing)
+    priceOverride?: number, // Optional override (e.g., for platform pricing)
+    isPlatform: boolean = false // New flag to indicating platform mode
 ): { total: number, breakdown: string } => {
     // 1. Convert inputs to meters
     const widthM = widthCm / 100;
@@ -18,8 +19,42 @@ export const calculatePrice = (
     if (collection.max_width && widthM > collection.max_width) {
         return { total: 0, breakdown: `ความกว้างเกินกำหนด (${collection.max_width} ม.)` };
     }
+    if (collection.min_width && widthM < collection.min_width) {
+        return { total: 0, breakdown: `ความกว้างต่ำกว่ากำหนด (${collection.min_width} ม.)` };
+    }
     if (collection.max_height && heightM > collection.max_height) {
         return { total: 0, breakdown: `ความสูงเกินกำหนด (${collection.max_height} ม.)` };
+    }
+
+    // --- LOGIC: WIDTH RANGE (Step Pricing) ---
+    if (method === 'width_range') {
+        const steps = Array.isArray(collection.price_data) ? collection.price_data : [];
+        if (steps.length === 0) {
+            return { total: 0, breakdown: 'ไม่พบข้อมูลช่วงราคา (No Price Steps)' };
+        }
+
+        // Find matching step
+        // Assumes width is in meters and steps are defined in meters
+        const matchedStep = steps.find((step: any) => {
+            const min = Number(step.min_width || 0);
+            const max = Number(step.max_width || 9999);
+            return widthM >= min && widthM <= max;
+        });
+
+        if (matchedStep) {
+            // Check for Platform Price in step data if isPlatform is true
+            let stepPrice = Number(matchedStep.price || 0);
+            if (isPlatform && matchedStep.price_platform && Number(matchedStep.price_platform) > 0) {
+                stepPrice = Number(matchedStep.price_platform);
+            }
+
+            return {
+                total: stepPrice,
+                breakdown: `ความกว้าง ${widthM.toFixed(2)} ม. อยู่ในช่วง ${matchedStep.min_width}-${matchedStep.max_width} ม.${isPlatform ? ' (Platform)' : ''}`
+            };
+        } else {
+            return { total: 0, breakdown: `ความกว้างไม่อยู่ในช่วงที่กำหนด (${widthM.toFixed(2)} ม.)` };
+        }
     }
 
     // --- LOGIC: RAIL WIDTH ---

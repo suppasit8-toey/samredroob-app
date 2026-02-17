@@ -36,6 +36,9 @@ export interface ProductCollection {
     height_step?: number;
     area_rounding?: number;
 
+    // Advanced Pricing
+    price_data?: any; // JSONB for storing price steps or ranges
+
     // Links
     catalog_url?: string;
     portfolio_url?: string;

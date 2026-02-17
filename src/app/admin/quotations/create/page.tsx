@@ -77,7 +77,7 @@ export default function CreateQuotationDraftPage() {
             priceToUse = selectedCollection.price_per_unit_platform!;
         }
 
-        const { total, breakdown } = calculatePrice(selectedCollection, w, h, priceToUse);
+        const { total, breakdown } = calculatePrice(selectedCollection, w, h, priceToUse, priceMode === 'platform');
 
         const newItem = {
             id: Date.now().toString(), // temporary ID

@@ -124,7 +124,7 @@ export default function QuotationPage() {
             }
         }
 
-        const res = calculatePrice(item.collection, item.width, item.height, priceToUse);
+        const res = calculatePrice(item.collection, Number(item.width), Number(item.height), priceToUse, priceMode === 'platform');
         const qty = item.quantity || 1;
         return {
             ...item,
