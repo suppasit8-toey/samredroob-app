@@ -9,8 +9,11 @@ import ServiceList from '@/components/ServiceList';
 import ServiceComparisonTable from '@/components/ServiceComparisonTable';
 import HeroBanner from '@/components/HeroBanner';
 
+import { useLanguage } from '@/contexts/LanguageContext';
+
 export default function Home() {
     // Sample data for "Explore" section
+    const { language } = useLanguage();
 
 
     return (
@@ -39,16 +42,18 @@ export default function Home() {
                                 <h2 className="text-2xl md:text-3xl font-bold font-[family-name:var(--font-mitr)]">Official Store on Shopee</h2>
                                 <span className="bg-yellow-400 text-[#EE4D2D] text-xs font-bold px-2 py-0.5 rounded shadow-sm uppercase tracking-wide transform rotate-3">Mall</span>
                             </div>
-                            <p className="text-white/90 text-lg font-light">ช้อปสินค้าสำเร็จรูปพร้อมโค้ดส่วนลดพิเศษมากมาย</p>
+                            <p className="text-white/90 text-lg font-light">
+                                {language === 'th' ? 'ช้อปสินค้าสำเร็จรูปพร้อมโค้ดส่วนลดพิเศษมากมาย' : 'Shop ready-made products with special discount codes'}
+                            </p>
                             <div className="flex flex-wrap gap-2 mt-4 text-sm font-medium">
-                                <span className="bg-black/10 px-3 py-1 rounded-full backdrop-blur-sm border border-white/10 flex items-center gap-1"><Truck size={14} /> ส่งฟรี*</span>
-                                <span className="bg-black/10 px-3 py-1 rounded-full backdrop-blur-sm border border-white/10 flex items-center gap-1"><ShieldCheck size={14} /> ของแท้ 100%</span>
-                                <span className="bg-black/10 px-3 py-1 rounded-full backdrop-blur-sm border border-white/10 flex items-center gap-1"><Star size={14} /> รีวิว 4.9/5</span>
+                                <span className="bg-black/10 px-3 py-1 rounded-full backdrop-blur-sm border border-white/10 flex items-center gap-1"><Truck size={14} /> {language === 'th' ? 'ส่งฟรี*' : 'Free Shipping*'}</span>
+                                <span className="bg-black/10 px-3 py-1 rounded-full backdrop-blur-sm border border-white/10 flex items-center gap-1"><ShieldCheck size={14} /> {language === 'th' ? 'ของแท้ 100%' : '100% Authentic'}</span>
+                                <span className="bg-black/10 px-3 py-1 rounded-full backdrop-blur-sm border border-white/10 flex items-center gap-1"><Star size={14} /> {language === 'th' ? 'รีวิว 4.9/5' : '4.9/5 Reviews'}</span>
                             </div>
                         </div>
                     </div>
                     <div className="bg-white text-[#EE4D2D] px-8 py-3 rounded-full font-bold text-lg flex items-center gap-2 group-hover:scale-105 transition-transform shadow-lg whitespace-nowrap">
-                        ไปที่ร้านค้า <ArrowRight size={20} />
+                        {language === 'th' ? 'ไปที่ร้านค้า' : 'Visit Shop'} <ArrowRight size={20} />
                     </div>
                 </div>
             </a>

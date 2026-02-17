@@ -5,14 +5,17 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Phone } from 'lucide-react';
 
+import { useLanguage } from '@/contexts/LanguageContext';
+
 const Header: React.FC = () => {
     const pathname = usePathname();
+    const { language, toggleLanguage } = useLanguage();
 
     const navLinks = [
-        { name: 'สินค้า', path: '/products' },
-        { name: 'คำนวณราคา', path: '/calculator' },
-        { name: 'เกี่ยวกับเรา', path: '/about' },
-        { name: 'ติดต่อเรา', path: '/contact' },
+        { name: 'สินค้า', nameEn: 'Products', path: '/products' },
+        { name: 'คำนวณราคา', nameEn: 'Calculator', path: '/calculator' },
+        { name: 'เกี่ยวกับเรา', nameEn: 'About Us', path: '/about' },
+        { name: 'ติดต่อเรา', nameEn: 'Contact', path: '/contact' },
     ];
 
     return (
@@ -53,7 +56,7 @@ const Header: React.FC = () => {
 
                 {/* Desktop Nav */}
                 <div className="desktop-nav">
-                    <div style={{ display: 'flex', gap: '2rem' }}>
+                    <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
                         {navLinks.map(link => (
                             <Link
                                 key={link.name}
@@ -66,9 +69,20 @@ const Header: React.FC = () => {
                                     color: pathname === link.path ? 'var(--color-accent)' : 'inherit'
                                 }}
                             >
-                                {link.name}
+                                {language === 'th' ? link.name : link.nameEn}
                             </Link>
                         ))}
+
+                        {/* Language Toggle */}
+                        <button
+                            onClick={toggleLanguage}
+                            className="flex items-center gap-1 px-3 py-1 rounded-full border border-gray-200 hover:border-gray-400 transition-colors text-sm font-medium"
+                            aria-label="Toggle Language"
+                        >
+                            <span className={language === 'th' ? 'text-black font-bold' : 'text-gray-400'}>TH</span>
+                            <span className="text-gray-300">|</span>
+                            <span className={language === 'en' ? 'text-black font-bold' : 'text-gray-400'}>EN</span>
+                        </button>
                     </div>
                 </div>
 

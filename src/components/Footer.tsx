@@ -1,6 +1,11 @@
+"use client";
+
 import React from 'react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 const Footer: React.FC = () => {
+    const { language } = useLanguage();
+
     return (
         <footer style={{
             backgroundColor: 'var(--color-primary)',
@@ -23,13 +28,13 @@ const Footer: React.FC = () => {
                             style={{ height: '50px', width: 'auto' }}
                         />
                     </div>
-                    <p>ผ้าม่านและวอลเปเปอร์เกรดพรีเมียมสำหรับบ้านของคุณ</p>
+                    <p>{language === 'th' ? 'ผ้าม่านและวอลเปเปอร์เกรดพรีเมียมสำหรับบ้านของคุณ' : 'Premium curtains and wallpapers for your home'}</p>
                 </div>
                 <div>
-                    <h4 style={{ marginBottom: '1rem' }}>ติดต่อเรา</h4>
-                    <p>โทร: 094-746-1744</p>
+                    <h4 style={{ marginBottom: '1rem' }}>{language === 'th' ? 'ติดต่อเรา' : 'Contact Us'}</h4>
+                    <p>{language === 'th' ? 'โทร' : 'Tel'}: 094-746-1744</p>
                     <p>Line ID: @samredroob</p>
-                    <p>ที่อยู่: 44/10 มิตรไมตรี แขวงคู้ฝั่งเหนือ เขต หนองจอก กทม.</p>
+                    <p>{language === 'th' ? 'ที่อยู่: 44/10 มิตรไมตรี แขวงคู้ฝั่งเหนือ เขต หนองจอก กทม.' : 'Address: 44/10 Mit Maitri, Khu Fang Nuea, Nong Chok, Bangkok'}</p>
                 </div>
             </div>
             <div style={{

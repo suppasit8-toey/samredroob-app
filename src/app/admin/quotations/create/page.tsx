@@ -158,6 +158,35 @@ export default function CreateQuotationDraftPage() {
         }
     };
 
+    const handleModeChange = (mode: 'shop' | 'platform') => {
+        setPriceMode(mode);
+
+        // Recalculate all items
+        const updatedItems = draftItems.map(item => {
+            let priceToUse = item.collection.price_per_unit;
+            if (mode === 'platform' && (item.collection.price_per_unit_platform ?? 0) > 0) {
+                priceToUse = item.collection.price_per_unit_platform!;
+            }
+
+            const { total, breakdown } = calculatePrice(
+                item.collection,
+                item.width,
+                item.height,
+                priceToUse
+            );
+
+            return {
+                ...item,
+                pricePerPiece: total,
+                totalPrice: total * item.quantity,
+                breakdown: breakdown,
+                unitPrice: priceToUse
+            };
+        });
+
+        setDraftItems(updatedItems);
+    };
+
     const totalEstimate = draftItems.reduce((sum, item) => sum + item.totalPrice, 0);
 
     return (
@@ -453,223 +482,225 @@ export default function CreateQuotationDraftPage() {
                         <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#111', marginBottom: '0.15rem' }}>🛒 ช่องทางการสั่งซื้อ</div>
                         <div style={{ color: '#999', fontSize: '0.8rem' }}>ราคาอาจแตกต่างตามช่องทาง</div>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                        <div style={{ display: 'flex', gap: '4px', background: '#f3f3f3', padding: '3px', borderRadius: '10px' }}>
-                            <button
-                                type="button"
-                                onClick={() => setPriceMode('shop')}
-                                style={{
-                                    padding: '0.5rem 1rem',
-                                    borderRadius: '8px',
-                                    border: 'none',
-                                    background: priceMode === 'shop' ? 'white' : 'transparent',
-                                    color: priceMode === 'shop' ? '#111' : '#888',
-                                    boxShadow: priceMode === 'shop' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
-                                    fontWeight: 600,
-                                    fontSize: '0.85rem',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.35rem',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s',
-                                }}
-                            >
-                                <Store size={15} /> หน้าร้าน
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setPriceMode('platform')}
-                                style={{
-                                    padding: '0.5rem 1rem',
-                                    borderRadius: '8px',
-                                    border: 'none',
-                                    background: priceMode === 'platform' ? 'white' : 'transparent',
-                                    color: priceMode === 'platform' ? '#f97316' : '#888',
-                                    boxShadow: priceMode === 'platform' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
-                                    fontWeight: 600,
-                                    fontSize: '0.85rem',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.35rem',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s',
-                                }}
-                            >
-                                <ShoppingBag size={15} /> แพลตฟอร์ม
-                            </button>
-                        </div>
-                        {priceMode === 'platform' && (
-                            <p style={{ fontSize: '0.7rem', color: '#f97316', display: 'flex', gap: '0.25rem', justifyContent: 'flex-end', margin: 0 }}>
-                                <Info size={11} style={{ marginTop: '1px' }} /> มีค่าธรรมเนียมเพิ่มเติม
-                            </p>
-                        )}
+                    <div style={{ display: 'flex', gap: '4px', background: '#f3f3f3', padding: '3px', borderRadius: '10px' }}>
+                        <button
+                            type="button"
+                            onClick={() => handleModeChange('shop')}
+                            style={{
+                                padding: '0.5rem 1rem',
+                                borderRadius: '8px',
+                                border: 'none',
+                                background: priceMode === 'shop' ? 'white' : 'transparent',
+                                color: priceMode === 'shop' ? '#111' : '#888',
+                                boxShadow: priceMode === 'shop' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
+                                fontWeight: 600,
+                                fontSize: '0.85rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.35rem',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                            }}
+                        >
+                            <Store size={15} /> หน้าร้าน
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => handleModeChange('platform')}
+                            style={{
+                                padding: '0.5rem 1rem',
+                                borderRadius: '8px',
+                                border: 'none',
+                                background: priceMode === 'platform' ? 'white' : 'transparent',
+                                color: priceMode === 'platform' ? '#f97316' : '#888',
+                                boxShadow: priceMode === 'platform' ? '0 2px 8px rgba(0,0,0,0.08)' : 'none',
+                                fontWeight: 600,
+                                fontSize: '0.85rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.35rem',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s',
+                            }}
+                        >
+                            <ShoppingBag size={15} /> แพลตฟอร์ม
+                        </button>
                     </div>
+                    {priceMode === 'platform' && (
+                        <p style={{ fontSize: '0.7rem', color: '#f97316', display: 'flex', gap: '0.25rem', justifyContent: 'flex-end', margin: 0 }}>
+                            <Info size={11} style={{ marginTop: '1px' }} /> มีค่าธรรมเนียมเพิ่มเติม
+                        </p>
+                    )}
                 </div>
-
-                {/* 3. Items Table */}
-                {draftItems.length > 0 ? (
-                    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm mb-8">
-                        {/* Mobile View / Card-like for small screens could be added here, sticking to Table as requested for visuals */}
-                        <div className="overflow-x-auto">
-                            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>
-                                <thead style={{ backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e5e5' }}>
-                                    <tr>
-                                        <th style={{ padding: '1.25rem', fontWeight: 600, color: '#444' }}>สินค้า</th>
-                                        <th style={{ padding: '1.25rem', fontWeight: 600, color: '#444' }}>รหัสสินค้า</th>
-                                        <th style={{ padding: '1.25rem', fontWeight: 600, color: '#444' }}>ขนาด (กxส)</th>
-                                        <th style={{ padding: '1.25rem', fontWeight: 600, color: '#444', textAlign: 'center' }}>จำนวน</th>
-                                        <th style={{ padding: '1.25rem', fontWeight: 600, color: '#444', textAlign: 'right' }}>ราคาประเมิน</th>
-                                        <th style={{ padding: '1.25rem', fontWeight: 600, color: '#444', width: '50px' }}></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {draftItems.map((item, index) => (
-                                        <tr key={index} style={{ borderBottom: '1px solid #f0f0f0' }}>
-                                            <td style={{ padding: '1.25rem' }}>
-                                                <div style={{ fontWeight: 600, fontSize: '1rem', color: '#111' }}>
-                                                    {item.collection.product_brands?.logo_url && (
-                                                        <img src={item.collection.product_brands?.logo_url} className="w-4 h-4 object-contain inline-block mr-2" alt="" />
-                                                    )}
-                                                    {item.collection.name}
-                                                </div>
-                                                <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '0.5rem' }}>
-                                                    {(item.unitPrice || 0).toLocaleString()} บาท/{item.collection.unit}
-                                                </div>
-                                            </td>
-                                            <td style={{ padding: '1.25rem' }}>
-                                                <div className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-500 italic w-32 text-center">
-                                                    -- เลือก --
-                                                </div>
-                                            </td>
-                                            <td style={{ padding: '1.25rem', color: '#666' }}>
-                                                {item.width} x {item.height} ซม.
-                                            </td>
-                                            <td style={{ padding: '1.25rem', textAlign: 'center' }}>
-                                                <div className="flex items-center justify-center gap-2">
-                                                    <button
-                                                        onClick={() => handleUpdateQuantity(index, item.quantity - 1)}
-                                                        className="p-1 rounded-md hover:bg-gray-100 text-gray-500 disabled:opacity-30"
-                                                        disabled={item.quantity <= 1}
-                                                    >
-                                                        <Minus size={16} />
-                                                    </button>
-                                                    <span className="w-8 text-center font-medium">{item.quantity}</span>
-                                                    <button
-                                                        onClick={() => handleUpdateQuantity(index, item.quantity + 1)}
-                                                        className="p-1 rounded-md hover:bg-gray-100 text-gray-500"
-                                                    >
-                                                        <Plus size={16} />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                            <td style={{ padding: '1.25rem', textAlign: 'right', fontWeight: 600, fontSize: '1.1rem' }}>
-                                                ฿{item.totalPrice.toLocaleString()}
-                                            </td>
-                                            <td style={{ padding: '1.25rem', textAlign: 'center' }}>
-                                                <button
-                                                    onClick={() => handleRemoveItem(index)}
-                                                    style={{ color: '#ef4444', border: 'none', background: 'none', cursor: 'pointer' }}
-                                                    title="ลบรายการ"
-                                                >
-                                                    <Trash2 size={18} />
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                                <tfoot style={{ backgroundColor: '#f9fafb', borderTop: '1px solid #e5e5e5' }}>
-                                    <tr>
-                                        <td colSpan={4} style={{ padding: '1.5rem', textAlign: 'right', fontWeight: 600, fontSize: '1.2rem' }}>
-                                            ราคารวมทั้งหมด ({priceMode === 'platform' ? 'Platform' : 'หน้าร้าน'})
-                                        </td>
-                                        <td style={{ padding: '1.5rem', textAlign: 'right', fontWeight: 700, fontSize: '1.5rem', color: 'black' }}>
-                                            ฿{totalEstimate.toLocaleString()}
-                                        </td>
-                                        <td></td>
-                                    </tr>
-                                    <tr>
-                                        <td colSpan={6} style={{ padding: '0.75rem 1.5rem', textAlign: 'right', color: '#ff4d4f', fontSize: '0.9rem', borderTop: '1px dashed #e5e5e5' }}>
-                                            * ราคาเฉพาะค่าสินค้า ยังไม่รวมค่าจัดส่งและค่าติดตั้ง
-                                        </td>
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                    </div>
-                ) : (
-                    <div style={{
-                        padding: '4rem 2rem',
-                        textAlign: 'center',
-                        background: 'white',
-                        borderRadius: '20px',
-                        border: '1px solid #f0f0f0',
-                        boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
-                        marginBottom: '2rem'
-                    }}>
-                        <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📋</div>
-                        <p style={{ color: '#999', fontSize: '1.1rem', marginBottom: '1.5rem', fontWeight: 500 }}>ยังไม่มีรายการสินค้าในใบเสนอราคา</p>
-                    </div>
-                )}
-
-
-                {/* ACTION BAR (Sticky Bottom) */}
-                <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg z-50 md:pl-[260px]">
-                    <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-                        <div className="flex-1 w-full md:w-auto">
-                            <input
-                                type="text"
-                                placeholder="ชื่อลูกค้า / โน๊ต (Optional)"
-                                value={customerName}
-                                onChange={e => setCustomerName(e.target.value)}
-                                className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
-
-                        {!generatedLink ? (
-                            <button
-                                onClick={handleSaveDraft}
-                                disabled={draftItems.length === 0 || saving}
-                                className="w-full md:w-auto px-8 py-3 bg-black text-white rounded-xl font-bold hover:bg-gray-800 transition disabled:opacity-50 flex items-center justify-center gap-2"
-                            >
-                                {saving ? 'กำลังบันทึก...' : <><Save size={18} /> สร้างลิงค์เสนอราคา</>}
-                            </button>
-                        ) : (
-                            <div className="flex items-center gap-2 w-full md:w-auto">
-                                <div className="px-4 py-3 bg-green-50 border border-green-200 rounded-xl text-green-800 font-mono text-sm flex-1 truncate max-w-[200px]">
-                                    {generatedLink}
-                                </div>
-                                <button
-                                    onClick={copyToClipboard}
-                                    className="p-3 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 text-gray-700"
-                                    title="Copy Link"
-                                >
-                                    <Copy size={20} />
-                                </button>
-                                <a
-                                    href={generatedLink}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="p-3 bg-black text-white rounded-xl hover:bg-gray-800"
-                                    title="Open Link"
-                                >
-                                    <ExternalLink size={20} />
-                                </a>
-                                <button
-                                    onClick={() => {
-                                        setGeneratedLink(null);
-                                        setDraftItems([]);
-                                        setCustomerName('');
-                                    }}
-                                    className="text-xs text-gray-500 underline ml-2 whitespace-nowrap"
-                                >
-                                    เริ่มใหม่
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
             </div>
+
+            {/* 3. Items Table */}
+            {draftItems.length > 0 ? (
+                <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm mb-8">
+                    {/* Mobile View / Card-like for small screens could be added here, sticking to Table as requested for visuals */}
+                    <div className="overflow-x-auto">
+                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', minWidth: '600px' }}>
+                            <thead style={{ backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e5e5' }}>
+                                <tr>
+                                    <th style={{ padding: '1.25rem', fontWeight: 600, color: '#444' }}>สินค้า</th>
+                                    <th style={{ padding: '1.25rem', fontWeight: 600, color: '#444' }}>รหัสสินค้า</th>
+                                    <th style={{ padding: '1.25rem', fontWeight: 600, color: '#444' }}>ขนาด (กxส)</th>
+                                    <th style={{ padding: '1.25rem', fontWeight: 600, color: '#444', textAlign: 'center' }}>จำนวน</th>
+                                    <th style={{ padding: '1.25rem', fontWeight: 600, color: '#444', textAlign: 'right' }}>ราคาต่อชิ้น</th>
+                                    <th style={{ padding: '1.25rem', fontWeight: 600, color: '#444', textAlign: 'right' }}>ราคารวม</th>
+                                    <th style={{ padding: '1.25rem', fontWeight: 600, color: '#444', width: '50px' }}></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {draftItems.map((item, index) => (
+                                    <tr key={index} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                                        <td style={{ padding: '1.25rem' }}>
+                                            <div style={{ fontWeight: 600, fontSize: '1rem', color: '#111' }}>
+                                                {item.collection.product_brands?.logo_url && (
+                                                    <img src={item.collection.product_brands?.logo_url} className="w-4 h-4 object-contain inline-block mr-2" alt="" />
+                                                )}
+                                                {item.collection.name}
+                                            </div>
+                                            <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '0.5rem' }}>
+                                                {(item.unitPrice || 0).toLocaleString()} บาท/{item.collection.unit}
+                                            </div>
+                                        </td>
+                                        <td style={{ padding: '1.25rem' }}>
+                                            <div className="px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-500 italic w-32 text-center">
+                                                -- เลือก --
+                                            </div>
+                                        </td>
+                                        <td style={{ padding: '1.25rem', color: '#666' }}>
+                                            {item.width} x {item.height} ซม.
+                                        </td>
+                                        <td style={{ padding: '1.25rem', textAlign: 'center' }}>
+                                            <div className="flex items-center justify-center gap-2">
+                                                <button
+                                                    onClick={() => handleUpdateQuantity(index, item.quantity - 1)}
+                                                    className="p-1 rounded-md hover:bg-gray-100 text-gray-500 disabled:opacity-30"
+                                                    disabled={item.quantity <= 1}
+                                                >
+                                                    <Minus size={16} />
+                                                </button>
+                                                <span className="w-8 text-center font-medium">{item.quantity}</span>
+                                                <button
+                                                    onClick={() => handleUpdateQuantity(index, item.quantity + 1)}
+                                                    className="p-1 rounded-md hover:bg-gray-100 text-gray-500"
+                                                >
+                                                    <Plus size={16} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                        <td style={{ padding: '1.25rem', textAlign: 'right', color: '#666', fontWeight: 500 }}>
+                                            ฿{item.pricePerPiece.toLocaleString()}
+                                        </td>
+                                        <td style={{ padding: '1.25rem', textAlign: 'right', fontWeight: 600, fontSize: '1.1rem' }}>
+                                            ฿{item.totalPrice.toLocaleString()}
+                                        </td>
+                                        <td style={{ padding: '1.25rem', textAlign: 'center' }}>
+                                            <button
+                                                onClick={() => handleRemoveItem(index)}
+                                                style={{ color: '#ef4444', border: 'none', background: 'none', cursor: 'pointer' }}
+                                                title="ลบรายการ"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                            <tfoot style={{ backgroundColor: '#f9fafb', borderTop: '1px solid #e5e5e5' }}>
+                                <tr>
+                                    <td colSpan={5} style={{ padding: '1.5rem', textAlign: 'right', fontWeight: 600, fontSize: '1.2rem' }}>
+                                        ราคารวมทั้งหมด ({priceMode === 'platform' ? 'Platform' : 'หน้าร้าน'})
+                                    </td>
+                                    <td style={{ padding: '1.5rem', textAlign: 'right', fontWeight: 700, fontSize: '1.5rem', color: 'black' }}>
+                                        ฿{totalEstimate.toLocaleString()}
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td colSpan={7} style={{ padding: '0.75rem 1.5rem', textAlign: 'right', color: '#ff4d4f', fontSize: '0.9rem', borderTop: '1px dashed #e5e5e5' }}>
+                                        * ราคาเฉพาะค่าสินค้า ยังไม่รวมค่าจัดส่งและค่าติดตั้ง
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            ) : (
+                <div style={{
+                    padding: '4rem 2rem',
+                    textAlign: 'center',
+                    background: 'white',
+                    borderRadius: '20px',
+                    border: '1px solid #f0f0f0',
+                    boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
+                    marginBottom: '2rem'
+                }}>
+                    <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📋</div>
+                    <p style={{ color: '#999', fontSize: '1.1rem', marginBottom: '1.5rem', fontWeight: 500 }}>ยังไม่มีรายการสินค้าในใบเสนอราคา</p>
+                </div>
+            )}
+
+
+            {/* ACTION BAR (Sticky Bottom) */}
+            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg z-50 md:pl-[260px]">
+                <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div className="flex-1 w-full md:w-auto">
+                        <input
+                            type="text"
+                            placeholder="ชื่อลูกค้า / โน๊ต (Optional)"
+                            value={customerName}
+                            onChange={e => setCustomerName(e.target.value)}
+                            className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+
+                    {!generatedLink ? (
+                        <button
+                            onClick={handleSaveDraft}
+                            disabled={draftItems.length === 0 || saving}
+                            className="w-full md:w-auto px-8 py-3 bg-black text-white rounded-xl font-bold hover:bg-gray-800 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                            {saving ? 'กำลังบันทึก...' : <><Save size={18} /> สร้างลิงค์เสนอราคา</>}
+                        </button>
+                    ) : (
+                        <div className="flex items-center gap-2 w-full md:w-auto">
+                            <div className="px-4 py-3 bg-green-50 border border-green-200 rounded-xl text-green-800 font-mono text-sm flex-1 truncate max-w-[200px]">
+                                {generatedLink}
+                            </div>
+                            <button
+                                onClick={copyToClipboard}
+                                className="p-3 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 text-gray-700"
+                                title="Copy Link"
+                            >
+                                <Copy size={20} />
+                            </button>
+                            <a
+                                href={generatedLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-3 bg-black text-white rounded-xl hover:bg-gray-800"
+                                title="Open Link"
+                            >
+                                <ExternalLink size={20} />
+                            </a>
+                            <button
+                                onClick={() => {
+                                    setGeneratedLink(null);
+                                    setDraftItems([]);
+                                    setCustomerName('');
+                                }}
+                                className="text-xs text-gray-500 underline ml-2 whitespace-nowrap"
+                            >
+                                เริ่มใหม่
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </div>
+
         </div>
     );
 }

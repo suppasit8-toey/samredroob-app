@@ -5,38 +5,50 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 
+import { useLanguage } from '@/contexts/LanguageContext';
+
 const slides = [
     {
         id: 1,
         title: "ยกระดับความสวยงามให้บ้านคุณ",
+        titleEn: "Elevate Your Home Aesthetics",
         subtitle: "ด้วยผ้าม่านและวอลเปเปอร์เกรดพรีเมียม",
+        subtitleEn: "With Premium Curtains & Wallpapers",
         image: "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?q=80&w=1600&auto=format&fit=crop",
         link: "/calculator",
         buttonText: "ดูสินค้าทั้งหมด",
+        buttonTextEn: "View All Products",
         themeColor: "#f97316"
     },
     {
         id: 2,
         title: "ออกแบบห้องในฝัน",
+        titleEn: "Design Your Dream Room",
         subtitle: "บริการวัดหน้างานและติดตั้งโดยทีมมืออาชีพ",
+        subtitleEn: "Professional Measurement & Installation",
         image: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=1600&auto=format&fit=crop",
         link: "/calculator",
         buttonText: "ประเมินราคาฟรี",
+        buttonTextEn: "Free Estimate",
         themeColor: "#000000"
     },
     {
         id: 3,
         title: "วอลเปเปอร์หลากหลายสไตล์",
+        titleEn: "Various Wallpaper Styles",
         subtitle: "เปลี่ยนผนังธรรมดาให้ดูมีระดับ",
+        subtitleEn: "Turn Ordinary Walls into Masterpieces",
         image: "https://images.unsplash.com/photo-1615873968403-89e068629265?q=80&w=1600&auto=format&fit=crop",
         link: "/calculator",
         buttonText: "เลือกชมลาย",
+        buttonTextEn: "Explore Patterns",
         themeColor: "#333333"
     }
 ];
 
 export default function HeroBanner() {
     const [currentSlide, setCurrentSlide] = useState(0);
+    const { language } = useLanguage();
 
     // Auto-play slide
     useEffect(() => {
@@ -82,10 +94,10 @@ export default function HeroBanner() {
                             <span>Authentic Premium Quality</span>
                         </div>
                         <h1 className="text-2xl md:text-5xl font-bold font-[family-name:var(--font-mitr)] mb-4 leading-tight drop-shadow-md">
-                            {slide.title}
+                            {language === 'th' ? slide.title : slide.titleEn}
                         </h1>
                         <p className="text-base md:text-xl text-white/90 mb-6 md:mb-8 font-light drop-shadow-sm max-w-lg">
-                            {slide.subtitle}
+                            {language === 'th' ? slide.subtitle : slide.subtitleEn}
                         </p>
                         <Link href={slide.link}>
                             <motion.button
@@ -93,7 +105,7 @@ export default function HeroBanner() {
                                 whileTap={{ scale: 0.95 }}
                                 className="bg-white text-black px-6 py-2 md:px-8 md:py-3 rounded-full font-bold text-base md:text-lg flex items-center gap-2 shadow-lg hover:shadow-xl transition-all"
                             >
-                                {slide.buttonText} <ArrowRight size={20} />
+                                {language === 'th' ? slide.buttonText : slide.buttonTextEn} <ArrowRight size={20} />
                             </motion.button>
                         </Link>
                     </motion.div>

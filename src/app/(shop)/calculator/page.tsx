@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { ProductCollection, Category } from '@/lib/types';
 import { calculatePrice } from '@/utils/pricing';
 import { Calculator as CalcIcon, RefreshCw, Loader2, ExternalLink, ArrowRight, ShoppingCart, Check, Store, ShoppingBag, Info, LayoutGrid, List, Search } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { useCart } from '@/context/CartContext';
 import Link from 'next/link';
 import CatalogModal from '@/components/CatalogModal';
@@ -16,6 +17,7 @@ interface CalculationResult {
 }
 
 export default function CalculatorPage() {
+    const { language } = useLanguage();
     const { addToCart, cartCount } = useCart();
     const [categories, setCategories] = useState<Category[]>([]);
     const [collections, setCollections] = useState<ProductCollection[]>([]);
@@ -285,7 +287,9 @@ export default function CalculatorPage() {
                             {cartCount}
                         </span>
                     </div>
-                    <span className="font-semibold text-base font-[family-name:var(--font-mitr)]">ดูใบเสนอราคา</span>
+                    <span className="font-semibold text-base font-[family-name:var(--font-mitr)]">
+                        {language === 'th' ? 'ดูใบเสนอราคา' : 'View Quotation'}
+                    </span>
                 </Link>
             )}
 
@@ -310,13 +314,17 @@ export default function CalculatorPage() {
                         fontFamily: 'var(--font-mitr)',
                         margin: '0 0 0.4rem',
                         letterSpacing: '-0.01em',
-                    }}>คำนวณราคาสั่งผลิต</h1>
+                    }}>
+                        {language === 'th' ? 'คำนวณราคาสั่งผลิต' : 'Calculate Price'}
+                    </h1>
                     <p style={{
                         color: 'rgba(255,255,255,0.5)',
                         fontSize: '0.9rem',
                         margin: 0,
                         fontWeight: 400,
-                    }}>เลือกหมวดหมู่ ระบุขนาด แล้วเปรียบเทียบราคาได้ทันที</p>
+                    }}>
+                        {language === 'th' ? 'เลือกหมวดหมู่ ระบุขนาด แล้วเปรียบเทียบราคาได้ทันที' : 'Select category, enter dimensions, and compare prices instantly'}
+                    </p>
                 </div>
             </div>
 
@@ -340,11 +348,11 @@ export default function CalculatorPage() {
                     overflow: 'hidden',
                 }}>
                     {[
-                        { num: '1', label: 'เลือกหมวดหมู่', short: 'หมวดหมู่' },
-                        { num: '2', label: 'ระบุขนาด', short: 'ขนาด' },
-                        { num: '3', label: 'คำนวณราคา', short: 'คำนวณ' },
-                        { num: '4', label: 'เพิ่มสินค้า', short: 'เพิ่ม' },
-                        { num: '5', label: 'ส่งใบเสนอราคา', short: 'ส่ง' },
+                        { num: '1', label: language === 'th' ? 'เลือกหมวดหมู่' : 'Select Category', short: language === 'th' ? 'หมวดหมู่' : 'Category' },
+                        { num: '2', label: language === 'th' ? 'ระบุขนาด' : 'Dimensions', short: language === 'th' ? 'ขนาด' : 'Size' },
+                        { num: '3', label: language === 'th' ? 'คำนวณราคา' : 'Calculate', short: language === 'th' ? 'คำนวณ' : 'Calc' },
+                        { num: '4', label: language === 'th' ? 'เพิ่มสินค้า' : 'Add Items', short: language === 'th' ? 'เพิ่ม' : 'Add' },
+                        { num: '5', label: language === 'th' ? 'ส่งใบเสนอราคา' : 'Get Quote', short: language === 'th' ? 'ส่ง' : 'Quote' },
                     ].map((step, i, arr) => (
                         <React.Fragment key={step.num}>
                             <div style={{
@@ -415,7 +423,7 @@ export default function CalculatorPage() {
                             color: '#111',
                         }}>
                             <CalcIcon size={20} />
-                            เพิ่มสินค้า
+                            {language === 'th' ? 'เพิ่มสินค้า' : 'Add Product'}
                         </h2>
 
                         {/* Category Selection - Trigger Button */}
@@ -428,7 +436,9 @@ export default function CalculatorPage() {
                                 color: '#555',
                                 textTransform: 'uppercase' as const,
                                 letterSpacing: '0.03em',
-                            }}>หมวดหมู่สินค้า</label>
+                            }}>
+                                {language === 'th' ? 'หมวดหมู่สินค้า' : 'Product Category'}
+                            </label>
                             <button
                                 type="button"
                                 onClick={() => setShowCategoryModal(true)}
@@ -466,7 +476,9 @@ export default function CalculatorPage() {
                                             })()}
                                         </>
                                     ) : (
-                                        <span style={{ color: '#aaa', fontSize: '0.95rem' }}>กดเพื่อเลือกหมวดหมู่</span>
+                                        <span style={{ color: '#aaa', fontSize: '0.95rem' }}>
+                                            {language === 'th' ? 'กดเพื่อเลือกหมวดหมู่' : 'Click to select category'}
+                                        </span>
                                     )}
                                 </div>
                                 <div style={{
@@ -508,7 +520,9 @@ export default function CalculatorPage() {
                                     <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
                                         <div style={{ width: '40px', height: '4px', borderRadius: '2px', background: '#ddd' }} />
                                     </div>
-                                    <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', textAlign: 'center' }}>เลือกหมวดหมู่สินค้า</h3>
+                                    <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', textAlign: 'center' }}>
+                                        {language === 'th' ? 'เลือกหมวดหมู่สินค้า' : 'Select Product Category'}
+                                    </h3>
                                     <div style={{
                                         display: 'grid',
                                         gridTemplateColumns: 'repeat(2, 1fr)',
@@ -597,7 +611,9 @@ export default function CalculatorPage() {
                                 color: '#555',
                                 textTransform: 'uppercase' as const,
                                 letterSpacing: '0.03em',
-                            }}>ขนาดที่ต้องการ</label>
+                            }}>
+                                {language === 'th' ? 'ขนาดที่ต้องการ' : 'Dimensions'}
+                            </label>
                             <div style={{
                                 display: 'grid',
                                 gridTemplateColumns: '1fr 1fr',
@@ -608,7 +624,7 @@ export default function CalculatorPage() {
                                         type="number"
                                         value={width}
                                         onChange={(e) => setWidth(e.target.value === '' ? '' : Number(e.target.value))}
-                                        placeholder="กว้าง"
+                                        placeholder={language === 'th' ? 'กว้าง' : 'Width'}
                                         required
                                         className="calc-input"
                                         style={{
@@ -623,14 +639,16 @@ export default function CalculatorPage() {
                                             outline: 'none',
                                         }}
                                     />
-                                    <span style={{ position: 'absolute', right: '0.85rem', top: '50%', transform: 'translateY(-50%)', fontSize: '0.8rem', color: '#999', fontWeight: 500 }}>ซม.</span>
+                                    <span style={{ position: 'absolute', right: '0.85rem', top: '50%', transform: 'translateY(-50%)', fontSize: '0.8rem', color: '#999', fontWeight: 500 }}>
+                                        {language === 'th' ? 'ซม.' : 'cm'}
+                                    </span>
                                 </div>
                                 <div style={{ position: 'relative' }}>
                                     <input
                                         type="number"
                                         value={height}
                                         onChange={(e) => setHeight(e.target.value === '' ? '' : Number(e.target.value))}
-                                        placeholder="สูง"
+                                        placeholder={language === 'th' ? 'สูง' : 'Height'}
                                         required
                                         className="calc-input"
                                         style={{
@@ -645,7 +663,9 @@ export default function CalculatorPage() {
                                             outline: 'none',
                                         }}
                                     />
-                                    <span style={{ position: 'absolute', right: '0.85rem', top: '50%', transform: 'translateY(-50%)', fontSize: '0.8rem', color: '#999', fontWeight: 500 }}>ซม.</span>
+                                    <span style={{ position: 'absolute', right: '0.85rem', top: '50%', transform: 'translateY(-50%)', fontSize: '0.8rem', color: '#999', fontWeight: 500 }}>
+                                        {language === 'th' ? 'ซม.' : 'cm'}
+                                    </span>
                                 </div>
                             </div>
                         </div>
@@ -668,7 +688,7 @@ export default function CalculatorPage() {
                             boxShadow: '0 4px 14px rgba(0,0,0,0.15)',
                             fontFamily: 'var(--font-mitr)',
                         }}>
-                            <CalcIcon size={20} /> คำนวณราคา
+                            <CalcIcon size={20} /> {language === 'th' ? 'คำนวณราคา' : 'Calculate'}
                         </button>
                     </form>
                 </div>
@@ -697,7 +717,7 @@ export default function CalculatorPage() {
                                 cursor: 'pointer'
                             }}
                         >
-                            <ArrowRight size={16} style={{ transform: 'rotate(180deg)' }} /> กลับไปแก้ไขข้อมูล
+                            <ArrowRight size={16} style={{ transform: 'rotate(180deg)' }} /> {language === 'th' ? 'กลับไปแก้ไขข้อมูล' : 'Back to Edit'}
                         </button>
                     </div>
                     {results ? (
@@ -705,7 +725,7 @@ export default function CalculatorPage() {
                             <div style={{ marginBottom: '1.5rem' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
                                     <h2 style={{ fontSize: '1.25rem', fontWeight: 600, margin: 0 }}>
-                                        ผลลัพธ์ ({results.length})
+                                        {language === 'th' ? 'ผลลัพธ์' : 'Results'} ({results.length})
                                     </h2>
                                     <button
                                         onClick={() => { setResults(null); setMobileTab('form'); }}
@@ -722,14 +742,16 @@ export default function CalculatorPage() {
                                             cursor: 'pointer'
                                         }}
                                     >
-                                        <RefreshCw size={12} /> ล้างค่าใหม่
+                                        <RefreshCw size={12} /> {language === 'th' ? 'ล้างค่าใหม่' : 'Reset'}
                                     </button>
                                 </div>
 
                                 {/* Price Mode Toggle (Moved here) */}
                                 <div style={{ backgroundColor: 'white', padding: '0.75rem 0.5rem', borderRadius: '10px', border: '1px solid #f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                        <span style={{ fontWeight: 600, color: '#333', fontSize: '0.9rem' }}>ราคาสำหรับ:</span>
+                                        <span style={{ fontWeight: 600, color: '#333', fontSize: '0.9rem' }}>
+                                            {language === 'th' ? 'ราคาสำหรับ:' : 'Price for:'}
+                                        </span>
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                         <div style={{ display: 'flex', gap: '0.25rem', backgroundColor: '#f5f5f5', padding: '0.2rem', borderRadius: '8px' }}>
@@ -752,7 +774,7 @@ export default function CalculatorPage() {
                                                     transition: 'all 0.2s'
                                                 }}
                                             >
-                                                <Store size={14} /> หน้าร้าน
+                                                <Store size={14} /> {language === 'th' ? 'หน้าร้าน' : 'Shop'}
                                             </button>
                                             <button
                                                 type="button"
@@ -773,14 +795,14 @@ export default function CalculatorPage() {
                                                     transition: 'all 0.2s'
                                                 }}
                                             >
-                                                <ShoppingBag size={14} /> แพลตฟอร์ม
+                                                <ShoppingBag size={14} /> {language === 'th' ? 'แพลตฟอร์ม' : 'Platform'}
                                             </button>
                                         </div>
                                     </div>
                                 </div>
                                 {priceMode === 'platform' && (
                                     <p style={{ fontSize: '0.8rem', color: '#f97316', marginTop: '0.5rem', textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.25rem' }}>
-                                        <Info size={14} /> ราคาอาจสูงกว่าหน้าร้านเนื่องจากมีค่าธรรมเนียม
+                                        <Info size={14} /> {language === 'th' ? 'ราคาอาจสูงกว่าหน้าร้านเนื่องจากมีค่าธรรมเนียม' : 'Price may be higher due to platform fees'}
                                     </p>
                                 )}
                             </div>
@@ -808,7 +830,7 @@ export default function CalculatorPage() {
                                                 transition: 'all 0.2s'
                                             }}
                                         >
-                                            ทั้งหมด
+                                            {language === 'th' ? 'ทั้งหมด' : 'All'}
                                         </button>
                                         {allTags.map(tag => (
                                             <button
@@ -934,12 +956,12 @@ export default function CalculatorPage() {
                                                             </h3>
                                                             {isBestValue && (
                                                                 <span style={{ fontSize: '0.7rem', padding: '0.2rem 0.6rem', backgroundColor: '#DCFCE7', color: '#166534', borderRadius: '12px', fontWeight: 700 }}>
-                                                                    คุ้มสุด
+                                                                    {language === 'th' ? 'คุ้มสุด' : 'Best Value'}
                                                                 </span>
                                                             )}
                                                         </div>
                                                         <div style={{ fontSize: '0.8rem', color: '#666' }}>
-                                                            ราคาต่อหน่วย: {displayUnitPrice} บาท/{item.collection.unit}
+                                                            {language === 'th' ? 'ราคาต่อหน่วย' : 'Unit Price'}: {displayUnitPrice} {language === 'th' ? 'บาท' : 'THB'}/{item.collection.unit}
                                                             <span style={{ marginLeft: '0.5rem', opacity: 0.8, color: isError ? '#ef4444' : '#888' }}>
                                                                 ({isError ? item.breakdown : item.breakdown.split(' (')[0]})
                                                             </span>
@@ -949,7 +971,9 @@ export default function CalculatorPage() {
                                                     {/* 2. Price */}
                                                     <div className="result-price" style={{ flex: '0 0 auto', textAlign: 'right' }}>
                                                         {isError ? (
-                                                            <span style={{ fontSize: '1rem', fontWeight: 700, color: '#ef4444' }}>เกินเงื่อนไข</span>
+                                                            <span style={{ fontSize: '1rem', fontWeight: 700, color: '#ef4444' }}>
+                                                                {language === 'th' ? 'เกินเงื่อนไข' : 'Out of Bounds'}
+                                                            </span>
                                                         ) : (
                                                             <span style={{ fontSize: '1.25rem', fontWeight: 700, color: 'black' }}>
                                                                 ฿{item.total.toLocaleString()}
@@ -978,11 +1002,11 @@ export default function CalculatorPage() {
                                                         >
                                                             {isAdded ? (
                                                                 <>
-                                                                    <Check size={16} /> <span className="hidden sm:inline">เพิ่มแล้ว</span>
+                                                                    <Check size={16} /> <span className="hidden sm:inline">{language === 'th' ? 'เพิ่มแล้ว' : 'Added'}</span>
                                                                 </>
                                                             ) : (
                                                                 <>
-                                                                    <ShoppingCart size={16} /> <span className="hidden sm:inline">เพิ่ม</span>
+                                                                    <ShoppingCart size={16} /> <span className="hidden sm:inline">{language === 'th' ? 'เพิ่ม' : 'Add'}</span>
                                                                 </>
                                                             )}
                                                         </button>
@@ -994,7 +1018,7 @@ export default function CalculatorPage() {
                                                                     title: `Spec: ${item.collection.name}`
                                                                 })}
                                                                 className="flex items-center justify-center p-2 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition cursor-pointer"
-                                                                title="ดู Catalog / Spec"
+                                                                title={language === 'th' ? "ดู Catalog / Spec" : "View Catalog / Spec"}
                                                             >
                                                                 <ExternalLink size={16} />
                                                             </button>
@@ -1032,7 +1056,7 @@ export default function CalculatorPage() {
                                                                 fontWeight: 700,
                                                                 whiteSpace: 'nowrap'
                                                             }}>
-                                                                คุ้มค่าที่สุด
+                                                                {language === 'th' ? 'คุ้มค่าที่สุด' : 'Best Value'}
                                                             </span>
                                                         )}
                                                     </div>
@@ -1040,7 +1064,7 @@ export default function CalculatorPage() {
                                                     <div style={{ marginBottom: '1rem' }}>
                                                         {isError ? (
                                                             <span style={{ fontSize: '1.5rem', fontWeight: 700, color: '#ef4444' }}>
-                                                                เกินเงื่อนไข
+                                                                {language === 'th' ? 'เกินเงื่อนไข' : 'Out of Bounds'}
                                                             </span>
                                                         ) : (
                                                             <span style={{ fontSize: '2rem', fontWeight: 700, color: 'black' }}>
@@ -1050,7 +1074,7 @@ export default function CalculatorPage() {
                                                     </div>
 
                                                     <div style={{ fontSize: '0.85rem', color: '#666', lineHeight: 1.6, backgroundColor: '#f9fafb', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem' }}>
-                                                        ราคาต่อหน่วย: {displayUnitPrice} บาท/{item.collection.unit}
+                                                        {language === 'th' ? 'ราคาต่อหน่วย' : 'Unit Price'}: {displayUnitPrice} {language === 'th' ? 'บาท' : 'THB'}/{item.collection.unit}
                                                         <br />
                                                         <span style={{ opacity: 0.8, color: isError ? '#ef4444' : 'inherit' }}>
                                                             {isError ? item.breakdown : item.breakdown.split(' (')[0]}
@@ -1078,13 +1102,13 @@ export default function CalculatorPage() {
                                                     >
                                                         {isAdded ? (
                                                             <>
-                                                                <Check size={18} /> เพิ่มแล้ว
+                                                                <Check size={18} /> {language === 'th' ? 'เพิ่มแล้ว' : 'Added'}
                                                             </>
                                                         ) : isError ? (
-                                                            'ไม่สามารถสั่งซื้อได้'
+                                                            language === 'th' ? 'ไม่สามารถสั่งซื้อได้' : 'Not Available'
                                                         ) : (
                                                             <>
-                                                                <ShoppingCart size={18} /> เพิ่มรายการ
+                                                                <ShoppingCart size={18} /> {language === 'th' ? 'เพิ่มรายการ' : 'Add Item'}
                                                             </>
                                                         )}
                                                     </button>
@@ -1104,9 +1128,9 @@ export default function CalculatorPage() {
                                                                 title: `Spec: ${item.collection.name}`
                                                             })}
                                                             className="flex-1 flex justify-center items-center gap-2 p-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer"
-                                                            title="ดู Catalog / Spec"
+                                                            title={language === 'th' ? "ดู Catalog / Spec" : "View Catalog / Spec"}
                                                         >
-                                                            <ExternalLink size={14} /> ดู Catalog
+                                                            <ExternalLink size={14} /> {language === 'th' ? 'ดู Catalog' : 'View Catalog'}
                                                         </button>
                                                     )}
                                                 </div>
@@ -1121,8 +1145,12 @@ export default function CalculatorPage() {
                             <div className="empty-state-icon">
                                 <CalcIcon size={28} style={{ color: '#bbb' }} />
                             </div>
-                            <p style={{ fontSize: '1.1rem', fontWeight: 600, color: '#555', margin: '0 0 0.35rem' }}>กรอกขนาดเพื่อเปรียบเทียบราคา</p>
-                            <p style={{ fontSize: '0.85rem', color: '#999', margin: 0 }}>เลือกหมวดหมู่ → ระบุขนาด → กดคำนวณ</p>
+                            <p style={{ fontSize: '1.1rem', fontWeight: 600, color: '#555', margin: '0 0 0.35rem' }}>
+                                {language === 'th' ? 'กรอกขนาดเพื่อเปรียบเทียบราคา' : 'Enter dimensions to compare prices'}
+                            </p>
+                            <p style={{ fontSize: '0.85rem', color: '#999', margin: 0 }}>
+                                {language === 'th' ? 'เลือกหมวดหมู่ → ระบุขนาด → กดคำนวณ' : 'Select Category → Enter Dimensions → Calculate'}
+                            </p>
                         </div>
                     )}
                 </div>

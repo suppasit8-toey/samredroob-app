@@ -4,27 +4,44 @@ import React from 'react';
 import { Package, MapPin, Wrench, ShieldCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
 
+import { useLanguage } from '@/contexts/LanguageContext';
+
 export default function ServiceList() {
+    const { language } = useLanguage();
+
     const services = [
         {
             title: "1. สั่งซื้อออนไลน์",
+            titleEn: "1. Online Order",
             subtitle: "(ประหยัดที่สุด)",
+            subtitleEn: "(Most Economical)",
             icon: <Package size={32} className="text-gray-700" />,
             description: "เลือกสินค้าออนไลน์ วัดพื้นที่ สั่งผลิต และติดตั้งเอง",
+            descriptionEn: "Choose online, measure yourself, order, and install yourself",
             details: [
                 "เลือกสินค้าออนไลน์",
                 "วัดพื้นที่เอง",
                 "สั่งผลิตส่งถึงบ้าน",
                 "ติดตั้งเอง"
             ],
+            detailsEn: [
+                "Choose online",
+                "Measure yourself",
+                "Delivered to home",
+                "Install yourself"
+            ],
             price: "ราคาสินค้า + ค่าจัดส่ง",
+            priceEn: "Product Price + Delivery",
             highlight: false
         },
         {
             title: "2. บริการวัดหน้างาน",
+            titleEn: "2. Measurement Service",
             subtitle: "(ติดตั้งเอง)",
+            subtitleEn: "(Self-Installation)",
             icon: <MapPin size={32} className="text-gray-700" />,
             description: "วัดพื้นที่และเลือกแบบถึงบ้าน (ลูกค้าติดตั้งเอง)",
+            descriptionEn: "On-site measurement & selection (Customer installs)",
             details: [
                 "เลือกแบบเบื้องต้น",
                 "นัดวัดพื้นที่หน้างาน",
@@ -32,14 +49,25 @@ export default function ServiceList() {
                 "สั่งผลิตส่งถึงบ้าน",
                 "ติดตั้งเอง"
             ],
+            detailsEn: [
+                "Initial selection",
+                "On-site measurement",
+                "Final selection on-site",
+                "Delivered to home",
+                "Install yourself"
+            ],
             price: "ค่าวัดหน้างาน + ราคาสินค้า + ค่าจัดส่ง",
+            priceEn: "Measurement Fee + Product + Delivery",
             highlight: false
         },
         {
             title: "3. บริการครบวงจร",
+            titleEn: "3. Full Service",
             subtitle: "(แนะนำ)",
+            subtitleEn: "(Recommended)",
             icon: <Wrench size={32} className="text-yellow-600" />,
             description: "ดูแลครบวงจร ตั้งแต่เลือกแบบ ผลิต จนถึงติดตั้ง",
+            descriptionEn: "Full service from selection, production to installation",
             details: [
                 "เลือกแบบเบื้องต้น",
                 "นัดวัดพื้นที่หน้างาน",
@@ -47,14 +75,25 @@ export default function ServiceList() {
                 "ติดตั้งโดยทีมช่าง",
                 "รับประกันงานติดตั้ง 1 ปี"
             ],
+            detailsEn: [
+                "Initial selection",
+                "On-site measurement",
+                "Final selection on-site",
+                "Professional installation",
+                "1 Year Warranty"
+            ],
             price: "ค่าวัดหน้างาน + ราคาสินค้า + ค่าติดตั้ง",
+            priceEn: "Measurement Fee + Product + Installation",
             highlight: false
         },
         {
             title: "4. บริการครบวงจร (Premium)",
+            titleEn: "4. Full Service (Premium)",
             subtitle: "(รับประกัน 2 ปี)",
+            subtitleEn: "(2 Year Warranty)",
             icon: <ShieldCheck size={32} className="text-emerald-600" />,
             description: "บริการพรีเมียม คุมงาน A-Z พร้อมออกแบบ & ประกัน 2 ปี",
+            descriptionEn: "Premium service A-Z with design & 2 year warranty",
             details: [
                 "ปรึกษา & ออกแบบ",
                 "นัดวัดพื้นที่หน้างาน",
@@ -62,7 +101,15 @@ export default function ServiceList() {
                 "คุมงานโดยผู้เชี่ยวชาญ",
                 "รับประกันงานติดตั้ง 2 ปี"
             ],
+            detailsEn: [
+                "Consultation & Design",
+                "On-site measurement",
+                "Final selection on-site",
+                "Expert supervision",
+                "2 Year Warranty"
+            ],
             price: "ราคาเหมางาน",
+            priceEn: "Package Price",
             highlight: true
         }
     ];
@@ -70,7 +117,7 @@ export default function ServiceList() {
     return (
         <div style={{ maxWidth: '100%', margin: '0 auto', padding: '2rem 0' }}>
             <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '2rem', textAlign: 'center' }}>
-                รูปแบบการให้บริการของเรา
+                {language === 'th' ? 'รูปแบบการให้บริการของเรา' : 'Our Service Options'}
             </h2>
 
             <div
@@ -106,7 +153,7 @@ export default function ServiceList() {
                                 fontSize: '0.75rem',
                                 fontWeight: 700
                             }}>
-                                แนะนำ
+                                {language === 'th' ? 'แนะนำ' : 'Recommended'}
                             </span>
                         )}
 
@@ -115,14 +162,14 @@ export default function ServiceList() {
                         </div>
 
                         <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '0.5rem', textAlign: 'center' }}>
-                            {service.title} <br />
+                            {language === 'th' ? service.title : service.titleEn} <br />
                             <span style={{ fontSize: '0.9rem', fontWeight: 500, color: '#555' }}>
-                                {service.subtitle}
+                                {language === 'th' ? service.subtitle : service.subtitleEn}
                             </span>
                         </h3>
 
                         <p style={{ color: '#444', marginBottom: '1rem', textAlign: 'center', minHeight: '3rem', fontWeight: 400, fontSize: '0.9rem', lineHeight: '1.4' }}>
-                            {service.description}
+                            {language === 'th' ? service.description : service.descriptionEn}
                         </p>
 
                         <div style={{
@@ -133,7 +180,7 @@ export default function ServiceList() {
                             flex: 1
                         }}>
                             <ul style={{ paddingLeft: '1.2rem', margin: 0 }}>
-                                {service.details.map((detail, idx) => (
+                                {(language === 'th' ? service.details : service.detailsEn).map((detail, idx) => (
                                     <li key={idx} style={{ marginBottom: '0.25rem', fontSize: '0.85rem', color: '#333', fontWeight: 500 }}>
                                         {detail}
                                     </li>
@@ -150,7 +197,7 @@ export default function ServiceList() {
                             whiteSpace: 'normal',
                             fontSize: '0.85rem'
                         }}>
-                            {service.price}
+                            {language === 'th' ? service.price : service.priceEn}
                         </div>
                     </motion.div>
                 ))}

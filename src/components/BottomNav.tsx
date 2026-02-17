@@ -5,16 +5,19 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, Calculator, Grid, Phone } from 'lucide-react';
 
+import { useLanguage } from '@/contexts/LanguageContext';
+
 const BottomNav: React.FC = () => {
     const pathname = usePathname();
+    const { language } = useLanguage();
 
     const isActive = (path: string) => pathname === path;
 
     const navItems = [
-        { name: 'หน้าแรก', path: '/', icon: <Home size={26} color={isActive('/') ? '#FFD700' : '#FFFFFF'} strokeWidth={isActive('/') ? 2.8 : 2} /> },
-        { name: 'สินค้า', path: '/products', icon: <Grid size={26} color={isActive('/products') ? '#FFD700' : '#FFFFFF'} strokeWidth={isActive('/products') ? 2.8 : 2} /> },
-        { name: 'คำนวณ', path: '/calculator', icon: <Calculator size={26} color={isActive('/calculator') ? '#FFD700' : '#FFFFFF'} strokeWidth={isActive('/calculator') ? 2.8 : 2} /> },
-        { name: 'ติดต่อ', path: '/contact', icon: <Phone size={26} color={isActive('/contact') ? '#FFD700' : '#FFFFFF'} strokeWidth={isActive('/contact') ? 2.8 : 2} /> },
+        { name: language === 'th' ? 'หน้าแรก' : 'Home', path: '/', icon: <Home size={26} color={isActive('/') ? '#FFD700' : '#FFFFFF'} strokeWidth={isActive('/') ? 2.8 : 2} /> },
+        { name: language === 'th' ? 'สินค้า' : 'Products', path: '/products', icon: <Grid size={26} color={isActive('/products') ? '#FFD700' : '#FFFFFF'} strokeWidth={isActive('/products') ? 2.8 : 2} /> },
+        { name: language === 'th' ? 'คำนวณ' : 'Calc', path: '/calculator', icon: <Calculator size={26} color={isActive('/calculator') ? '#FFD700' : '#FFFFFF'} strokeWidth={isActive('/calculator') ? 2.8 : 2} /> },
+        { name: language === 'th' ? 'ติดต่อ' : 'Contact', path: '/contact', icon: <Phone size={26} color={isActive('/contact') ? '#FFD700' : '#FFFFFF'} strokeWidth={isActive('/contact') ? 2.8 : 2} /> },
     ];
 
     return (
