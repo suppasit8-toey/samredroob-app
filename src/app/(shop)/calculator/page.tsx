@@ -865,8 +865,16 @@ export default function CalculatorPage() {
                                                             </div>
                                                         </div>
                                                         <div style={{ fontSize: '0.8rem', color: '#666' }}>
-                                                            {language === 'th' ? 'ราคาต่อหน่วย' : 'Unit Price'}: {displayUnitPrice} {language === 'th' ? 'บาท' : 'THB'}/{item.collection.unit}
-                                                            <span style={{ marginLeft: '0.5rem', opacity: 0.8, color: isError ? '#ef4444' : '#888' }}>
+                                                            {!isError && (
+                                                                <>
+                                                                    {displayUnitPrice === 0 ? (
+                                                                        <>{language === 'th' ? 'ราคา / ชุด' : 'Price / Set'}</>
+                                                                    ) : (
+                                                                        <>{language === 'th' ? 'ราคาต่อหน่วย' : 'Unit Price'}: {displayUnitPrice} {language === 'th' ? 'บาท' : 'THB'}/{item.collection.unit}</>
+                                                                    )}
+                                                                </>
+                                                            )}
+                                                            <span style={{ marginLeft: isError ? 0 : '0.5rem', opacity: 0.8, color: isError ? '#ef4444' : '#888' }}>
                                                                 ({isError ? item.breakdown : item.breakdown.split(' (')[0]})
                                                             </span>
                                                         </div>
@@ -986,8 +994,16 @@ export default function CalculatorPage() {
                                                     </div>
 
                                                     <div style={{ fontSize: '0.85rem', color: '#666', lineHeight: 1.6, backgroundColor: '#f9fafb', padding: '0.75rem', borderRadius: '8px', marginBottom: '1rem' }}>
-                                                        {language === 'th' ? 'ราคาต่อหน่วย' : 'Unit Price'}: {displayUnitPrice} {language === 'th' ? 'บาท' : 'THB'}/{item.collection.unit}
-                                                        <br />
+                                                        {!isError && (
+                                                            <>
+                                                                {displayUnitPrice === 0 ? (
+                                                                    <>{language === 'th' ? 'ราคา / ชุด' : 'Price / Set'}</>
+                                                                ) : (
+                                                                    <>{language === 'th' ? 'ราคาต่อหน่วย' : 'Unit Price'}: {displayUnitPrice} {language === 'th' ? 'บาท' : 'THB'}/{item.collection.unit}</>
+                                                                )}
+                                                                <br />
+                                                            </>
+                                                        )}
                                                         <span style={{ opacity: 0.8, color: isError ? '#ef4444' : 'inherit' }}>
                                                             {isError ? item.breakdown : item.breakdown.split(' (')[0]}
                                                         </span>

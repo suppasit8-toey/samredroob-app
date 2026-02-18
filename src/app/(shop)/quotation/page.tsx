@@ -463,7 +463,11 @@ export default function QuotationPage() {
                                                                         {item.collection.name}
                                                                     </div>
                                                                     <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '0.5rem' }}>
-                                                                        {item.unitPrice} บาท/{item.collection.unit}
+                                                                        {item.unitPrice > 0 ? (
+                                                                            `${item.unitPrice.toLocaleString()} บาท/${item.collection.unit}`
+                                                                        ) : (
+                                                                            'ราคา /ชุด'
+                                                                        )}
                                                                     </div>
                                                                     {isError && (
                                                                         <div style={{ fontSize: '0.8rem', color: '#ef4444', marginTop: '0.25rem' }}>
@@ -667,7 +671,9 @@ export default function QuotationPage() {
                                                         </button>
 
                                                         <div className="text-sm text-gray-500 mb-3 flex items-center justify-between">
-                                                            <span>{item.width} x {item.height} ซม. • {item.unitPrice} บาท/{item.collection.unit}</span>
+                                                            <span>
+                                                                {item.width} x {item.height} ซม. • {item.unitPrice > 0 ? `${item.unitPrice.toLocaleString()} บาท/${item.collection.unit}` : 'ราคา /ชุด'}
+                                                            </span>
 
                                                             <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-1 border border-gray-200">
                                                                 <button

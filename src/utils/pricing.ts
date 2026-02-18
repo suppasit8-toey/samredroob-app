@@ -57,6 +57,37 @@ export const calculatePrice = (
         }
     }
 
+    // --- LOGIC: WIDTH & HEIGHT RANGE (2D Step Pricing) ---
+    if (method === 'width_height_range') {
+        const steps = Array.isArray(collection.price_data) ? collection.price_data : [];
+        if (steps.length === 0) {
+            return { total: 0, breakdown: 'ไม่พบข้อมูลช่วงราคา (No Price Steps)' };
+        }
+
+        // Find matching step
+        const matchedStep = steps.find((step: any) => {
+            const minW = Number(step.min_width || 0);
+            const maxW = Number(step.max_width || 9999);
+            const minH = Number(step.min_height || 0);
+            const maxH = Number(step.max_height || 9999);
+            return widthM >= minW && widthM <= maxW && heightM >= minH && heightM <= maxH;
+        });
+
+        if (matchedStep) {
+            let stepPrice = Number(matchedStep.price || 0);
+            if (isPlatform && matchedStep.price_platform && Number(matchedStep.price_platform) > 0) {
+                stepPrice = Number(matchedStep.price_platform);
+            }
+
+            return {
+                total: stepPrice,
+                breakdown: `ขนาด ${widthM.toFixed(2)}x${heightM.toFixed(2)} ม. อยู่ในช่วง W:${matchedStep.min_width}-${matchedStep.max_width}, H:${matchedStep.min_height}-${matchedStep.max_height} (฿${stepPrice})`
+            };
+        } else {
+            return { total: 0, breakdown: `ขนาดไม่อยู่ในช่วงที่กำหนด (${widthM.toFixed(2)}x${heightM.toFixed(2)} ม.)` };
+        }
+    }
+
     // --- LOGIC: RAIL WIDTH ---
     if (method === 'rail_width') {
         // Step 1: Apply Min Billable Width

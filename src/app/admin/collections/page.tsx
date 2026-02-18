@@ -45,6 +45,7 @@ const CALC_METHODS = [
     { value: 'box', label: 'คำนวณตามจำนวน (กล่อง/ม้วน)' },
     { value: 'fixed', label: 'ราคาคงที่ (ต่อชิ้น/ชุด)' },
     { value: 'width_range', label: 'Step ราคาตามความกว้าง' },
+    { value: 'width_height_range', label: 'Step ราคาตามความกว้างและสูง' },
 ];
 
 
@@ -53,6 +54,20 @@ const renderCollectionPrice = (col: ProductCollection, isPlatform = false) => {
         const prices = col.price_data
             .map((step: any) => isPlatform ? Number(step.price_platform || 0) : Number(step.price))
             .filter((p: number) => p > 0); // Filter out 0 or invalid prices
+
+        if (prices.length > 0) {
+            const min = Math.min(...prices);
+            const max = Math.max(...prices);
+            return min === max
+                ? `฿${min.toLocaleString()}`
+                : `฿${min.toLocaleString()} - ฿${max.toLocaleString()}`;
+        }
+    }
+
+    if (col.calculation_method === 'width_height_range' && Array.isArray(col.price_data)) {
+        const prices = col.price_data
+            .map((step: any) => isPlatform ? Number(step.price_platform || 0) : Number(step.price))
+            .filter((p: number) => p > 0);
 
         if (prices.length > 0) {
             const min = Math.min(...prices);
@@ -1151,7 +1166,7 @@ export default function AdminCollectionsPage() {
 
 
                                 {/* Width Range Constraints */}
-                                {formData.calculation_method === 'width_range' && (
+                                {(formData.calculation_method === 'width_range' || formData.calculation_method === 'width_height_range') && (
                                     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden transition-all duration-300">
                                         <div
                                             className="p-6 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors"
@@ -1246,7 +1261,7 @@ export default function AdminCollectionsPage() {
                                             </select>
                                         </div>
 
-                                        {formData.calculation_method !== 'width_range' && (
+                                        {formData.calculation_method !== 'width_range' && formData.calculation_method !== 'width_height_range' && (
                                             <>
                                                 <div>
                                                     <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">ราคาขายปกติ</label>
@@ -1397,7 +1412,147 @@ export default function AdminCollectionsPage() {
                                         </div>
                                     )}
 
-                                    {formData.calculation_method !== 'width_range' && (
+                                    {formData.calculation_method === 'width_height_range' && (
+                                        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden transition-all duration-300 mt-4">
+                                            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-2 bg-gradient-to-br from-indigo-100 to-indigo-50 rounded-lg text-indigo-700 shadow-sm">
+                                                        <DollarSign size={20} />
+                                                    </div>
+                                                    <div>
+                                                        <h3 className="font-bold text-gray-900 text-base">กำหนดราคาตามช่วงกว้าง x สูง</h3>
+                                                        <p className="text-xs text-gray-500">กำหนดช่วงความกว้าง, ความสูง และราคาสำหรับแต่ละช่วง</p>
+                                                    </div>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const newSteps = [...(formData.price_data || [])];
+                                                        newSteps.push({ min_width: '', max_width: '', min_height: '', max_height: '', price: '' });
+                                                        setFormData({ ...formData, price_data: newSteps });
+                                                    }}
+                                                    className="px-3 py-1.5 bg-black text-white text-xs font-medium rounded-lg hover:bg-gray-800 transition flex items-center gap-1"
+                                                >
+                                                    <Plus size={14} /> เพิ่มช่วงราคา
+                                                </button>
+                                            </div>
+
+                                            <div className="p-6 bg-gray-50/50">
+                                                {(formData.price_data || []).length === 0 ? (
+                                                    <div className="text-center py-8 text-gray-400 text-sm border-2 border-dashed border-gray-200 rounded-xl">
+                                                        ยังไม่มีการกำหนดช่วงราคา
+                                                    </div>
+                                                ) : (
+                                                    <div className="space-y-3">
+                                                        <div className="grid grid-cols-12 gap-2 text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 px-1">
+                                                            <div className="col-span-2">กว้าง (Min/Max)</div>
+                                                            <div className="col-span-2">สูง (Min/Max)</div>
+                                                            <div className="col-span-3">ราคา (บาท)</div>
+                                                            <div className="col-span-3 text-orange-600">ราคา Platform</div>
+                                                            <div className="col-span-1"></div>
+                                                        </div>
+                                                        {(formData.price_data || []).map((step: any, index: number) => (
+                                                            <div key={index} className="grid grid-cols-12 gap-2 items-start bg-white p-3 rounded-xl border border-gray-100 shadow-sm">
+                                                                <div className="col-span-2 space-y-1">
+                                                                    <input
+                                                                        type="number"
+                                                                        step="0.01"
+                                                                        placeholder="Min W"
+                                                                        value={step.min_width}
+                                                                        onChange={(e) => {
+                                                                            const newSteps = [...(formData.price_data || [])];
+                                                                            newSteps[index].min_width = e.target.value;
+                                                                            setFormData({ ...formData, price_data: newSteps });
+                                                                        }}
+                                                                        className="w-full px-2 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs text-center focus:ring-1 focus:ring-black"
+                                                                    />
+                                                                    <input
+                                                                        type="number"
+                                                                        step="0.01"
+                                                                        placeholder="Max W"
+                                                                        value={step.max_width}
+                                                                        onChange={(e) => {
+                                                                            const newSteps = [...(formData.price_data || [])];
+                                                                            newSteps[index].max_width = e.target.value;
+                                                                            setFormData({ ...formData, price_data: newSteps });
+                                                                        }}
+                                                                        className="w-full px-2 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs text-center focus:ring-1 focus:ring-black"
+                                                                    />
+                                                                </div>
+                                                                <div className="col-span-2 space-y-1">
+                                                                    <input
+                                                                        type="number"
+                                                                        step="0.01"
+                                                                        placeholder="Min H"
+                                                                        value={step.min_height}
+                                                                        onChange={(e) => {
+                                                                            const newSteps = [...(formData.price_data || [])];
+                                                                            newSteps[index].min_height = e.target.value;
+                                                                            setFormData({ ...formData, price_data: newSteps });
+                                                                        }}
+                                                                        className="w-full px-2 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs text-center focus:ring-1 focus:ring-black"
+                                                                    />
+                                                                    <input
+                                                                        type="number"
+                                                                        step="0.01"
+                                                                        placeholder="Max H"
+                                                                        value={step.max_height}
+                                                                        onChange={(e) => {
+                                                                            const newSteps = [...(formData.price_data || [])];
+                                                                            newSteps[index].max_height = e.target.value;
+                                                                            setFormData({ ...formData, price_data: newSteps });
+                                                                        }}
+                                                                        className="w-full px-2 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs text-center focus:ring-1 focus:ring-black"
+                                                                    />
+                                                                </div>
+                                                                <div className="col-span-3 flex items-center h-full">
+                                                                    <input
+                                                                        type="number"
+                                                                        placeholder="Price"
+                                                                        value={step.price}
+                                                                        onChange={(e) => {
+                                                                            const newSteps = [...(formData.price_data || [])];
+                                                                            newSteps[index].price = e.target.value;
+                                                                            setFormData({ ...formData, price_data: newSteps });
+                                                                        }}
+                                                                        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-black transition text-sm text-right font-mono"
+                                                                    />
+                                                                </div>
+                                                                <div className="col-span-3 flex items-center h-full">
+                                                                    <input
+                                                                        type="number"
+                                                                        placeholder="Platform"
+                                                                        value={step.price_platform || ''}
+                                                                        onChange={(e) => {
+                                                                            const newSteps = [...(formData.price_data || [])];
+                                                                            newSteps[index].price_platform = e.target.value;
+                                                                            setFormData({ ...formData, price_data: newSteps });
+                                                                        }}
+                                                                        className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-orange-500 transition text-sm text-right font-mono text-orange-600"
+                                                                    />
+                                                                </div>
+                                                                <div className="col-span-1 flex justify-center items-center h-full">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => {
+                                                                            const newSteps = [...(formData.price_data || [])];
+                                                                            newSteps.splice(index, 1);
+                                                                            setFormData({ ...formData, price_data: newSteps });
+                                                                        }}
+                                                                        className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
+                                                                    >
+                                                                        <Trash2 size={16} />
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {formData.calculation_method !== 'width_range' && formData.calculation_method !== 'width_height_range' && (
                                         <p className="text-xs text-gray-500 mt-2">* ราคา Platform คือราคาที่ใช้คำนวณเมื่อลูกค้าสั่งซื้อผ่านหน้าเว็บ (ถ้าไม่ใส่จะใช้ราคาปกติ)</p>
                                     )}
                                 </div>

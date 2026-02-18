@@ -562,7 +562,11 @@ export default function CreateQuotationDraftPage() {
                                                 {item.collection.name}
                                             </div>
                                             <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '0.5rem' }}>
-                                                {(item.unitPrice || 0).toLocaleString()} บาท/{item.collection.unit}
+                                                {(item.unitPrice || 0) > 0 ? (
+                                                    `${(item.unitPrice || 0).toLocaleString()} บาท/${item.collection.unit}`
+                                                ) : (
+                                                    'ราคา /ชุด'
+                                                )}
                                             </div>
                                         </td>
                                         <td style={{ padding: '1.25rem' }}>

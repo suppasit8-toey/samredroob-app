@@ -118,6 +118,17 @@ export default function ServiceComparisonTable() {
                                 {language === 'th' ? <React.Fragment>มัดจำ 50%<br />จบงาน 50%</React.Fragment> : <React.Fragment>50% Deposit<br />50% Completion</React.Fragment>}
                             </td>
                         </tr>
+
+                        {/* Suitability */}
+                        <tr className="hover:bg-gray-50 transition-colors border-t border-gray-100">
+                            <td className="p-4 font-medium text-gray-700">{language === 'th' ? 'เหมาะกับใคร' : 'Suitable for'}</td>
+                            <td className="p-4 text-center text-gray-600 text-sm">{language === 'th' ? 'ติดตั้งเป็น / ประหยัดงบ' : 'DIY / Budget'}</td>
+                            <td className="p-4 text-center text-gray-600 text-sm">{language === 'th' ? 'ต้องการความแม่นยำ / ติดตั้งเอง' : 'Precision / Self-Install'}</td>
+                            <td className="p-4 text-center text-gray-600 text-sm">{language === 'th' ? 'เน้นความสะดวกสบาย' : 'Focus on Convenience'}</td>
+                            <td className="p-4 text-center text-emerald-700 font-bold bg-emerald-50/30">
+                                {language === 'th' ? 'เน้นบริการพิเศษ' : 'Premium Service'}
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
