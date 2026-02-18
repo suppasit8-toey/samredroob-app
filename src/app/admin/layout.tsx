@@ -14,7 +14,10 @@ import {
     X,
     ChevronRight,
     List,
-    FolderOpen
+    FolderOpen,
+    Image as ImageIcon,
+    MessageSquare,
+    Tag,
 } from 'lucide-react';
 
 export default function AdminLayout({
@@ -78,8 +81,11 @@ export default function AdminLayout({
     const navItems = [
         { name: 'ภาพรวม', href: '/admin', icon: <LayoutDashboard size={20} /> },
         { name: 'หมวดหมู่สินค้า', href: '/admin/categories', icon: <List size={20} /> },
-        { name: 'แบรนด์', href: '/admin/brands', icon: <List size={20} /> }, // Using List icon for now, or Tag
+        { name: 'แบรนด์', href: '/admin/brands', icon: <List size={20} /> },
         { name: 'คอลเลกชัน', href: '/admin/collections', icon: <FolderOpen size={20} /> },
+        { name: 'ผลงาน', href: '/admin/portfolio', icon: <ImageIcon size={20} /> },
+        { name: 'รีวิว', href: '/admin/reviews', icon: <MessageSquare size={20} /> },
+        { name: 'โปรโมชั่น', href: '/admin/promotions', icon: <Tag size={20} /> },
         { name: 'สร้างใบเสนอราคา', href: '/admin/quotations/create', icon: <Package size={20} /> },
         { name: 'ตั้งค่าราคา', href: '/admin/pricing', icon: <Calculator size={20} /> },
     ];

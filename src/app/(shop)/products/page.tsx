@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 import ProductCard from '@/components/ProductCard';
 import CategoryList from '@/components/CategoryList';
 import SearchBar from '@/components/SearchBar';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Product {
     id: number;
@@ -18,13 +19,31 @@ interface Product {
 }
 
 function ProductsContent() {
+    const { language } = useLanguage();
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedTag, setSelectedTag] = useState<string | null>(null); // Added selectedTag state // Added search state
+    const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
     const searchParams = useSearchParams();
     const currentCategory = searchParams.get('category') || 'all';
+
+    const t = {
+        th: {
+            catalog: 'แคตตาล็อกสินค้า',
+            searchPlaceholder: 'ค้นหาสินค้า...',
+            allTags: 'ทั้งหมด',
+            loading: 'กำลังโหลดสินค้า...',
+            noProducts: 'ไม่พบสินค้า'
+        },
+        en: {
+            catalog: 'Product Catalog',
+            searchPlaceholder: 'Search products...',
+            allTags: 'All',
+            loading: 'Loading products...',
+            noProducts: 'No products found'
+        }
+    };
 
     useEffect(() => {
         const fetchProducts = async () => {
@@ -68,7 +87,7 @@ function ProductsContent() {
             <SearchBar
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="ค้นหาสินค้า..."
+                placeholder={t[language].searchPlaceholder}
             />
 
             {/* Tag Chips */}
@@ -94,7 +113,7 @@ function ProductsContent() {
                                     boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
                                 }}
                             >
-                                ทั้งหมด
+                                {t[language].allTags}
                             </button>
                             {allTags.map(tag => (
                                 <button
@@ -125,7 +144,7 @@ function ProductsContent() {
 
             <div style={{ marginBottom: '2rem' }}>
                 <h1 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '1rem', paddingLeft: '0.5rem' }}>
-                    สินค้าทั้งหมด
+                    {t[language].catalog}
                 </h1>
 
                 {/* Horizontal Category List (Reusing component for consistency) */}
@@ -134,7 +153,7 @@ function ProductsContent() {
 
             {loading ? (
                 <div style={{ textAlign: 'center', padding: '4rem', color: 'var(--color-secondary)' }}>
-                    กำลังโหลดสินค้า...
+                    {t[language].loading}
                 </div>
             ) : (
                 <motion.div

@@ -3,16 +3,25 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Phone } from 'lucide-react';
+import { Phone, Menu, X } from 'lucide-react';
 
 import { useLanguage } from '@/contexts/LanguageContext';
 
 const Header: React.FC = () => {
     const pathname = usePathname();
     const { language, toggleLanguage } = useLanguage();
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+
+    // Close menu when route changes
+    React.useEffect(() => {
+        setIsMobileMenuOpen(false);
+    }, [pathname]);
 
     const navLinks = [
         { name: 'สินค้า', nameEn: 'Products', path: '/products' },
+        { name: 'ผลงาน', nameEn: 'Portfolio', path: '/portfolio' },
+        { name: 'รีวิว', nameEn: 'Reviews', path: '/reviews' },
+        { name: 'โปรโมชั่น', nameEn: 'Promotion', path: '/promotion' },
         { name: 'คำนวณราคา', nameEn: 'Calculator', path: '/calculator' },
         { name: 'เกี่ยวกับเรา', nameEn: 'About Us', path: '/about' },
         { name: 'ติดต่อเรา', nameEn: 'Contact', path: '/contact' },
@@ -86,6 +95,45 @@ const Header: React.FC = () => {
                     </div>
                 </div>
 
+                {/* Mobile Menu Toggle */}
+                <button
+                    className="mobile-menu-toggle"
+                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                    aria-label="Toggle Menu"
+                >
+                    {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                </button>
+
+                {/* Mobile Full Screen Menu Overlay */}
+                <div className={`mobile-menu-overlay ${isMobileMenuOpen ? 'open' : ''}`}>
+                    <div className="mobile-menu-content">
+                        {navLinks.map(link => (
+                            <Link
+                                key={link.name}
+                                href={link.path}
+                                className="mobile-nav-link"
+                                style={{
+                                    color: pathname === link.path ? 'var(--color-accent)' : '#333'
+                                }}
+                            >
+                                {language === 'th' ? link.name : link.nameEn}
+                            </Link>
+                        ))}
+
+                        <div className="mobile-menu-divider"></div>
+
+                        {/* Language Toggle in Mobile Menu */}
+                        <button
+                            onClick={toggleLanguage}
+                            className="mobile-lang-toggle"
+                        >
+                            <span className={language === 'th' ? 'active' : ''}>TH</span>
+                            <span className="separator">|</span>
+                            <span className={language === 'en' ? 'active' : ''}>EN</span>
+                        </button>
+                    </div>
+                </div>
+
                 <style>{`
                     .logo-text {
                         font-size: 1.8rem;
@@ -110,6 +158,96 @@ const Header: React.FC = () => {
                             letter-spacing: 0.03em;
                         }
                         .desktop-nav { display: none !important; }
+                        
+                        /* Mobile Menu Styles */
+                        .mobile-menu-toggle {
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            background: none;
+                            border: none;
+                            cursor: pointer;
+                            padding: 0.5rem;
+                            color: #333;
+                            z-index: 1002;
+                        }
+
+                        .mobile-menu-overlay {
+                            position: fixed;
+                            top: 0; /* Cover everything */
+                            left: 0;
+                            right: 0;
+                            bottom: 0;
+                            background-color: rgba(255, 255, 255, 0.98);
+                            z-index: 1001; /* Behind toggle button but above header content */
+                            display: flex;
+                            flex-direction: column;
+                            justify-content: center;
+                            align-items: center;
+                            opacity: 0;
+                            pointer-events: none;
+                            transition: opacity 0.3s ease;
+                            padding-top: 60px; /* Space for header */
+                        }
+
+                        .mobile-menu-overlay.open {
+                            opacity: 1;
+                            pointer-events: all;
+                        }
+
+                        .mobile-menu-content {
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            gap: 2rem;
+                            width: 100%;
+                        }
+
+                        .mobile-nav-link {
+                            font-family: var(--font-mitr);
+                            font-size: 1.5rem;
+                            font-weight: 600;
+                            text-decoration: none;
+                            color: #333;
+                            transition: transform 0.2s;
+                        }
+
+                        .mobile-nav-link:active {
+                            transform: scale(0.95);
+                        }
+                        
+                        .mobile-menu-divider {
+                            width: 50px;
+                            height: 2px;
+                            background-color: #e5e5e5;
+                            margin: 1rem 0;
+                        }
+
+                        .mobile-lang-toggle {
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                            font-size: 1.2rem;
+                            font-weight: 500;
+                            color: #888;
+                            background: none;
+                            border: 1px solid #e5e5e5;
+                            padding: 0.5rem 1.5rem;
+                            border-radius: 50px;
+                        }
+
+                        .mobile-lang-toggle .active {
+                            color: #000;
+                            font-weight: 700;
+                        }
+                    }
+                    @media (min-width: 769px) {
+                        .mobile-menu-toggle {
+                            display: none;
+                        }
+                        .mobile-menu-overlay {
+                            display: none;
+                        }
                     }
                 `}</style>
             </nav>

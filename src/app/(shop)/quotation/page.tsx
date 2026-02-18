@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 import Link from 'next/link';
 import { Trash2, ArrowLeft, Send, Store, ShoppingBag, Info, BookOpen, Images, ChevronDown, ChevronUp, Plus, Minus } from 'lucide-react';
 import { calculatePrice } from '@/utils/pricing';
@@ -10,8 +11,128 @@ import { ProductVariant } from '@/lib/types';
 import CatalogModal from '@/components/CatalogModal';
 
 export default function QuotationPage() {
+    const { language } = useLanguage();
     const { items, removeFromCart, updateItem } = useCart();
     const [priceMode, setPriceMode] = useState<'shop' | 'platform'>('shop');
+
+    const t = {
+        th: {
+            backToCalculator: 'กลับไปหน้าคำนวณ',
+            quotation: 'ใบเสนอราคา',
+            quotationSub: 'รายการสินค้าที่คุณเลือกไว้ พร้อมส่งขอใบเสนอราคา',
+            remarks: '📋 หมายเหตุ / เงื่อนไข',
+            remark1: 'ราคาที่แสดงเป็นราคาประเมินเบื้องต้น อาจมีการเปลี่ยนแปลงตามขนาดจริงและหน้างาน',
+            remark2: 'ราคายังไม่รวมภาษีมูลค่าเพิ่ม (VAT 7%)',
+            remark3: 'ราคายังไม่รวมค่าบริการติดตั้งและค่าจัดส่ง',
+            remark4: 'ระยะเวลาผลิตสินค้าประมาณ 7-14 วันทำการ หลังยืนยันการสั่งซื้อ',
+            orderChannels: '🛒 ช่องทางการสั่งซื้อ',
+            priceDiff: 'ราคาอาจแตกต่างตามช่องทาง',
+            shop: 'หน้าร้าน',
+            platform: 'แพลตฟอร์ม',
+            platformFee: 'มีค่าธรรมเนียมเพิ่มเติม',
+            product: 'สินค้า',
+            code: 'รหัสสินค้า',
+            size: 'ขนาด (กxส)',
+            qty: 'จำนวน',
+            estPrice: 'ราคาประเมิน',
+            changeAll: '-- เปลี่ยนทั้งหมด --',
+            select: '-- เลือก --',
+            viewCatalog: 'ดู Catalog',
+            viewPortfolio: 'ดูตัวอย่าง',
+            pricePerUnit: 'บาท',
+            pricePerSet: 'ราคา /ชุด',
+            overLimit: 'เกินเงื่อนไข',
+            totalShop: 'ราคารวมทั้งหมด (หน้าร้าน)',
+            totalPlatform: 'ราคารวมทั้งหมด (Platform)',
+            excludeVat: '* ราคาเฉพาะค่าสินค้า ยังไม่รวมค่าจัดส่งและค่าติดตั้ง',
+            sendRequest: 'ส่งข้อมูลเพื่อขอใบเสนอราคาฉบับเต็มจากทางร้าน',
+            requestQuotation: 'ขอใบเสนอราคา',
+            contactInfo: 'ข้อมูลติดต่อ',
+            name: 'ชื่อ',
+            namePlaceholder: 'กรอกชื่อของคุณ',
+            phone: 'เบอร์โทรศัพท์',
+            phonePlaceholder: 'กรอกเบอร์โทรศัพท์ (10 หลัก)',
+            email: 'อีเมล (ถ้ามี)',
+            emailPlaceholder: 'example@email.com',
+            cancel: 'ยกเลิก',
+            confirm: 'ยืนยันส่งข้อมูล',
+            sending: 'กำลังส่ง...',
+            successTitle: 'ส่งข้อมูลเรียบร้อยแล้ว',
+            successMessage: 'ทางร้านได้รับข้อมูลของคุณแล้ว และจะติดต่อกลับโดยเร็วที่สุด',
+            refCode: 'รหัสอ้างอิง:',
+            close: 'ปิดหน้าต่าง',
+            changeGroup: 'เปลี่ยนทั้งกลุ่ม:',
+            specMaterial: 'เลือกสเปค/วัสดุ',
+            totalApprox: 'ราคารวมโดยประมาณ',
+            itemsCount: 'รายการ',
+            // New keys
+            sendLine: 'ส่งลิ้งให้แอดมินทาง LINE (ตอบไว)',
+            sendLineSub: 'เพื่อความรวดเร็ว กดปุ่มด้านบนแล้วส่งลิ้งใบเสนอราคาให้แอดมินได้เลยครับ',
+            shareLink: 'ลิ้งใบเสนอราคาของคุณ (แชร์ได้)',
+            copy: 'คัดลอก',
+            copied: 'คัดลอกลิ้งเรียบร้อย',
+            ok: 'ตกลง',
+            catalogTitle: 'แคตตาล็อกสินค้า'
+        },
+        en: {
+            backToCalculator: 'Back to Calculator',
+            quotation: 'Quotation',
+            quotationSub: 'Your selected items, ready for quotation request',
+            remarks: '📋 Remarks / Conditions',
+            remark1: 'Prices shown are estimated and may change based on actual measurements and site conditions.',
+            remark2: 'Prices exclude VAT 7%.',
+            remark3: 'Prices exclude installation and delivery fees.',
+            remark4: 'Production time is approximately 7-14 working days after order confirmation.',
+            orderChannels: '🛒 Order Channels',
+            priceDiff: 'Prices may vary by channel',
+            shop: 'Store',
+            platform: 'Platform',
+            platformFee: 'Additional fees apply',
+            product: 'Product',
+            code: 'Code',
+            size: 'Size (WxH)',
+            qty: 'Qty',
+            estPrice: 'Est. Price',
+            changeAll: '-- Change All --',
+            select: '-- Select --',
+            viewCatalog: 'View Catalog',
+            viewPortfolio: 'View Portfolio',
+            pricePerUnit: 'THB',
+            pricePerSet: 'Price / Set',
+            overLimit: 'Exceeds Limit',
+            totalShop: 'Total (Store)',
+            totalPlatform: 'Total (Platform)',
+            excludeVat: '* Price for products only, excludes delivery and installation.',
+            sendRequest: 'Send information to request a full quotation from the store',
+            requestQuotation: 'Request Quotation',
+            contactInfo: 'Contact Information',
+            name: 'Name',
+            namePlaceholder: 'Enter your name',
+            phone: 'Phone Number',
+            phonePlaceholder: 'Enter phone number (10 digits)',
+            email: 'Email (Optional)',
+            emailPlaceholder: 'example@email.com',
+            cancel: 'Cancel',
+            confirm: 'Submit Request',
+            sending: 'Sending...',
+            successTitle: 'Request Sent Successfully',
+            successMessage: 'We have received your request and will contact you back shortly.',
+            refCode: 'Reference Code:',
+            close: 'Close',
+            changeGroup: 'Change Group:',
+            specMaterial: 'Select Spec/Material',
+            totalApprox: 'Approximate Total',
+            itemsCount: 'items',
+            // New keys
+            sendLine: 'Send link to Admin via LINE (Fast Response)',
+            sendLineSub: 'For faster service, click above to send your quotation link to our admin.',
+            shareLink: 'Your Quotation Link (Shareable)',
+            copy: 'Copy',
+            copied: 'Link copied',
+            ok: 'OK',
+            catalogTitle: 'Product Catalog'
+        }
+    };
 
     // Variant State
     const [variantsMap, setVariantsMap] = useState<Record<number, ProductVariant[]>>({});
@@ -216,7 +337,7 @@ export default function QuotationPage() {
                             transition: 'color 0.2s',
                         }}
                     >
-                        <ArrowLeft size={14} /> กลับไปหน้าคำนวณ
+                        <ArrowLeft size={14} /> {t[language].backToCalculator}
                     </Link>
                     <h1 style={{
                         fontSize: '2.2rem',
@@ -225,12 +346,12 @@ export default function QuotationPage() {
                         fontFamily: 'var(--font-mitr)',
                         margin: '0 0 0.4rem',
                         letterSpacing: '-0.01em',
-                    }}>ใบเสนอราคา</h1>
+                    }}>{t[language].quotation}</h1>
                     <p style={{
                         color: 'rgba(255,255,255,0.45)',
                         fontSize: '0.9rem',
                         margin: 0,
-                    }}>รายการสินค้าที่คุณเลือกไว้ พร้อมส่งขอใบเสนอราคา</p>
+                    }}>{t[language].quotationSub}</p>
                 </div>
             </div>
 
@@ -262,17 +383,17 @@ export default function QuotationPage() {
                             color: '#333',
                         }}
                     >
-                        <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>📋 หมายเหตุ / เงื่อนไข</span>
+                        <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>{t[language].remarks}</span>
                         {showRemarks ? <ChevronUp size={18} color="#999" /> : <ChevronDown size={18} color="#999" />}
                     </button>
 
                     {showRemarks && (
                         <div style={{ padding: '0 1.25rem 1.25rem', fontSize: '0.85rem', color: '#666', borderTop: '1px solid #f5f5f5' }}>
                             <ul style={{ listStyleType: 'disc', paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.4rem', marginTop: '1rem' }}>
-                                <li>ราคาที่แสดงเป็นราคาประเมินเบื้องต้น อาจมีการเปลี่ยนแปลงตามขนาดจริงและหน้างาน</li>
-                                <li>ราคายังไม่รวมภาษีมูลค่าเพิ่ม (VAT 7%)</li>
-                                <li>ราคายังไม่รวมค่าบริการติดตั้งและค่าจัดส่ง</li>
-                                <li>ระยะเวลาผลิตสินค้าประมาณ 7-14 วันทำการ หลังยืนยันการสั่งซื้อ</li>
+                                <li>{t[language].remark1}</li>
+                                <li>{t[language].remark2}</li>
+                                <li>{t[language].remark3}</li>
+                                <li>{t[language].remark4}</li>
                             </ul>
                         </div>
                     )}
@@ -293,8 +414,8 @@ export default function QuotationPage() {
                     boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
                 }}>
                     <div>
-                        <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#111', marginBottom: '0.15rem' }}>🛒 ช่องทางการสั่งซื้อ</div>
-                        <div style={{ color: '#999', fontSize: '0.8rem' }}>ราคาอาจแตกต่างตามช่องทาง</div>
+                        <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#111', marginBottom: '0.15rem' }}>{t[language].orderChannels}</div>
+                        <div style={{ color: '#999', fontSize: '0.8rem' }}>{t[language].priceDiff}</div>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
                         <div style={{ display: 'flex', gap: '4px', background: '#f3f3f3', padding: '3px', borderRadius: '10px' }}>
@@ -317,7 +438,7 @@ export default function QuotationPage() {
                                     transition: 'all 0.2s',
                                 }}
                             >
-                                <Store size={15} /> หน้าร้าน
+                                <Store size={15} /> {t[language].shop}
                             </button>
                             <button
                                 type="button"
@@ -338,12 +459,12 @@ export default function QuotationPage() {
                                     transition: 'all 0.2s',
                                 }}
                             >
-                                <ShoppingBag size={15} /> แพลตฟอร์ม
+                                <ShoppingBag size={15} /> {t[language].platform}
                             </button>
                         </div>
                         {priceMode === 'platform' && (
                             <p style={{ fontSize: '0.7rem', color: '#f97316', display: 'flex', gap: '0.25rem', justifyContent: 'flex-end', margin: 0 }}>
-                                <Info size={11} style={{ marginTop: '1px' }} /> มีค่าธรรมเนียมเพิ่มเติม
+                                <Info size={11} style={{ marginTop: '1px' }} /> {t[language].platformFee}
                             </p>
                         )}
                     </div>
@@ -357,11 +478,11 @@ export default function QuotationPage() {
                             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
                                 <thead style={{ backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e5e5' }}>
                                     <tr>
-                                        <th style={{ padding: '1.25rem', fontWeight: 600, color: '#444' }}>สินค้า</th>
-                                        <th style={{ padding: '1.25rem', fontWeight: 600, color: '#444' }}>รหัสสินค้า</th>
-                                        <th style={{ padding: '1.25rem', fontWeight: 600, color: '#444' }}>ขนาด (กxส)</th>
-                                        <th style={{ padding: '1.25rem', fontWeight: 600, color: '#444', textAlign: 'center' }}>จำนวน</th>
-                                        <th style={{ padding: '1.25rem', fontWeight: 600, color: '#444', textAlign: 'right' }}>ราคาประเมิน</th>
+                                        <th style={{ padding: '1.25rem', fontWeight: 600, color: '#444' }}>{t[language].product}</th>
+                                        <th style={{ padding: '1.25rem', fontWeight: 600, color: '#444' }}>{t[language].code}</th>
+                                        <th style={{ padding: '1.25rem', fontWeight: 600, color: '#444' }}>{t[language].size}</th>
+                                        <th style={{ padding: '1.25rem', fontWeight: 600, color: '#444', textAlign: 'center' }}>{t[language].qty}</th>
+                                        <th style={{ padding: '1.25rem', fontWeight: 600, color: '#444', textAlign: 'right' }}>{t[language].estPrice}</th>
                                         <th style={{ padding: '1.25rem', fontWeight: 600, color: '#444', width: '50px' }}></th>
                                     </tr>
                                 </thead>
@@ -400,7 +521,7 @@ export default function QuotationPage() {
                                                                                 </span>
                                                                             )}
                                                                             <span style={{ fontWeight: 600, fontSize: '1rem', color: '#1e293b' }}>
-                                                                                {firstItem.collection.name} ({groupItems.length} รายการ)
+                                                                                {language === 'en' && firstItem.collection.name_en ? firstItem.collection.name_en : firstItem.collection.name} ({groupItems.length} {t[language].itemsCount})
                                                                             </span>
                                                                         </div>
                                                                         {catalogMap[collectionId] && (
@@ -409,13 +530,13 @@ export default function QuotationPage() {
                                                                                 onClick={() => setViewingCatalogUrl(catalogMap[collectionId]!)}
                                                                                 className="text-blue-600 hover:text-blue-800 text-xs font-medium flex items-center gap-1 bg-blue-50 px-2 py-1 rounded"
                                                                             >
-                                                                                <BookOpen size={12} /> ดู Catalog
+                                                                                <BookOpen size={12} /> {t[language].viewCatalog}
                                                                             </button>
                                                                         )}
                                                                     </div>
 
                                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                                                        <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 500 }}>เลือกพร้อมกันทั้งกลุ่ม:</span>
+                                                                        <span style={{ fontSize: '0.85rem', color: '#64748b', fontWeight: 500 }}>{t[language].changeGroup}</span>
                                                                         <select
                                                                             onChange={(e) => {
                                                                                 const variantId = Number(e.target.value);
@@ -430,7 +551,7 @@ export default function QuotationPage() {
                                                                             className="text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer px-3 py-1.5"
                                                                             style={{ minWidth: '180px' }}
                                                                         >
-                                                                            <option value="">-- เปลี่ยนทั้งหมด --</option>
+                                                                            <option value="">{t[language].changeAll}</option>
                                                                             {collectionVariants.map(variant => (
                                                                                 <option key={variant.id} value={variant.id}>
                                                                                     {variant.name}{variant.description ? ` - ${variant.description}` : ''}
@@ -460,13 +581,13 @@ export default function QuotationPage() {
                                                                                 {brandMap[item.collection.id]?.name}
                                                                             </span>
                                                                         )}
-                                                                        {item.collection.name}
+                                                                        {language === 'en' && item.collection.name_en ? item.collection.name_en : item.collection.name}
                                                                     </div>
                                                                     <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '0.5rem' }}>
                                                                         {item.unitPrice > 0 ? (
-                                                                            `${item.unitPrice.toLocaleString()} บาท/${item.collection.unit}`
+                                                                            `${item.unitPrice.toLocaleString()} ${t[language].pricePerUnit}/${item.collection.unit}`
                                                                         ) : (
-                                                                            'ราคา /ชุด'
+                                                                            t[language].pricePerSet
                                                                         )}
                                                                     </div>
                                                                     {isError && (
@@ -490,7 +611,7 @@ export default function QuotationPage() {
                                                                             className="w-full text-sm bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black/5 cursor-pointer px-2 py-1.5"
                                                                             style={{ minWidth: '120px' }}
                                                                         >
-                                                                            <option value="">-- เลือก --</option>
+                                                                            <option value="">{t[language].select}</option>
                                                                             {collectionVariants.map(variant => (
                                                                                 <option key={variant.id} value={variant.id}>
                                                                                     {variant.name}{variant.description ? ` - ${variant.description}` : ''}
@@ -510,7 +631,7 @@ export default function QuotationPage() {
                                                                                     onClick={() => setViewingCatalogUrl(catalogMap[item.collection.id]!)}
                                                                                     className="w-full py-1.5 px-3 rounded text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-800 flex items-center justify-center gap-2 font-medium transition-colors"
                                                                                 >
-                                                                                    <BookOpen size={14} /> ดูแคตตาล็อก
+                                                                                    <BookOpen size={14} /> {t[language].viewCatalog}
                                                                                 </button>
                                                                             )}
                                                                             {portfolioMap[item.collection.id] && (
@@ -519,14 +640,14 @@ export default function QuotationPage() {
                                                                                     onClick={() => setViewingCatalogUrl(portfolioMap[item.collection.id]!)}
                                                                                     className="w-full py-1.5 px-3 rounded text-xs bg-purple-50 text-purple-600 hover:bg-purple-100 hover:text-purple-800 flex items-center justify-center gap-2 font-medium transition-colors"
                                                                                 >
-                                                                                    <Images size={14} /> ดูตัวอย่างผลงาน
+                                                                                    <Images size={14} /> {t[language].viewPortfolio}
                                                                                 </button>
                                                                             )}
                                                                         </div>
                                                                     )}
                                                                 </td>
                                                                 <td style={{ padding: '1.25rem', color: '#666' }}>
-                                                                    {item.width} x {item.height} ซม.
+                                                                    {item.width} x {item.height} {language === 'en' ? 'cm' : 'ซม.'}
                                                                 </td>
                                                                 <td style={{ padding: '1.25rem', textAlign: 'center' }}>
                                                                     <div className="flex items-center justify-center gap-2">
@@ -548,7 +669,7 @@ export default function QuotationPage() {
                                                                 </td>
                                                                 <td style={{ padding: '1.25rem', textAlign: 'right', fontWeight: 600, fontSize: '1.1rem' }}>
                                                                     {isError ? (
-                                                                        <span style={{ color: '#ef4444' }}>เกินเงื่อนไข</span>
+                                                                        <span style={{ color: '#ef4444' }}>{t[language].overLimit}</span>
                                                                     ) : (
                                                                         `฿${item.currentTotal.toLocaleString()}`
                                                                     )}
@@ -573,7 +694,7 @@ export default function QuotationPage() {
                                 <tfoot style={{ backgroundColor: '#f9fafb', borderTop: '1px solid #e5e5e5' }}>
                                     <tr>
                                         <td colSpan={4} style={{ padding: '1.5rem', textAlign: 'right', fontWeight: 600, fontSize: '1.2rem' }}>
-                                            ราคารวมทั้งหมด ({priceMode === 'platform' ? 'Platform' : 'หน้าร้าน'})
+                                            {priceMode === 'platform' ? t[language].totalPlatform : t[language].totalShop}
                                         </td>
                                         <td style={{ padding: '1.5rem', textAlign: 'right', fontWeight: 700, fontSize: '1.5rem', color: 'black' }}>
                                             ฿{totalEstimate.toLocaleString()}
@@ -582,7 +703,7 @@ export default function QuotationPage() {
                                     </tr>
                                     <tr>
                                         <td colSpan={6} style={{ padding: '0.75rem 1.5rem', textAlign: 'right', color: '#ff4d4f', fontSize: '0.9rem', borderTop: '1px dashed #e5e5e5' }}>
-                                            * ราคาเฉพาะค่าสินค้า ยังไม่รวมค่าจัดส่งและค่าติดตั้ง
+                                            {t[language].excludeVat}
                                         </td>
                                     </tr>
                                 </tfoot>
@@ -620,11 +741,11 @@ export default function QuotationPage() {
                                                             </span>
                                                         )}
                                                         <span className="font-semibold text-gray-700 text-sm">
-                                                            {firstItem.collection.name} ({groupItems.length})
+                                                            {language === 'en' && firstItem.collection.name_en ? firstItem.collection.name_en : firstItem.collection.name} ({groupItems.length})
                                                         </span>
                                                     </div>
                                                     <div className="flex items-center gap-2">
-                                                        <span className="text-xs text-gray-500 whitespace-nowrap">เปลี่ยนทั้งกลุ่ม:</span>
+                                                        <span className="text-xs text-gray-500 whitespace-nowrap">{t[language].changeGroup}</span>
                                                         <select
                                                             onChange={(e) => {
                                                                 const variantId = Number(e.target.value);
@@ -637,7 +758,7 @@ export default function QuotationPage() {
                                                             }}
                                                             className="w-full text-xs bg-white border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
                                                         >
-                                                            <option value="">-- เลือก --</option>
+                                                            <option value="">{t[language].select}</option>
                                                             {collectionVariants.map(variant => (
                                                                 <option key={variant.id} value={variant.id}>
                                                                     {variant.name}
@@ -660,7 +781,7 @@ export default function QuotationPage() {
                                                                         {brandMap[item.collection.id]?.name}
                                                                     </div>
                                                                 )}
-                                                                <div className="font-semibold text-lg leading-tight">{item.collection.name}</div>
+                                                                <div className="font-semibold text-lg leading-tight">{language === 'en' && item.collection.name_en ? item.collection.name_en : item.collection.name}</div>
                                                             </div>
                                                         </div>
                                                         <button
@@ -672,7 +793,7 @@ export default function QuotationPage() {
 
                                                         <div className="text-sm text-gray-500 mb-3 flex items-center justify-between">
                                                             <span>
-                                                                {item.width} x {item.height} ซม. • {item.unitPrice > 0 ? `${item.unitPrice.toLocaleString()} บาท/${item.collection.unit}` : 'ราคา /ชุด'}
+                                                                {item.width} x {item.height} {language === 'en' ? 'cm' : 'ซม.'} • {item.unitPrice > 0 ? `${item.unitPrice.toLocaleString()} ${t[language].pricePerUnit}/${item.collection.unit}` : t[language].pricePerSet}
                                                             </span>
 
                                                             <div className="flex items-center gap-2 bg-gray-50 rounded-lg p-1 border border-gray-200">
@@ -695,7 +816,7 @@ export default function QuotationPage() {
 
                                                         {/* Variant Selection */}
                                                         <div className="mb-3">
-                                                            <label className="text-xs font-semibold text-gray-500 mb-1 block">เลือกสเปค/วัสดุ</label>
+                                                            <label className="text-xs font-semibold text-gray-500 mb-1 block">{t[language].specMaterial}</label>
                                                             {collectionVariants.length > 0 ? (
                                                                 <select
                                                                     value={item.selectedVariant?.id || ''}
@@ -708,7 +829,7 @@ export default function QuotationPage() {
                                                                     }}
                                                                     className="w-full text-sm bg-gray-50 border border-gray-200 rounded-lg p-2.5 focus:outline-none focus:ring-2 focus:ring-black/5"
                                                                 >
-                                                                    <option value="">-- เลือก --</option>
+                                                                    <option value="">{t[language].select}</option>
                                                                     {collectionVariants.map(variant => (
                                                                         <option key={variant.id} value={variant.id}>
                                                                             {variant.name}{variant.description ? ` - ${variant.description}` : ''}
@@ -728,7 +849,7 @@ export default function QuotationPage() {
                                                                     onClick={() => setViewingCatalogUrl(catalogMap[item.collection.id]!)}
                                                                     className="py-1.5 px-3 rounded text-xs bg-blue-50 text-blue-600 font-medium flex items-center justify-center gap-1"
                                                                 >
-                                                                    <BookOpen size={14} /> ดู Catalog
+                                                                    <BookOpen size={14} /> {t[language].viewCatalog}
                                                                 </button>
                                                             )}
                                                             {portfolioMap[item.collection.id] && (
@@ -737,17 +858,17 @@ export default function QuotationPage() {
                                                                     onClick={() => setViewingCatalogUrl(portfolioMap[item.collection.id]!)}
                                                                     className="py-1.5 px-3 rounded text-xs bg-purple-50 text-purple-600 font-medium flex items-center justify-center gap-1"
                                                                 >
-                                                                    <Images size={14} /> ดูตัวอย่าง
+                                                                    <Images size={14} /> {t[language].viewPortfolio}
                                                                 </button>
                                                             )}
                                                         </div>
 
                                                         {/* Price and Error */}
                                                         <div className="flex justify-between items-end border-t border-gray-50 pt-3 mt-1">
-                                                            <div className="text-xs text-gray-400">ราคารวม ({priceMode === 'platform' ? 'Platform' : 'หน้าร้าน'})</div>
+                                                            <div className="text-xs text-gray-400">{t[language].totalApprox} ({priceMode === 'platform' ? 'Platform' : t[language].shop})</div>
                                                             <div className="text-xl font-bold text-gray-900">
                                                                 {isError ? (
-                                                                    <span className="text-red-500 text-base">เกินเงื่อนไข</span>
+                                                                    <span className="text-red-500 text-base">{t[language].overLimit}</span>
                                                                 ) : (
                                                                     `฿${item.currentTotal.toLocaleString()}`
                                                                 )}
@@ -769,11 +890,11 @@ export default function QuotationPage() {
                             {/* Mobile Total */}
                             <div className="bg-gray-50 rounded-xl p-4 flex flex-col gap-2 border border-gray-100">
                                 <div className="flex justify-between items-center">
-                                    <span className="font-semibold text-gray-700">ราคารวมโดยประมาณ</span>
-                                    <span className="font-bold text-xl text-black">{totalEstimate.toLocaleString()} บาท</span>
+                                    <span className="font-semibold text-gray-700">{t[language].totalApprox}</span>
+                                    <span className="font-bold text-xl text-black">{totalEstimate.toLocaleString()} {t[language].pricePerUnit}</span>
                                 </div>
                                 <div className="text-right text-xs text-red-500">
-                                    * ราคาเฉพาะค่าสินค้า ยังไม่รวมค่าจัดส่งและค่าติดตั้ง
+                                    {t[language].excludeVat}
                                 </div>
                             </div>
                         </div>
@@ -787,7 +908,7 @@ export default function QuotationPage() {
                             alignItems: 'center',
                             textAlign: 'center',
                         }}>
-                            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', marginBottom: '1.25rem' }}>ส่งข้อมูลเพื่อขอใบเสนอราคาฉบับเต็มจากทางร้าน</p>
+                            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', marginBottom: '1.25rem' }}>{t[language].sendRequest}</p>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'center' }}>
                                 <button
                                     onClick={() => setShowModal(true)}
@@ -810,7 +931,7 @@ export default function QuotationPage() {
                                     onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.04)'}
                                     onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
                                 >
-                                    <Send size={18} /> ขอใบเสนอราคา
+                                    <Send size={18} /> {t[language].requestQuotation}
                                 </button>
                                 <a
                                     href="https://lin.ee/59TaAgG"
@@ -823,7 +944,7 @@ export default function QuotationPage() {
                                         fontSize: '0.8rem',
                                     }}
                                 >
-                                    หรือแอด LINE: @samredroob
+                                    Or add LINE: @samredroob
                                 </a>
                             </div>
                         </div>
@@ -838,7 +959,7 @@ export default function QuotationPage() {
                         boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
                     }}>
                         <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📋</div>
-                        <p style={{ color: '#999', fontSize: '1.1rem', marginBottom: '1.5rem', fontWeight: 500 }}>ยังไม่มีรายการสินค้าในใบเสนอราคา</p>
+                        <p style={{ color: '#999', fontSize: '1.1rem', marginBottom: '1.5rem', fontWeight: 500 }}>{language === 'th' ? 'ยังไม่มีรายการสินค้าในใบเสนอราคา' : 'No items in quotation'}</p>
                         <Link
                             href="/calculator"
                             style={{
@@ -856,7 +977,7 @@ export default function QuotationPage() {
                                 fontFamily: 'var(--font-mitr)',
                             }}
                         >
-                            ไปหน้าคำนวณราคา
+                            {t[language].backToCalculator}
                         </Link>
                     </div>
                 )}
@@ -884,22 +1005,22 @@ export default function QuotationPage() {
                             maxWidth: '400px',
                             boxShadow: '0 10px 25px rgba(0,0,0,0.1)'
                         }}>
-                            <h2 style={{ fontSize: '1.5rem', fontFamily: 'var(--font-mitr)', marginBottom: '1.5rem', textAlign: 'center' }}>ข้อมูลติดต่อ</h2>
+                            <h2 style={{ fontSize: '1.5rem', fontFamily: 'var(--font-mitr)', marginBottom: '1.5rem', textAlign: 'center' }}>{t[language].contactInfo}</h2>
 
                             <form onSubmit={handleSubmitRequest} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                 <div>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>ชื่อ - นามสกุล *</label>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>{t[language].name} *</label>
                                     <input
                                         type="text"
                                         required
                                         value={formData.name}
                                         onChange={e => setFormData({ ...formData, name: e.target.value })}
                                         style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e5e5e5' }}
-                                        placeholder="กรอกชื่อของคุณ"
+                                        placeholder={t[language].namePlaceholder}
                                     />
                                 </div>
                                 <div>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>เบอร์โทรศัพท์ *</label>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>{t[language].phone} *</label>
                                     <input
                                         type="tel"
                                         required
@@ -909,17 +1030,17 @@ export default function QuotationPage() {
                                             setFormData({ ...formData, phone: value });
                                         }}
                                         style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e5e5e5' }}
-                                        placeholder="08XXXXXXXX (10 หลัก)"
+                                        placeholder={t[language].phonePlaceholder}
                                     />
                                 </div>
                                 <div>
-                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>อีเมล (ถ้ามี)</label>
+                                    <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>{t[language].email}</label>
                                     <input
                                         type="email"
                                         value={formData.email}
                                         onChange={e => setFormData({ ...formData, email: e.target.value })}
                                         style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e5e5e5' }}
-                                        placeholder="Example@email.com"
+                                        placeholder={t[language].emailPlaceholder}
                                     />
                                 </div>
 
@@ -938,7 +1059,7 @@ export default function QuotationPage() {
                                             color: '#666'
                                         }}
                                     >
-                                        ยกเลิก
+                                        {t[language].cancel}
                                     </button>
                                     <button
                                         type="submit"
@@ -955,7 +1076,7 @@ export default function QuotationPage() {
                                             opacity: submitting ? 0.7 : 1
                                         }}
                                     >
-                                        {submitting ? 'กำลังส่ง...' : 'ยืนยัน'}
+                                        {submitting ? t[language].sending : t[language].confirm}
                                     </button>
                                 </div>
                             </form>
@@ -1000,33 +1121,42 @@ export default function QuotationPage() {
                             }}>
                                 <Send size={32} />
                             </div>
-                            <h2 style={{ fontSize: '1.5rem', fontFamily: 'var(--font-mitr)', marginBottom: '0.5rem' }}>ส่งข้อมูลสำเร็จ!</h2>
+                            <h2 style={{ fontSize: '1.5rem', fontFamily: 'var(--font-mitr)', marginBottom: '0.75rem', color: '#06C755' }}>{t[language].successTitle}</h2>
 
                             {lastReferenceCode && (
                                 <div className="bg-gray-100 rounded-lg py-2 px-4 mb-4 inline-block">
-                                    <span className="text-gray-500 text-sm">รหัสอ้างอิง:</span>
+                                    <span className="text-gray-500 text-sm">{t[language].refCode}</span>
                                     <span className="text-xl font-bold ml-2 text-black">#{lastReferenceCode}</span>
                                 </div>
                             )}
-                            <p style={{ color: '#666', marginBottom: '1rem' }}>ทางร้านได้รับข้อมูลแล้ว จะรีบติดต่อกลับเพื่อส่งใบเสนอราคาให้เร็วที่สุดครับ</p>
+                            <p style={{ color: '#666', marginBottom: '1rem' }}>{t[language].successMessage}</p>
 
                             <div className="mb-6">
                                 <a
                                     href="https://lin.ee/FQdVms5"
                                     target="_blank"
                                     rel="noopener noreferrer"
+                                    onClick={(e) => {
+                                        if (lastReferenceCode) {
+                                            navigator.clipboard.writeText(`${window.location.origin}/quotation/${lastReferenceCode}`);
+                                            // Optional: Show a toast or small alert that link is copied, but user asked for auto-copy.
+                                            // The alert might block the new tab opening in some browsers, but usually fine in onClick.
+                                            // Let's just copy silently or maybe use a small timeout if needed, but synchronous writeText is standard.
+                                            alert(t[language].copied);
+                                        }
+                                    }}
                                     className="inline-flex items-center gap-2 bg-[#06C755] text-white px-4 py-3 rounded-xl font-bold hover:bg-[#05b64d] transition-colors w-full justify-center shadow-lg shadow-green-100"
                                 >
                                     <Send size={20} />
-                                    ส่งลิ้งให้แอดมินทาง LINE (ตอบไว)
+                                    {t[language].sendLine}
                                 </a>
-                                <p className="text-xs text-gray-400 mt-2 text-center">เพื่อความรวดเร็ว กดปุ่มด้านบนแล้วส่งลิ้งใบเสนอราคาให้แอดมินได้เลยครับ</p>
+                                <p className="text-xs text-gray-400 mt-2 text-center">{t[language].sendLineSub}</p>
                             </div>
 
                             {/* Share Link Section */}
                             {lastReferenceCode && (
                                 <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 mb-6 text-left">
-                                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">ลิ้งใบเสนอราคาของคุณ (แชร์ได้)</label>
+                                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">{t[language].shareLink}</label>
                                     <div className="flex gap-2">
                                         <input
                                             type="text"
@@ -1037,11 +1167,11 @@ export default function QuotationPage() {
                                         <button
                                             onClick={() => {
                                                 navigator.clipboard.writeText(`${window.location.origin}/quotation/${lastReferenceCode}`);
-                                                alert('คัดลอกลิ้งเรียบร้อย');
+                                                alert(t[language].copied);
                                             }}
                                             className="bg-black text-white px-3 py-2 rounded-lg text-sm font-semibold hover:bg-gray-800 transition-colors"
                                         >
-                                            คัดลอก
+                                            {t[language].copy}
                                         </button>
                                     </div>
                                 </div>
@@ -1060,7 +1190,7 @@ export default function QuotationPage() {
                                     fontWeight: 600
                                 }}
                             >
-                                ตกลง
+                                {t[language].ok}
                             </button>
                         </div>
                     </div>
@@ -1072,7 +1202,7 @@ export default function QuotationPage() {
                 isOpen={!!viewingCatalogUrl}
                 onClose={() => setViewingCatalogUrl(null)}
                 url={viewingCatalogUrl}
-                title="แคตตาล็อกสินค้า"
+                title={t[language].catalogTitle}
             />
         </div>
     );

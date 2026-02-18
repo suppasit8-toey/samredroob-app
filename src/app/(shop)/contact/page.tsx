@@ -1,6 +1,38 @@
+"use client";
+
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Phone, MapPin, Clock, MessageCircle, ExternalLink } from 'lucide-react';
 
 export default function ContactPage() {
+    const { language } = useLanguage();
+
+    const t = {
+        th: {
+            contactUs: 'ติดต่อเรา',
+            contactSub: 'สำเร็จรูป — พร้อมบริการ ให้คำปรึกษา ทุกวัน',
+            phone: 'โทรศัพท์',
+            lineId: 'Line ID',
+            officeHours: 'เวลาทำการ',
+            officeHoursDetail: 'ทุกวัน 09:00 – 18:00',
+            addressTitle: 'ที่อยู่ร้าน',
+            addressLine1: '44/10 มิตรไมตรี แขวงคู้ฝั่งเหนือ',
+            addressLine2: 'เขตหนองจอก กรุงเทพมหานคร ประเทศไทย',
+            openMap: 'เปิดใน Google Maps'
+        },
+        en: {
+            contactUs: 'Contact Us',
+            contactSub: 'Ready-made — Service & Consultation Available Daily',
+            phone: 'Phone',
+            lineId: 'Line ID',
+            officeHours: 'Business Hours',
+            officeHoursDetail: 'Every day 09:00 – 18:00',
+            addressTitle: 'Store Address',
+            addressLine1: '44/10 Mit Maitri, Khu Fang Nuea',
+            addressLine2: 'Nong Chok, Bangkok, Thailand',
+            openMap: 'Open in Google Maps'
+        }
+    };
+
     return (
         <div style={{ maxWidth: '1000px', margin: '0 auto', position: 'relative' }}>
             {/* Hero */}
@@ -24,13 +56,13 @@ export default function ContactPage() {
                         fontFamily: 'var(--font-mitr)',
                         margin: '0 0 0.5rem',
                         letterSpacing: '-0.01em',
-                    }}>ติดต่อเรา</h1>
+                    }}>{t[language].contactUs}</h1>
                     <p style={{
                         color: 'rgba(255,255,255,0.5)',
                         fontSize: '0.95rem',
                         margin: 0,
                         fontWeight: 400,
-                    }}>สำเร็จรูป — พร้อมบริการ ให้คำปรึกษา ทุกวัน</p>
+                    }}>{t[language].contactSub}</p>
                 </div>
             </div>
 
@@ -74,7 +106,7 @@ export default function ContactPage() {
                         <Phone size={24} color="white" />
                     </div>
                     <div>
-                        <div style={{ fontSize: '0.75rem', color: '#999', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>โทรศัพท์</div>
+                        <div style={{ fontSize: '0.75rem', color: '#999', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>{t[language].phone}</div>
                         <div style={{ fontSize: '1.15rem', fontWeight: 700, color: '#111' }}>094-746-1744</div>
                     </div>
                 </a>
@@ -109,7 +141,7 @@ export default function ContactPage() {
                         <MessageCircle size={24} color="white" />
                     </div>
                     <div>
-                        <div style={{ fontSize: '0.75rem', color: '#999', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Line ID</div>
+                        <div style={{ fontSize: '0.75rem', color: '#999', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>{t[language].lineId}</div>
                         <div style={{ fontSize: '1.15rem', fontWeight: 700, color: '#111', display: 'flex', alignItems: 'center', gap: '0.3rem', justifyContent: 'center' }}>
                             @samredroob
                             <ExternalLink size={14} color="#aaa" />
@@ -143,8 +175,8 @@ export default function ContactPage() {
                         <Clock size={24} color="white" />
                     </div>
                     <div>
-                        <div style={{ fontSize: '0.75rem', color: '#999', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>เวลาทำการ</div>
-                        <div style={{ fontSize: '1rem', fontWeight: 700, color: '#111' }}>ทุกวัน 09:00 – 18:00</div>
+                        <div style={{ fontSize: '0.75rem', color: '#999', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>{t[language].officeHours}</div>
+                        <div style={{ fontSize: '1rem', fontWeight: 700, color: '#111' }}>{t[language].officeHoursDetail}</div>
                     </div>
                 </div>
             </div>
@@ -179,12 +211,12 @@ export default function ContactPage() {
                         <MapPin size={22} color="white" />
                     </div>
                     <div>
-                        <div style={{ fontSize: '0.75rem', color: '#999', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.35rem' }}>ที่อยู่ร้าน</div>
+                        <div style={{ fontSize: '0.75rem', color: '#999', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.35rem' }}>{t[language].addressTitle}</div>
                         <div style={{ fontSize: '1rem', fontWeight: 600, color: '#111', lineHeight: 1.6 }}>
-                            44/10 มิตรไมตรี แขวงคู้ฝั่งเหนือ
+                            {t[language].addressLine1}
                         </div>
                         <div style={{ fontSize: '0.95rem', color: '#555', lineHeight: 1.6 }}>
-                            เขตหนองจอก กรุงเทพมหานคร ประเทศไทย
+                            {t[language].addressLine2}
                         </div>
                     </div>
                 </div>
@@ -231,7 +263,7 @@ export default function ContactPage() {
                         }}
                     >
                         <MapPin size={18} />
-                        เปิดใน Google Maps
+                        {t[language].openMap}
                         <ExternalLink size={14} />
                     </a>
                 </div>

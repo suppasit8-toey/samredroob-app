@@ -108,6 +108,7 @@ export default function AdminCollectionsPage() {
 
     const [formData, setFormData] = useState({
         name: '',
+        name_en: '',
         category_id: 0,
         unit: 'm2',
         price_per_unit: '',
@@ -313,6 +314,7 @@ export default function AdminCollectionsPage() {
             setEditingCollection(collection);
             setFormData({
                 name: collection.name,
+                name_en: collection.name_en || '',
                 category_id: collection.category_id,
                 unit: collection.unit,
                 price_per_unit: collection.price_per_unit.toString(),
@@ -378,6 +380,7 @@ export default function AdminCollectionsPage() {
             setEditingCollection(null);
             setFormData({
                 name: '',
+                name_en: '',
                 category_id: defaultCategory,
                 unit: 'm2',
                 price_per_unit: '',
@@ -431,6 +434,7 @@ export default function AdminCollectionsPage() {
         setEditingCollection(null); // Treat as new
         setFormData({
             name: `${collection.name} (Copy)`,
+            name_en: collection.name_en ? `${collection.name_en} (Copy)` : '',
             category_id: collection.category_id,
             unit: collection.unit,
             price_per_unit: collection.price_per_unit?.toString() || '',
@@ -518,6 +522,7 @@ export default function AdminCollectionsPage() {
         try {
             const dataToSave = {
                 name: formData.name,
+                name_en: formData.name_en || null,
                 category_id: Number(formData.category_id),
                 unit: formData.unit,
                 price_per_unit: Number(formData.price_per_unit),
@@ -599,6 +604,7 @@ export default function AdminCollectionsPage() {
 
     const filteredCollections = collections.filter(c => {
         const matchesSearch = c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            c.name_en?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             // @ts-ignore
             c.product_categories?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             // @ts-ignore
@@ -876,15 +882,29 @@ export default function AdminCollectionsPage() {
                             <form onSubmit={handleSubmit} className="p-4 md:p-6 space-y-5 md:space-y-6 overflow-y-auto custom-scrollbar">
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="col-span-1 md:col-span-2">
-                                        <label className="block text-sm font-semibold text-gray-700 mb-1.5">ชื่อคอลเล็กชัน <span className="text-red-500">*</span></label>
-                                        <input
-                                            type="text"
-                                            required
-                                            value={formData.name}
-                                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                            className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition"
-                                            placeholder="เช่น ม่านจีบ รุ่น Premium UV"
-                                        />
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">ชื่อคอลเล็กชัน (TH) <span className="text-red-500">*</span></label>
+                                                <input
+                                                    type="text"
+                                                    required
+                                                    value={formData.name}
+                                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition"
+                                                    placeholder="เช่น ม่านจีบ รุ่น Premium UV (TH)"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">ชื่อคอลเล็กชัน (EN)</label>
+                                                <input
+                                                    type="text"
+                                                    value={formData.name_en}
+                                                    onChange={(e) => setFormData({ ...formData, name_en: e.target.value })}
+                                                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition"
+                                                    placeholder="e.g. Pleated Curtains Premium UV (EN)"
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <div className="col-span-1 md:col-span-2">

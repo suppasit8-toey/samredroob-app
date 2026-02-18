@@ -16,6 +16,7 @@ export interface Brand {
 export interface ProductCollection {
     id: number;
     name: string;
+    name_en?: string;
     category_id: number;
     unit: string;
     price_per_unit: number;
