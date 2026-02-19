@@ -15,8 +15,8 @@ export default function ContactPage() {
             officeHours: 'เวลาทำการ',
             officeHoursDetail: 'ทุกวัน 09:00 – 18:00',
             addressTitle: 'ที่อยู่ร้าน',
-            addressLine1: '44/10 มิตรไมตรี แขวงคู้ฝั่งเหนือ',
-            addressLine2: 'เขตหนองจอก กรุงเทพมหานคร ประเทศไทย',
+            addressLine1: '5/59 มิตรไมตรี แขวงคู้ฝั่งเหนือ',
+            addressLine2: 'เขตหนองจอก กรุงเทพมหานคร ประเทศไทย 10530',
             openMap: 'เปิดใน Google Maps'
         },
         en: {
@@ -27,8 +27,8 @@ export default function ContactPage() {
             officeHours: 'Business Hours',
             officeHoursDetail: 'Every day 09:00 – 18:00',
             addressTitle: 'Store Address',
-            addressLine1: '44/10 Mit Maitri, Khu Fang Nuea',
-            addressLine2: 'Nong Chok, Bangkok, Thailand',
+            addressLine1: '5/59 Mit Maitri, Khu Fang Nuea',
+            addressLine2: 'Nong Chok, Bangkok, Thailand 10530',
             openMap: 'Open in Google Maps'
         }
     };
@@ -241,7 +241,7 @@ export default function ContactPage() {
                 {/* Open in Google Maps Button */}
                 <div style={{ padding: '1rem 1.5rem' }}>
                     <a
-                        href="https://maps.google.com/?q=44/10+มิตรไมตรี+แขวงคู้ฝั่งเหนือ+เขตหนองจอก+กรุงเทพมหานคร"
+                        href="https://maps.google.com/?q=5/59+มิตรไมตรี+แขวงคู้ฝั่งเหนือ+เขตหนองจอก+กรุงเทพมหานคร+10530"
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{

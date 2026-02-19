@@ -82,7 +82,7 @@ export default function PromotionPage() {
                             className="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 group"
                         >
                             <div className="flex flex-col md:flex-row">
-                                <div className="md:w-1/2 lg:w-3/5 h-[300px] md:h-[400px] bg-gray-100 relative overflow-hidden">
+                                <div className="md:w-1/2 lg:w-3/5 aspect-[2/1] bg-gray-100 relative overflow-hidden">
                                     {promo.image_url ? (
                                         <img
                                             src={promo.image_url}

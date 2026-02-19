@@ -85,6 +85,19 @@ export default function ReviewsPage() {
     };
 
 
+    useEffect(() => {
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                closeLightbox();
+            }
+        };
+
+        if (lightboxState.isOpen) {
+            window.addEventListener('keydown', handleKeyDown);
+            return () => window.removeEventListener('keydown', handleKeyDown);
+        }
+    }, [lightboxState.isOpen]);
+
     return (
         <div className="max-w-7xl mx-auto px-4 py-16 font-sans">
             <div className="text-center mb-16">
@@ -98,8 +111,8 @@ export default function ReviewsPage() {
                     </h1>
                     <p className="text-gray-600 max-w-2xl mx-auto text-lg">
                         {language === 'th'
-                            ? 'ความประทับใจจากลูกค้าที่ใช้บริการติดตั้งผ้าม่านและวอลเปเปอร์กับเรา'
-                            : 'Impressions from customers who have used our curtain and wallpaper installation services.'}
+                            ? 'รวมภาพรีวิวผลงานจริงจากลูกค้าที่สั่งผลิตสินค้าไปติดตั้งเอง สวยงาม ภูมิใจ ทำเองได้ง่ายๆ'
+                            : 'Real reviews from customers who ordered custom-made products for DIY installation. Beautiful, proud, and easy to do.'}
                     </p>
                 </motion.div>
             </div>
@@ -128,7 +141,7 @@ export default function ReviewsPage() {
                                         <div className="flex items-center gap-2">
                                             <h4 className="font-bold text-gray-900 text-sm">{review.customer_name}</h4>
                                             <span className="text-[10px] text-green-700 font-bold bg-green-100 px-1.5 py-0.5 rounded-full flex items-center gap-0.5 border border-green-200">
-                                                Verified
+                                                Verified DIY
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-0.5 mt-0.5">
@@ -213,38 +226,39 @@ export default function ReviewsPage() {
                 >
                     <button
                         onClick={closeLightbox}
-                        className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white p-2 rounded-full backdrop-blur-md transition-colors z-[110]"
+                        className="absolute top-6 right-6 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full backdrop-blur-md transition-colors z-[110]"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                     </button>
 
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
-                        className="relative max-w-7xl max-h-[90vh] w-full h-full flex items-center justify-center"
-                        onClick={(e) => e.stopPropagation()}
+                        className="relative max-w-7xl max-h-[90vh] w-full h-full flex items-center justify-center pointer-events-none"
+                        onClick={(e) => e.stopPropagation()} // Prevent clicks on the container from bubbling (though the backdrop handles close)
                     >
                         <img
                             src={lightboxState.images[lightboxState.currentIndex]}
                             alt="Full size review"
-                            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl pointer-events-auto cursor-default"
+                            onClick={(e) => e.stopPropagation()} // Clicking image shouldn't close it
                         />
 
                         {lightboxState.images.length > 1 && (
                             <>
                                 <button
                                     onClick={prevImage}
-                                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full backdrop-blur-md transition-colors z-50"
+                                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-4 rounded-full backdrop-blur-md transition-colors z-[120] pointer-events-auto"
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
                                 </button>
                                 <button
                                     onClick={nextImage}
-                                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full backdrop-blur-md transition-colors z-50"
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white p-4 rounded-full backdrop-blur-md transition-colors z-[120] pointer-events-auto"
                                 >
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
                                 </button>
-                                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/50 text-white px-3 py-1 rounded-full text-sm backdrop-blur-sm">
+                                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/60 text-white px-4 py-2 rounded-full text-base backdrop-blur-md pointer-events-auto">
                                     {lightboxState.currentIndex + 1} / {lightboxState.images.length}
                                 </div>
                             </>

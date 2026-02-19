@@ -34,7 +34,7 @@ const Footer: React.FC = () => {
                     <h4 style={{ marginBottom: '1rem' }}>{language === 'th' ? 'ติดต่อเรา' : 'Contact Us'}</h4>
                     <p>{language === 'th' ? 'โทร' : 'Tel'}: 094-746-1744</p>
                     <p>Line ID: @samredroob</p>
-                    <p>{language === 'th' ? 'ที่อยู่: 44/10 มิตรไมตรี แขวงคู้ฝั่งเหนือ เขต หนองจอก กทม.' : 'Address: 44/10 Mit Maitri, Khu Fang Nuea, Nong Chok, Bangkok'}</p>
+                    <p>{language === 'th' ? 'ที่อยู่: 5/59 มิตรไมตรี แขวงคู้ฝั่งเหนือ เขตหนองจอก กรุงเทพมหานคร ประเทศไทย 10530' : 'Address: 5/59 Mit Maitri, Khu Fang Nuea, Nong Chok, Bangkok 10530'}</p>
                 </div>
             </div>
             <div style={{
