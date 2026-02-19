@@ -100,8 +100,11 @@ export const calculatePrice = (
 
         // Price Calculation
         const total = billableWidth * price;
+        // Fix floating point errors (e.g., 1.2 * 600 = 720.000000001) before ceil
+        const totalRounded = Math.ceil(Number(total.toFixed(2)));
+
         return {
-            total: Math.ceil(total),
+            total: totalRounded,
             breakdown: `ราง: ${billableWidth.toFixed(2)} ม. x ฿${price}`
         };
     }
