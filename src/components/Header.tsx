@@ -33,7 +33,7 @@ const Header: React.FC = () => {
             boxShadow: 'var(--shadow-sm)',
             position: 'sticky',
             top: 0,
-            zIndex: 1000
+            zIndex: 1005 // Higher than BottomNav (1000) to ensure mobile menu covers it
         }}>
             {/* Top Bar for Contact Info */}
             <div style={{ backgroundColor: '#111', color: 'white', padding: '0.4rem 1rem', fontSize: '0.85rem' }}>

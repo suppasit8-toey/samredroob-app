@@ -25,7 +25,8 @@ interface ReviewItem {
     rating: number;
     comment_th?: string;
     comment_en?: string;
-    image_url?: string;
+    image_url?: string; // Keep for backward compat
+    images?: string[]; // New field
     is_active: boolean;
     created_at?: string;
 }
@@ -45,7 +46,8 @@ export default function AdminReviewsPage() {
         rating: 5,
         comment_th: '',
         comment_en: '',
-        image_url: '',
+        image_url: '', // Deprecated but might be needed for migration logic or just ignored
+        images: [] as string[],
         is_active: true
     });
 
@@ -64,7 +66,12 @@ export default function AdminReviewsPage() {
         if (error) {
             console.error('Error fetching reviews:', error);
         } else {
-            setReviews(data || []);
+            // Map legacy image_url to images if images is empty/null
+            const mappedData = (data || []).map((item: any) => ({
+                ...item,
+                images: item.images || (item.image_url ? [item.image_url] : [])
+            }));
+            setReviews(mappedData);
         }
         setLoading(false);
     };
@@ -78,6 +85,7 @@ export default function AdminReviewsPage() {
                 comment_th: item.comment_th || '',
                 comment_en: item.comment_en || '',
                 image_url: item.image_url || '',
+                images: item.images && item.images.length > 0 ? item.images : (item.image_url ? [item.image_url] : []),
                 is_active: item.is_active
             });
         } else {
@@ -88,6 +96,7 @@ export default function AdminReviewsPage() {
                 comment_th: '',
                 comment_en: '',
                 image_url: '',
+                images: [],
                 is_active: true
             });
         }
@@ -122,7 +131,8 @@ export default function AdminReviewsPage() {
                 rating: formData.rating,
                 comment_th: formData.comment_th,
                 comment_en: formData.comment_en,
-                image_url: formData.image_url,
+                // image_url: formData.images[0] || '', // Save first image to image_url for backward compat if needed
+                images: formData.images,
                 is_active: formData.is_active
             };
 
@@ -218,7 +228,9 @@ export default function AdminReviewsPage() {
                                 <div className="flex justify-between items-start mb-4">
                                     <div className="flex items-center gap-2">
                                         <div className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden">
-                                            {item.image_url ? (
+                                            {item.images && item.images.length > 0 ? (
+                                                <img src={item.images[0]} alt={item.customer_name} className="w-full h-full object-cover" />
+                                            ) : item.image_url ? (
                                                 <img src={item.image_url} alt={item.customer_name} className="w-full h-full object-cover" />
                                             ) : (
                                                 <div className="w-full h-full flex items-center justify-center bg-blue-100 text-blue-600 font-bold">
@@ -383,28 +395,35 @@ export default function AdminReviewsPage() {
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">รูปลูกค้า / โปรไฟล์ (Optional)</label>
-                                    {formData.image_url ? (
-                                        <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
-                                            <div className="w-16 h-16 rounded-full overflow-hidden bg-white shadow-sm">
-                                                <img src={formData.image_url} alt="Profile" className="w-full h-full object-cover" />
+                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">รูปรีวิวสินค้า (Review Images)</label>
+
+                                    <div className="flex flex-wrap gap-3 mb-3">
+                                        {formData.images.map((img, idx) => (
+                                            <div key={idx} className="relative w-20 h-20 rounded-lg overflow-hidden group border border-gray-200">
+                                                <img src={img} alt={`Preview ${idx}`} className="w-full h-full object-cover" />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setFormData(prev => ({
+                                                        ...prev,
+                                                        images: prev.images.filter((_, i) => i !== idx)
+                                                    }))}
+                                                    className="absolute top-1 right-1 bg-red-500/80 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity transform scale-75 hover:scale-100"
+                                                >
+                                                    <X size={12} />
+                                                </button>
                                             </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => setFormData(prev => ({ ...prev, image_url: '' }))}
-                                                className="text-red-500 text-sm font-medium hover:underline"
-                                            >
-                                                ลบรูป
-                                            </button>
-                                        </div>
-                                    ) : (
+                                        ))}
+
                                         <CldUploadWidget
                                             uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}
-                                            options={{ maxFiles: 1, resourceType: 'image', folder: 'samredroob/reviews' }}
+                                            options={{ maxFiles: 5, resourceType: 'image', folder: 'samredroob/reviews', multiple: true }}
                                             onSuccess={(result: CloudinaryUploadWidgetResults) => {
                                                 const info = result?.info;
                                                 if (typeof info !== 'string' && info?.secure_url) {
-                                                    setFormData(prev => ({ ...prev, image_url: info.secure_url }));
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        images: [...prev.images, info.secure_url]
+                                                    }));
                                                 }
                                                 setUploading(false);
                                             }}
@@ -415,13 +434,15 @@ export default function AdminReviewsPage() {
                                                 <button
                                                     type="button"
                                                     onClick={() => open()}
-                                                    className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium hover:bg-gray-50 transition flex items-center gap-2"
+                                                    className="w-20 h-20 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 hover:text-blue-500 hover:border-blue-500 hover:bg-blue-50 transition-all gap-1"
                                                 >
-                                                    <Upload size={16} /> อัปโหลดรูปภาพ
+                                                    <Plus size={20} />
+                                                    <span className="text-[10px] font-medium">เพิ่มรูป</span>
                                                 </button>
                                             )}
                                         </CldUploadWidget>
-                                    )}
+                                    </div>
+                                    <p className="text-xs text-gray-400">* สามารถอัปโหลดได้หลายรูป</p>
                                 </div>
 
                                 <div className="pt-6 flex justify-end gap-3 border-t border-gray-100">
