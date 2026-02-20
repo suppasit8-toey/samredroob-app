@@ -165,10 +165,22 @@ export const calculatePrice = (
 
     // --- LOGIC: BOX / ROLL ---
     if (method === 'box') {
-        // Simple logic: Area / Coverage per box?
-        // Current requirement doesn't specify box logic details, use basic area coverage if available or fallback
-        // For now, return 0 or basic calc if possible, but let's stick to requested logic.
-        return { total: 0, breakdown: 'Box calculation not fully implemented' };
+        // widthCm is actually area in sq.m. * 100 (from calculator), heightCm = 100
+        // So area = (widthCm / 100) * (heightCm / 100) = area_sqm * 1 = area_sqm
+        const areaSqm = widthM * heightM; // This gives us the actual area in sq.m.
+
+        const coverage = collection.coverage_per_unit || 0;
+        if (coverage <= 0) {
+            return { total: 0, breakdown: 'ยังไม่ได้ตั้งค่าพื้นที่ต่อม้วน (Coverage per roll not set)' };
+        }
+
+        const rolls = Math.ceil(areaSqm / coverage);
+        const total = rolls * price;
+
+        return {
+            total,
+            breakdown: `${areaSqm.toFixed(2)} ตร.ม. ÷ ${coverage} ตร.ม./ม้วน = ${rolls} ม้วน (@฿${price.toLocaleString()})`
+        };
     }
 
     // --- LOGIC: FIXED ---

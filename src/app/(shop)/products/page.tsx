@@ -184,7 +184,7 @@ function ProductsContent() {
 
 export default function ProductsPage() {
     return (
-        <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
+        <Suspense fallback={<div className="p-8 text-center">กำลังโหลด...</div>}>
             <ProductsContent />
         </Suspense>
     );

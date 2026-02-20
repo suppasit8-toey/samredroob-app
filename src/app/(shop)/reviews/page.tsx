@@ -141,7 +141,7 @@ export default function ReviewsPage() {
                                         <div className="flex items-center gap-2">
                                             <h4 className="font-bold text-gray-900 text-sm">{review.customer_name}</h4>
                                             <span className="text-[10px] text-green-700 font-bold bg-green-100 px-1.5 py-0.5 rounded-full flex items-center gap-0.5 border border-green-200">
-                                                Verified DIY
+                                                {language === 'th' ? 'ติดตั้งเอง ✓' : 'Verified DIY'}
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-0.5 mt-0.5">

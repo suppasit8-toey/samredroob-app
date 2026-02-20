@@ -36,6 +36,9 @@ export interface ProductCollection {
     width_step?: number;
     height_step?: number;
     area_rounding?: number;
+    coverage_per_unit?: number; // sq.m. per roll/box (for box calculation)
+    roll_width_cm?: number;     // physical roll width in cm (e.g., 50 or 100)
+    roll_length_cm?: number;    // physical roll length in cm (e.g., 1000 or 1500)
 
     // Advanced Pricing
     price_data?: any; // JSONB for storing price steps or ranges

@@ -138,7 +138,7 @@ export default function PortfolioPage() {
                                     {/* Product Info Tag */}
                                     {item.product_collections && (
                                         <div className="text-white/90 text-xs font-medium bg-black/40 backdrop-blur-md px-3 py-2 rounded-lg border border-white/10 self-start">
-                                            <span className="text-white/60 text-[10px] uppercase tracking-wider block mb-0.5">Product</span>
+                                            <span className="text-white/60 text-[10px] uppercase tracking-wider block mb-0.5">{language === 'th' ? 'สินค้า' : 'Product'}</span>
                                             {item.product_collections.name}
                                             {item.product_variant_ids && item.product_variant_ids.length > 0 && (
                                                 <span className="opacity-75 ml-1">(+{item.product_variant_ids.length})</span>
@@ -193,12 +193,19 @@ export default function PortfolioPage() {
                                             draggable={false}
                                         />
                                         {/* Watermark Overlay */}
-                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-40">
+
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none opacity-40 select-none">
                                             <img
                                                 src="https://res.cloudinary.com/dcspjhgdj/image/upload/v1770868240/xq5odkgk3lkto43nzvgh.png"
                                                 alt="Watermark"
-                                                className="w-1/3 h-auto object-contain"
+                                                className="w-1/3 h-auto object-contain mb-4"
                                             />
+                                            <div className="text-white text-xl md:text-3xl font-bold drop-shadow-lg" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+                                                094-746-1744
+                                            </div>
+                                            <div className="text-white text-xl md:text-3xl font-bold drop-shadow-lg" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+                                                Line: @samredroob
+                                            </div>
                                         </div>
                                     </div>
                                 ) : (

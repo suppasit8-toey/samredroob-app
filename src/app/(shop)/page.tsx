@@ -39,7 +39,7 @@ export default function Home() {
                         </div>
                         <div>
                             <div className="flex items-center gap-3 mb-1">
-                                <h2 className="text-2xl md:text-3xl font-bold font-[family-name:var(--font-mitr)]">Official Store on Shopee</h2>
+                                <h2 className="text-2xl md:text-3xl font-bold font-[family-name:var(--font-mitr)]">{language === 'th' ? 'ร้านค้าทางการบน Shopee' : 'Official Store on Shopee'}</h2>
                                 <span className="bg-yellow-400 text-[#EE4D2D] text-xs font-bold px-2 py-0.5 rounded shadow-sm uppercase tracking-wide transform rotate-3">Mall</span>
                             </div>
                             <p className="text-white/90 text-lg font-light">

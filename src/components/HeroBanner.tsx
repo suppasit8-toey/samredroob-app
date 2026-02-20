@@ -91,7 +91,7 @@ export default function HeroBanner() {
                     >
                         <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs md:text-sm font-medium mb-4 text-white border border-white/20">
                             <Sparkles size={14} className="text-yellow-400" />
-                            <span>Authentic Premium Quality</span>
+                            <span>{language === 'th' ? 'คุณภาพพรีเมียมของแท้' : 'Authentic Premium Quality'}</span>
                         </div>
                         <h1 className="text-2xl md:text-5xl font-bold font-[family-name:var(--font-mitr)] mb-4 leading-tight drop-shadow-md">
                             {language === 'th' ? slide.title : slide.titleEn}

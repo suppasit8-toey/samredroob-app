@@ -7,7 +7,7 @@ import dynamic from 'next/dynamic';
 
 const FlipbookViewer = dynamic(() => import('./FlipbookViewer'), {
     ssr: false,
-    loading: () => <div className="flex items-center justify-center h-full text-white">Loading Viewer...</div>
+    loading: () => <div className="flex items-center justify-center h-full text-white">กำลังโหลด...</div>
 });
 
 interface CatalogModalProps {
@@ -17,7 +17,7 @@ interface CatalogModalProps {
     title?: string;
 }
 
-export default function CatalogModal({ isOpen, onClose, url, title = 'Catalog' }: CatalogModalProps) {
+export default function CatalogModal({ isOpen, onClose, url, title = 'แคตตาล็อก' }: CatalogModalProps) {
     if (!url) return null;
 
     // Determine file type simply by extension

@@ -16,6 +16,24 @@ interface CalculationResult {
     breakdown: string;
 }
 
+function getCategoryInputConfig(categoryName: string): { type: 'wh' | 'area'; widthLabel: string; heightLabel: string; areaLabel: string; widthLabelEn: string; heightLabelEn: string; areaLabelEn: string } {
+    const name = categoryName.toLowerCase();
+    if (name.includes('วอลล์เปเปอร์') || name.includes('วอลเปเปอร์') || name.includes('wallpaper')) {
+        return { type: 'area', widthLabel: '', heightLabel: '', areaLabel: 'ขนาดผนัง (ตร.ม.)', widthLabelEn: '', heightLabelEn: '', areaLabelEn: 'Wall Area (sq.m.)' };
+    }
+    if (name.includes('ผ้าม่าน') || name.includes('curtain')) {
+        return { type: 'wh', widthLabel: 'กว้างราง', heightLabel: 'สูงผ้า', areaLabel: '', widthLabelEn: 'Rail Width', heightLabelEn: 'Fabric Height', areaLabelEn: '' };
+    }
+    if (name.includes('ม่านพับ') || name.includes('roman')) {
+        return { type: 'wh', widthLabel: 'กว้างราง', heightLabel: 'สูงผ้า', areaLabel: '', widthLabelEn: 'Rail Width', heightLabelEn: 'Fabric Height', areaLabelEn: '' };
+    }
+    if (name.includes('ฉาก') || name.includes('folding') || name.includes('pvc')) {
+        return { type: 'wh', widthLabel: 'กว้างราง', heightLabel: 'สูง เพดาน', areaLabel: '', widthLabelEn: 'Rail Width', heightLabelEn: 'Height', areaLabelEn: '' };
+    }
+    // Default for all blinds (wooden, roller, aluminium, vertical)
+    return { type: 'wh', widthLabel: 'กว้าง', heightLabel: 'สูง', areaLabel: '', widthLabelEn: 'Width', heightLabelEn: 'Height', areaLabelEn: '' };
+}
+
 export default function CalculatorPage() {
     const { language } = useLanguage();
     const { addToCart, cartCount } = useCart();
@@ -37,7 +55,13 @@ export default function CalculatorPage() {
 
     // Catalog Modal State
     const [activeCatalog, setActiveCatalog] = useState<{ url: string; title: string } | null>(null);
-    const [showCategoryModal, setShowCategoryModal] = useState(false);
+
+    // Area input for wallpaper
+    const [areaInput, setAreaInput] = useState<number | ''>('');
+
+    // Get input config for selected category
+    const selectedCategory = categories.find(c => c.id.toString() === selectedCategoryId);
+    const inputConfig = selectedCategory ? getCategoryInputConfig(selectedCategory.name) : null;
 
     useEffect(() => {
         const initData = async () => {
@@ -80,7 +104,12 @@ export default function CalculatorPage() {
 
     // Extract calculation logic
     const performCalculation = () => {
-        if (width && height && filteredCollections.length > 0) {
+        const isAreaMode = inputConfig?.type === 'area';
+        const hasValidInput = isAreaMode ? (areaInput !== '' && Number(areaInput) > 0) : (width !== '' && height !== '');
+        if (hasValidInput && filteredCollections.length > 0) {
+            // For wallpaper area mode: convert area(sq.m.) to width/height for calculation
+            const calcWidth = isAreaMode ? Number(areaInput) * 100 : Number(width);
+            const calcHeight = isAreaMode ? 100 : Number(height);
             const calculatedResults: CalculationResult[] = filteredCollections.map(collection => {
                 let priceToUse = collection.price_per_unit;
                 if (priceMode === 'platform') {
@@ -89,7 +118,7 @@ export default function CalculatorPage() {
                     }
                 }
 
-                const res = calculatePrice(collection, Number(width), Number(height), priceToUse, priceMode === 'platform');
+                const res = calculatePrice(collection, calcWidth, calcHeight, priceToUse, priceMode === 'platform');
                 return {
                     collection,
                     total: res.total,
@@ -112,10 +141,11 @@ export default function CalculatorPage() {
                                 item_count: calculatedResults.length,
                                 total_amount: calculatedResults.reduce((sum, item) => sum + item.total, 0),
                                 price_mode: priceMode,
-                                width: Number(width),
-                                height: Number(height),
+                                width: isAreaMode ? null : Number(width),
+                                height: isAreaMode ? null : Number(height),
+                                area: isAreaMode ? Number(areaInput) : null,
                                 category_id: selectedCategoryId,
-                                category_name: categories.find(c => c.id === Number(selectedCategoryId))?.name,
+                                category_name: selectedCategory?.name,
                                 top_product: calculatedResults.length > 0 ? calculatedResults[0].collection.name : null,
                                 top_price: calculatedResults.length > 0 ? calculatedResults[0].total : null
                             }
@@ -129,7 +159,9 @@ export default function CalculatorPage() {
 
     // Auto-calculate when priceMode changes AND we already have results (or valid inputs)
     useEffect(() => {
-        if (width && height && results) {
+        const isAreaMode = inputConfig?.type === 'area';
+        const hasValidInput = isAreaMode ? (areaInput !== '' && Number(areaInput) > 0) : (width !== '' && height !== '');
+        if (hasValidInput && results) {
             performCalculation();
         }
     }, [priceMode]); // Only trigger on priceMode change for now to avoid loops or aggressive recalcs on typing
@@ -153,13 +185,27 @@ export default function CalculatorPage() {
     };
 
     const handleAddToCart = (item: CalculationResult) => {
-        addToCart({
-            collection: item.collection,
-            width: Number(width),
-            height: Number(height),
-            totalPrice: item.total,
-            breakdown: item.breakdown
-        });
+        const isAreaMode = inputConfig?.type === 'area';
+        if (isAreaMode && item.collection.coverage_per_unit) {
+            // Wallpaper: pass per-roll dimensions and number of rolls as quantity
+            const coverage = item.collection.coverage_per_unit;
+            const rolls = Math.ceil(Number(areaInput) / coverage);
+            addToCart({
+                collection: item.collection,
+                width: item.collection.roll_width_cm || coverage * 100,
+                height: item.collection.roll_length_cm || 100,
+                totalPrice: item.total,
+                breakdown: item.breakdown
+            }, rolls);
+        } else {
+            addToCart({
+                collection: item.collection,
+                width: Number(width),
+                height: Number(height),
+                totalPrice: item.total,
+                breakdown: item.breakdown
+            });
+        }
         setAddedItems(prev => new Set(prev).add(item.collection.id.toString()));
     };
 
@@ -404,191 +450,265 @@ export default function CalculatorPage() {
             <div className="calculator-layout">
 
                 {/* Input Section */}
-                {/* Input Section */}
                 <div className={`input-section ${mobileTab === 'result' ? 'mobile-hidden' : ''}`}>
-                    <form onSubmit={handleCalculate} style={{
-                        background: 'white',
-                        padding: '1.75rem',
-                        borderRadius: '20px',
-                        boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
-                        border: '1px solid #eee',
-                    }}>
-                        <h2 style={{
-                            fontSize: '1.15rem',
-                            fontWeight: 700,
-                            margin: '0 0 1.25rem',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            color: '#111',
+                    {!selectedCategoryId ? (
+                        /* ===== FULL-SCREEN CATEGORY SELECTION ===== */
+                        <div style={{
+                            background: 'white',
+                            padding: '1.75rem',
+                            borderRadius: '20px',
+                            boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
+                            border: '1px solid #eee',
                         }}>
-                            <CalcIcon size={20} />
-                            {language === 'th' ? 'เพิ่มสินค้า' : 'Add Product'}
-                        </h2>
-
-                        {/* Category Selection - Trigger Button */}
-                        <div style={{ marginBottom: '1.5rem' }}>
-                            <label style={{
-                                display: 'block',
-                                marginBottom: '0.5rem',
-                                fontWeight: 600,
-                                fontSize: '0.82rem',
-                                color: '#555',
-                                textTransform: 'uppercase' as const,
-                                letterSpacing: '0.03em',
+                            <h2 style={{
+                                fontSize: '1.15rem',
+                                fontWeight: 700,
+                                margin: '0 0 1.25rem',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                color: '#111',
                             }}>
-                                {language === 'th' ? 'หมวดหมู่สินค้า' : 'Product Category'}
-                            </label>
-                            <button
-                                type="button"
-                                onClick={() => setShowCategoryModal(true)}
-                                style={{
-                                    width: '100%',
-                                    padding: '0.85rem 1rem',
-                                    borderRadius: '14px',
-                                    border: selectedCategoryId ? '2px solid #111' : '2px solid #e5e5e5',
-                                    background: selectedCategoryId ? '#fafafa' : 'white',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    gap: '0.75rem',
-                                    transition: 'all 0.2s',
-                                    fontFamily: 'var(--font-mitr)',
-                                }}
-                            >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                    {selectedCategoryId ? (
-                                        <>
-                                            {(() => {
-                                                const cat = categories.find(c => c.id.toString() === selectedCategoryId);
-                                                return cat ? (
-                                                    <>
-                                                        {cat.image_url && (
-                                                            <img src={cat.image_url} alt={cat.name} style={{
-                                                                width: '40px', height: '40px', borderRadius: '10px',
-                                                                objectFit: 'cover', flexShrink: 0,
-                                                            }} />
-                                                        )}
-                                                        <span style={{ fontWeight: 600, fontSize: '0.95rem', color: '#111' }}>{cat.name}</span>
-                                                    </>
-                                                ) : null;
-                                            })()}
-                                        </>
-                                    ) : (
-                                        <span style={{ color: '#aaa', fontSize: '0.95rem' }}>
-                                            {language === 'th' ? 'กดเพื่อเลือกหมวดหมู่' : 'Click to select category'}
-                                        </span>
-                                    )}
-                                </div>
-                                <div style={{
-                                    width: '32px', height: '32px', borderRadius: '10px',
-                                    background: selectedCategoryId ? '#111' : '#f0f0f0',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    flexShrink: 0, transition: 'all 0.2s',
-                                }}>
-                                    {selectedCategoryId ? (
-                                        <Check size={16} color="white" />
-                                    ) : (
-                                        <span style={{ fontSize: '1.1rem', color: '#888', lineHeight: 1 }}>+</span>
-                                    )}
-                                </div>
-                            </button>
-                        </div>
-
-
-
-                        {/* Dimensions */}
-                        <div style={{ marginBottom: '1.5rem' }}>
-                            <label style={{
-                                display: 'block',
-                                marginBottom: '0.5rem',
-                                fontWeight: 600,
-                                fontSize: '0.82rem',
-                                color: '#555',
-                                textTransform: 'uppercase' as const,
-                                letterSpacing: '0.03em',
-                            }}>
-                                {language === 'th' ? 'ขนาดที่ต้องการ' : 'Dimensions'}
-                            </label>
+                                <CalcIcon size={20} />
+                                {language === 'th' ? 'เลือกหมวดหมู่สินค้า' : 'Select Product Category'}
+                            </h2>
                             <div style={{
                                 display: 'grid',
-                                gridTemplateColumns: '1fr 1fr',
-                                gap: '0.75rem',
+                                gridTemplateColumns: 'repeat(2, 1fr)',
+                                gap: '0.6rem',
                             }}>
-                                <div style={{ position: 'relative' }}>
-                                    <input
-                                        type="number"
-                                        value={width}
-                                        onChange={(e) => setWidth(e.target.value === '' ? '' : Number(e.target.value))}
-                                        placeholder={language === 'th' ? 'กว้าง' : 'Width'}
-                                        required
-                                        className="calc-input"
+                                {categories.map(c => (
+                                    <button
+                                        key={c.id}
+                                        type="button"
+                                        className="cat-card"
                                         style={{
-                                            width: '100%',
-                                            padding: '0.85rem 3rem 0.85rem 1rem',
-                                            border: '1.5px solid #e5e5e5',
-                                            borderRadius: '12px',
-                                            fontSize: '1rem',
-                                            fontFamily: 'var(--font-mitr)',
-                                            background: '#fafafa',
-                                            transition: 'all 0.2s',
-                                            outline: 'none',
+                                            position: 'relative',
+                                            overflow: 'hidden',
+                                            borderRadius: '14px',
+                                            border: '2px solid transparent',
+                                            padding: 0,
+                                            cursor: 'pointer',
+                                            transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                                            aspectRatio: '16/10',
+                                            display: 'flex',
+                                            alignItems: 'flex-end',
+                                            background: '#f0f0f0',
                                         }}
-                                    />
-                                    <span style={{ position: 'absolute', right: '0.85rem', top: '50%', transform: 'translateY(-50%)', fontSize: '0.8rem', color: '#999', fontWeight: 500 }}>
-                                        {language === 'th' ? 'ซม.' : 'cm'}
-                                    </span>
-                                </div>
-                                <div style={{ position: 'relative' }}>
-                                    <input
-                                        type="number"
-                                        value={height}
-                                        onChange={(e) => setHeight(e.target.value === '' ? '' : Number(e.target.value))}
-                                        placeholder={language === 'th' ? 'สูง' : 'Height'}
-                                        required
-                                        className="calc-input"
-                                        style={{
-                                            width: '100%',
-                                            padding: '0.85rem 3rem 0.85rem 1rem',
-                                            border: '1.5px solid #e5e5e5',
-                                            borderRadius: '12px',
-                                            fontSize: '1rem',
-                                            fontFamily: 'var(--font-mitr)',
-                                            background: '#fafafa',
-                                            transition: 'all 0.2s',
-                                            outline: 'none',
+                                        onClick={() => {
+                                            setSelectedCategoryId(c.id.toString());
+                                            setResults(null);
+                                            setMobileTab('form');
+                                            setSelectedTags([]);
+                                            setWidth('');
+                                            setHeight('');
+                                            setAreaInput('');
                                         }}
-                                    />
-                                    <span style={{ position: 'absolute', right: '0.85rem', top: '50%', transform: 'translateY(-50%)', fontSize: '0.8rem', color: '#999', fontWeight: 500 }}>
-                                        {language === 'th' ? 'ซม.' : 'cm'}
-                                    </span>
-                                </div>
+                                    >
+                                        {c.image_url ? (
+                                            <img src={c.image_url} alt={c.name}
+                                                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+                                            />
+                                        ) : (
+                                            <div style={{
+                                                position: 'absolute', inset: 0,
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                background: 'linear-gradient(135deg, #e8e8e8, #d5d5d5)',
+                                            }}>
+                                                <span style={{ fontSize: '1.5rem', opacity: 0.25 }}>📷</span>
+                                            </div>
+                                        )}
+                                        <div style={{
+                                            position: 'absolute', inset: 0,
+                                            background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.15) 55%, rgba(0,0,0,0.05) 100%)',
+                                        }} />
+                                        <span style={{
+                                            position: 'relative', zIndex: 1, width: '100%',
+                                            padding: '0.5rem 0.65rem',
+                                            color: 'white', fontWeight: 600, fontSize: '0.8rem',
+                                            textAlign: 'left', lineHeight: 1.3,
+                                            fontFamily: 'var(--font-mitr)',
+                                            textShadow: '0 1px 4px rgba(0,0,0,0.5)',
+                                        }}>{c.name}</span>
+                                    </button>
+                                ))}
                             </div>
                         </div>
-
-                        <button type="submit" className="calc-submit" style={{
-                            width: '100%',
-                            padding: '1rem',
-                            background: 'linear-gradient(135deg, #111 0%, #333 100%)',
-                            color: 'white',
-                            fontWeight: 700,
-                            borderRadius: '14px',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            cursor: 'pointer',
-                            border: 'none',
-                            fontSize: '1rem',
-                            transition: 'all 0.25s',
-                            boxShadow: '0 4px 14px rgba(0,0,0,0.15)',
-                            fontFamily: 'var(--font-mitr)',
+                    ) : (
+                        /* ===== FORM WITH CATEGORY-SPECIFIC INPUTS ===== */
+                        <form onSubmit={handleCalculate} style={{
+                            background: 'white',
+                            padding: '1.75rem',
+                            borderRadius: '20px',
+                            boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
+                            border: '1px solid #eee',
                         }}>
-                            <CalcIcon size={20} /> {language === 'th' ? 'คำนวณราคา' : 'Calculate'}
-                        </button>
-                    </form>
+                            {/* Selected Category Header with Change Button */}
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setSelectedCategoryId('');
+                                        setResults(null);
+                                        setMobileTab('form');
+                                        setWidth('');
+                                        setHeight('');
+                                        setAreaInput('');
+                                    }}
+                                    style={{
+                                        width: '100%',
+                                        padding: '0.85rem 1rem',
+                                        borderRadius: '14px',
+                                        border: '2px solid #111',
+                                        background: '#fafafa',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        gap: '0.75rem',
+                                        transition: 'all 0.2s',
+                                        fontFamily: 'var(--font-mitr)',
+                                    }}
+                                >
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                        {selectedCategory?.image_url && (
+                                            <img src={selectedCategory.image_url} alt={selectedCategory.name} style={{
+                                                width: '40px', height: '40px', borderRadius: '10px',
+                                                objectFit: 'cover', flexShrink: 0,
+                                            }} />
+                                        )}
+                                        <span style={{ fontWeight: 600, fontSize: '0.95rem', color: '#111' }}>{selectedCategory?.name}</span>
+                                    </div>
+                                    <span style={{ fontSize: '0.78rem', color: '#888', fontWeight: 500 }}>
+                                        {language === 'th' ? 'เปลี่ยน' : 'Change'}
+                                    </span>
+                                </button>
+                            </div>
+
+                            {/* Category-Specific Inputs */}
+                            <div style={{ marginBottom: '1.5rem' }}>
+                                <label style={{
+                                    display: 'block',
+                                    marginBottom: '0.5rem',
+                                    fontWeight: 600,
+                                    fontSize: '0.82rem',
+                                    color: '#555',
+                                    textTransform: 'uppercase' as const,
+                                    letterSpacing: '0.03em',
+                                }}>
+                                    {language === 'th' ? 'ขนาดที่ต้องการ' : 'Dimensions'}
+                                </label>
+
+                                {inputConfig?.type === 'area' ? (
+                                    /* Wallpaper: single area input */
+                                    <div style={{ position: 'relative' }}>
+                                        <input
+                                            type="number"
+                                            step="0.01"
+                                            value={areaInput}
+                                            onChange={(e) => setAreaInput(e.target.value === '' ? '' : Number(e.target.value))}
+                                            placeholder={language === 'th' ? inputConfig.areaLabel : inputConfig.areaLabelEn}
+                                            required
+                                            className="calc-input"
+                                            style={{
+                                                width: '100%',
+                                                padding: '0.85rem 4rem 0.85rem 1rem',
+                                                border: '1.5px solid #e5e5e5',
+                                                borderRadius: '12px',
+                                                fontSize: '1rem',
+                                                fontFamily: 'var(--font-mitr)',
+                                                background: '#fafafa',
+                                                transition: 'all 0.2s',
+                                                outline: 'none',
+                                            }}
+                                        />
+                                        <span style={{ position: 'absolute', right: '0.85rem', top: '50%', transform: 'translateY(-50%)', fontSize: '0.8rem', color: '#999', fontWeight: 500 }}>
+                                            {language === 'th' ? 'ตร.ม.' : 'sq.m.'}
+                                        </span>
+                                    </div>
+                                ) : (
+                                    /* Width x Height inputs with custom labels */
+                                    <div style={{
+                                        display: 'grid',
+                                        gridTemplateColumns: '1fr 1fr',
+                                        gap: '0.75rem',
+                                    }}>
+                                        <div style={{ position: 'relative' }}>
+                                            <input
+                                                type="number"
+                                                value={width}
+                                                onChange={(e) => setWidth(e.target.value === '' ? '' : Number(e.target.value))}
+                                                placeholder={language === 'th' ? (inputConfig?.widthLabel || 'กว้าง') : (inputConfig?.widthLabelEn || 'Width')}
+                                                required
+                                                className="calc-input"
+                                                style={{
+                                                    width: '100%',
+                                                    padding: '0.85rem 2rem 0.85rem 0.75rem',
+                                                    border: '1.5px solid #e5e5e5',
+                                                    borderRadius: '12px',
+                                                    fontSize: '1rem',
+                                                    fontFamily: 'var(--font-mitr)',
+                                                    background: '#fafafa',
+                                                    transition: 'all 0.2s',
+                                                    outline: 'none',
+                                                }}
+                                            />
+                                            <span style={{ position: 'absolute', right: '0.5rem', top: '50%', transform: 'translateY(-50%)', fontSize: '0.7rem', color: '#999', fontWeight: 500 }}>
+                                                {language === 'th' ? 'ซม.' : 'cm'}
+                                            </span>
+                                        </div>
+                                        <div style={{ position: 'relative' }}>
+                                            <input
+                                                type="number"
+                                                value={height}
+                                                onChange={(e) => setHeight(e.target.value === '' ? '' : Number(e.target.value))}
+                                                placeholder={language === 'th' ? (inputConfig?.heightLabel || 'สูง') : (inputConfig?.heightLabelEn || 'Height')}
+                                                required
+                                                className="calc-input"
+                                                style={{
+                                                    width: '100%',
+                                                    padding: '0.85rem 2rem 0.85rem 0.75rem',
+                                                    border: '1.5px solid #e5e5e5',
+                                                    borderRadius: '12px',
+                                                    fontSize: '1rem',
+                                                    fontFamily: 'var(--font-mitr)',
+                                                    background: '#fafafa',
+                                                    transition: 'all 0.2s',
+                                                    outline: 'none',
+                                                }}
+                                            />
+                                            <span style={{ position: 'absolute', right: '0.5rem', top: '50%', transform: 'translateY(-50%)', fontSize: '0.7rem', color: '#999', fontWeight: 500 }}>
+                                                {language === 'th' ? 'ซม.' : 'cm'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <button type="submit" className="calc-submit" style={{
+                                width: '100%',
+                                padding: '1rem',
+                                background: 'linear-gradient(135deg, #111 0%, #333 100%)',
+                                color: 'white',
+                                fontWeight: 700,
+                                borderRadius: '14px',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                cursor: 'pointer',
+                                border: 'none',
+                                fontSize: '1rem',
+                                transition: 'all 0.25s',
+                                boxShadow: '0 4px 14px rgba(0,0,0,0.15)',
+                                fontFamily: 'var(--font-mitr)',
+                            }}>
+                                <CalcIcon size={20} /> {language === 'th' ? 'คำนวณราคา' : 'Calculate'}
+                            </button>
+                        </form>
+                    )}
                 </div>
+
 
                 {/* Results Section */}
                 {/* Results Section */}
@@ -1084,110 +1204,6 @@ export default function CalculatorPage() {
                 </div>
             </div>
 
-            {/* Category Selection Modal */}
-            {showCategoryModal && (
-                <div style={{
-                    position: 'fixed', inset: 0, zIndex: 9999,
-                    background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
-                    display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-                }} onClick={() => setShowCategoryModal(false)}>
-                    <div
-                        style={{
-                            background: 'white',
-                            borderRadius: '24px 24px 0 0',
-                            padding: '1.5rem',
-                            width: '100%',
-                            maxWidth: '500px',
-                            maxHeight: '80vh',
-                            overflowY: 'auto',
-                            animation: 'slideUp 0.3s ease-out',
-                        }}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        {/* Handle */}
-                        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
-                            <div style={{ width: '40px', height: '4px', borderRadius: '2px', background: '#ddd' }} />
-                        </div>
-                        <h3 style={{ fontSize: '1.1rem', fontWeight: 700, marginBottom: '1rem', textAlign: 'center' }}>
-                            {language === 'th' ? 'เลือกหมวดหมู่สินค้า' : 'Select Product Category'}
-                        </h3>
-                        <div style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(2, 1fr)',
-                            gap: '0.6rem',
-                        }}>
-                            {categories.map(c => {
-                                const isSelected = selectedCategoryId === c.id.toString();
-                                return (
-                                    <button
-                                        key={c.id}
-                                        type="button"
-                                        style={{
-                                            position: 'relative',
-                                            overflow: 'hidden',
-                                            borderRadius: '14px',
-                                            border: isSelected ? '2px solid #111' : '2px solid transparent',
-                                            padding: 0,
-                                            cursor: 'pointer',
-                                            transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                                            aspectRatio: '16/10',
-                                            display: 'flex',
-                                            alignItems: 'flex-end',
-                                            background: '#f0f0f0',
-                                            boxShadow: isSelected ? '0 4px 16px rgba(0,0,0,0.18)' : 'none',
-                                            transform: isSelected ? 'scale(1.02)' : 'none',
-                                        }}
-                                        onClick={() => {
-                                            setSelectedCategoryId(isSelected ? '' : c.id.toString());
-                                            setResults(null);
-                                            setMobileTab('form');
-                                            setSelectedTags([]);
-                                            setShowCategoryModal(false);
-                                        }}
-                                    >
-                                        {c.image_url ? (
-                                            <img src={c.image_url} alt={c.name}
-                                                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
-                                            />
-                                        ) : (
-                                            <div style={{
-                                                position: 'absolute', inset: 0,
-                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                background: isSelected ? 'linear-gradient(135deg, #1a1a2e, #16213e)' : 'linear-gradient(135deg, #e8e8e8, #d5d5d5)',
-                                            }}>
-                                                <span style={{ fontSize: '1.5rem', opacity: 0.25 }}>📷</span>
-                                            </div>
-                                        )}
-                                        <div style={{
-                                            position: 'absolute', inset: 0,
-                                            background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.15) 55%, rgba(0,0,0,0.05) 100%)',
-                                        }} />
-                                        <span style={{
-                                            position: 'relative', zIndex: 1, width: '100%',
-                                            padding: '0.5rem 0.65rem',
-                                            color: 'white', fontWeight: 600, fontSize: '0.8rem',
-                                            textAlign: 'left', lineHeight: 1.3,
-                                            fontFamily: 'var(--font-mitr)',
-                                            textShadow: '0 1px 4px rgba(0,0,0,0.5)',
-                                        }}>{c.name}</span>
-                                        {isSelected && (
-                                            <div style={{
-                                                position: 'absolute', top: 6, right: 6,
-                                                width: 24, height: 24, borderRadius: '50%',
-                                                background: '#111', display: 'flex',
-                                                alignItems: 'center', justifyContent: 'center',
-                                                zIndex: 2, boxShadow: '0 2px 6px rgba(0,0,0,0.35)',
-                                            }}>
-                                                <Check size={14} color="white" />
-                                            </div>
-                                        )}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                    </div>
-                </div>
-            )}
 
             {/* Catalog Modal */}
             <CatalogModal

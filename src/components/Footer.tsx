@@ -45,7 +45,7 @@ const Footer: React.FC = () => {
                 fontSize: '0.9rem',
                 color: '#aaa'
             }}>
-                © {new Date().getFullYear()} สำเร็จรูป-Samredroob. All rights reserved.
+                © {new Date().getFullYear()} สำเร็จรูป-Samredroob. {language === 'th' ? 'สงวนลิขสิทธิ์' : 'All rights reserved.'}
             </div>
         </footer>
     );

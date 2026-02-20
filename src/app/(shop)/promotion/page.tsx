@@ -94,11 +94,7 @@ export default function PromotionPage() {
                                             <Tag size={64} />
                                         </div>
                                     )}
-                                    <div className="absolute top-4 left-4">
-                                        <span className="bg-white/90 backdrop-blur text-black px-4 py-2 rounded-xl font-bold text-sm shadow-lg">
-                                            LIMITED OFFER
-                                        </span>
-                                    </div>
+
                                 </div>
                                 <div className="md:w-1/2 lg:w-2/5 p-8 md:p-12 flex flex-col justify-center">
                                     {promo.end_date && (

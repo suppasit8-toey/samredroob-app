@@ -127,6 +127,9 @@ export default function AdminCollectionsPage() {
         catalog_url: '',
         portfolio_url: '',
         brand_id: '',
+        coverage_per_unit: '',
+        roll_width_cm: '',
+        roll_length_cm: '',
         price_data: [] as any[] // For width_range steps
     });
 
@@ -345,6 +348,9 @@ export default function AdminCollectionsPage() {
                 // @ts-ignore
                 portfolio_url: collection.portfolio_url || '',
                 brand_id: collection.brand_id?.toString() || '',
+                coverage_per_unit: collection.coverage_per_unit?.toString() || '',
+                roll_width_cm: collection.roll_width_cm?.toString() || '',
+                roll_length_cm: collection.roll_length_cm?.toString() || '',
                 price_data: collection.price_data || []
             });
 
@@ -399,6 +405,9 @@ export default function AdminCollectionsPage() {
                 catalog_url: '',
                 portfolio_url: '',
                 brand_id: '',
+                coverage_per_unit: '',
+                roll_width_cm: '',
+                roll_length_cm: '',
                 price_data: []
             });
             setTags([]);
@@ -453,6 +462,9 @@ export default function AdminCollectionsPage() {
             catalog_url: collection.catalog_url || '',
             portfolio_url: collection.portfolio_url || '',
             brand_id: collection.brand_id?.toString() || '',
+            coverage_per_unit: collection.coverage_per_unit?.toString() || '',
+            roll_width_cm: collection.roll_width_cm?.toString() || '',
+            roll_length_cm: collection.roll_length_cm?.toString() || '',
             price_data: collection.price_data || []
         });
 
@@ -544,6 +556,9 @@ export default function AdminCollectionsPage() {
                 portfolio_url: formData.portfolio_url || null,
                 brand_id: formData.brand_id ? Number(formData.brand_id) : null,
                 tags: tags,
+                coverage_per_unit: formData.coverage_per_unit ? Number(formData.coverage_per_unit) : null,
+                roll_width_cm: formData.roll_width_cm ? Number(formData.roll_width_cm) : null,
+                roll_length_cm: formData.roll_length_cm ? Number(formData.roll_length_cm) : null,
                 price_data: formData.price_data // Save price steps
             };
 
@@ -1021,6 +1036,61 @@ export default function AdminCollectionsPage() {
                                         </div>
                                     </div>
                                 </div>
+
+                                {/* Box/Roll Coverage Input */}
+                                {formData.calculation_method === 'box' && (
+                                    <div className="bg-amber-50 rounded-2xl border border-amber-200 p-6">
+                                        <h4 className="text-sm font-bold text-amber-800 mb-3 flex items-center gap-2">
+                                            📦 ตั้งค่าขนาดม้วน
+                                        </h4>
+                                        <div className="grid grid-cols-2 gap-4 mb-3">
+                                            <div>
+                                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                                                    กว้าง (ซม.)
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    step="1"
+                                                    min="0"
+                                                    value={formData.roll_width_cm || ''}
+                                                    onChange={(e) => {
+                                                        const w = e.target.value;
+                                                        const l = formData.roll_length_cm || '';
+                                                        const coverage = (Number(w) && Number(l)) ? ((Number(w) * Number(l)) / 10000).toFixed(2) : '';
+                                                        setFormData({ ...formData, roll_width_cm: w, coverage_per_unit: coverage });
+                                                    }}
+                                                    placeholder="เช่น 50"
+                                                    className="w-full px-4 py-3.5 bg-white text-gray-900 font-medium rounded-xl border-2 border-transparent focus:border-black focus:outline-none focus:ring-4 focus:ring-black/5 transition-all duration-300"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                                                    ยาว (ซม.)
+                                                </label>
+                                                <input
+                                                    type="number"
+                                                    step="1"
+                                                    min="0"
+                                                    value={formData.roll_length_cm || ''}
+                                                    onChange={(e) => {
+                                                        const l = e.target.value;
+                                                        const w = formData.roll_width_cm || '';
+                                                        const coverage = (Number(w) && Number(l)) ? ((Number(w) * Number(l)) / 10000).toFixed(2) : '';
+                                                        setFormData({ ...formData, roll_length_cm: l, coverage_per_unit: coverage });
+                                                    }}
+                                                    placeholder="เช่น 1000"
+                                                    className="w-full px-4 py-3.5 bg-white text-gray-900 font-medium rounded-xl border-2 border-transparent focus:border-black focus:outline-none focus:ring-4 focus:ring-black/5 transition-all duration-300"
+                                                />
+                                            </div>
+                                        </div>
+                                        {formData.coverage_per_unit && Number(formData.coverage_per_unit) > 0 && (
+                                            <p className="text-sm text-amber-800 font-semibold">
+                                                = พื้นที่ต่อม้วน {formData.coverage_per_unit} ตร.ม.
+                                            </p>
+                                        )}
+                                        <p className="text-xs text-amber-700 mt-1">ระบุขนาดม้วน เพื่อใช้คำนวณจำนวนม้วนที่ต้องใช้</p>
+                                    </div>
+                                )}
 
                                 {/* Rail Width Calculation Constraints */}
                                 {formData.calculation_method === 'rail_width' && (

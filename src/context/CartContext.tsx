@@ -16,7 +16,7 @@ export interface CartItem {
 
 interface CartContextType {
     items: CartItem[];
-    addToCart: (item: Omit<CartItem, 'id' | 'quantity'>) => void;
+    addToCart: (item: Omit<CartItem, 'id' | 'quantity'>, initialQuantity?: number) => void;
     updateItem: (id: string, updates: Partial<CartItem>) => void;
     removeFromCart: (id: string) => void;
     clearCart: () => void;
@@ -46,11 +46,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         localStorage.setItem('samredroob_cart', JSON.stringify(items));
     }, [items]);
 
-    const addToCart = (newItem: Omit<CartItem, 'id' | 'quantity'>) => {
+    const addToCart = (newItem: Omit<CartItem, 'id' | 'quantity'>, initialQuantity?: number) => {
         setItems(prev => {
             // Check if exact same config exists (optional, simply adding new entry for now)
             const id = Date.now().toString();
-            return [...prev, { ...newItem, id, quantity: 1 }];
+            return [...prev, { ...newItem, id, quantity: initialQuantity || 1 }];
         });
     };
 

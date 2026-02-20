@@ -131,6 +131,9 @@ const Header: React.FC = () => {
                             <span className="separator">|</span>
                             <span className={language === 'en' ? 'active' : ''}>EN</span>
                         </button>
+
+
+
                     </div>
                 </div>
 
