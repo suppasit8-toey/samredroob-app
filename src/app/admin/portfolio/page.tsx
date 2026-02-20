@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CldUploadWidget, CloudinaryUploadWidgetResults } from 'next-cloudinary';
+import { PRODUCT_CATEGORIES } from '@/lib/constants';
 
 // Define Type locally or in types file
 interface PortfolioItem {
@@ -27,11 +28,31 @@ interface PortfolioItem {
     description_en?: string;
     image_url?: string;
     category?: string;
+    categories?: string[];
+    product_collection_id?: number | null;
+    product_variant_ids?: number[] | null;
     created_at?: string;
+    // Joined fields
+    product_collections?: { name: string };
+    product_variants?: { id: number, name: string }[]; // We might need to fetch this separately or via join
+}
+
+interface Collection {
+    id: number;
+    name: string;
+}
+
+interface Variant {
+    id: number;
+    name: string;
+    collection_id: number;
 }
 
 export default function AdminPortfolioPage() {
     const [items, setItems] = useState<PortfolioItem[]>([]);
+    const [collections, setCollections] = useState<Collection[]>([]);
+    const [variants, setVariants] = useState<Variant[]>([]);
+
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<PortfolioItem | null>(null);
@@ -46,19 +67,55 @@ export default function AdminPortfolioPage() {
         description_th: '',
         description_en: '',
         image_url: '',
-        category: ''
+        categories: [] as string[],
+        product_collection_id: '' as string | number, // Use string for select input handling
+        product_variant_ids: [] as number[]
     });
 
     useEffect(() => {
         fetchItems();
+        fetchCollections();
+        fetchVariants();
     }, []);
+
+    const fetchCollections = async () => {
+        if (!supabase) return;
+        const { data, error } = await supabase
+            .from('product_collections')
+            .select('*')
+            .order('id', { ascending: false });
+
+        if (error) {
+            console.error('Error fetching collections:', error);
+        } else {
+            console.log('Fetched collections:', data);
+            setCollections(data || []);
+        }
+    };
+
+    const fetchVariants = async () => {
+        if (!supabase) return;
+        const { data, error } = await supabase
+            .from('product_variants')
+            .select('id, name, collection_id')
+            .order('name');
+
+        if (error) {
+            console.error('Error fetching variants:', error);
+        } else {
+            setVariants(data || []);
+        }
+    };
 
     const fetchItems = async () => {
         if (!supabase) return;
         setLoading(true);
         const { data, error } = await supabase
             .from('portfolio_items')
-            .select('*')
+            .select(`
+                *,
+                product_collections ( name )
+            `)
             .order('id', { ascending: false });
 
         if (error) {
@@ -78,7 +135,9 @@ export default function AdminPortfolioPage() {
                 description_th: item.description_th || '',
                 description_en: item.description_en || '',
                 image_url: item.image_url || '',
-                category: item.category || ''
+                categories: item.categories || (item.category ? [item.category] : []),
+                product_collection_id: item.product_collection_id || '',
+                product_variant_ids: item.product_variant_ids || []
             });
         } else {
             setEditingItem(null);
@@ -88,7 +147,9 @@ export default function AdminPortfolioPage() {
                 description_th: '',
                 description_en: '',
                 image_url: '',
-                category: ''
+                categories: [],
+                product_collection_id: '',
+                product_variant_ids: []
             });
         }
         setIsModalOpen(true);
@@ -117,13 +178,40 @@ export default function AdminPortfolioPage() {
         if (!supabase) return;
 
         try {
+            // Auto-generate title from selected catalog
+            let titleToSave = formData.title_th;
+            if (formData.product_collection_id) {
+                const selectedCollection = collections.find(c => c.id === Number(formData.product_collection_id));
+                if (selectedCollection) {
+                    titleToSave = selectedCollection.name;
+                }
+            }
+
+            if (!titleToSave) {
+                alert('กรุณาเลือกเล่มตัวอย่าง (Catalog)');
+                return;
+            }
+
+            if (formData.categories.length === 0) {
+                alert('กรุณาเลือกหมวดหมู่');
+                return;
+            }
+
+            if (!formData.image_url) {
+                alert('กรุณาอัปโหลดรูปภาพ');
+                return;
+            }
+
             const dataToSave = {
-                title_th: formData.title_th,
-                title_en: formData.title_en,
-                description_th: formData.description_th,
-                description_en: formData.description_en,
+                title_th: titleToSave,
+                title_en: formData.title_en, // Optional, can be empty
+                description_th: formData.description_th, // Optional
+                description_en: formData.description_en, // Optional
                 image_url: formData.image_url,
-                category: formData.category
+                categories: formData.categories,
+                category: formData.categories[0] || null,
+                product_collection_id: formData.product_collection_id || null,
+                product_variant_ids: formData.product_variant_ids
             };
 
             if (editingItem) {
@@ -232,9 +320,23 @@ export default function AdminPortfolioPage() {
                             <div className="p-5 border-t border-gray-50">
                                 <h3 className="font-bold text-lg text-gray-900 mb-1 line-clamp-1">{item.title_th}</h3>
                                 {item.title_en && <p className="text-sm text-gray-500 mb-2 line-clamp-1">{item.title_en}</p>}
-                                <span className="inline-block px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-md font-medium">
-                                    {item.category || 'General'}
-                                </span>
+                                <div className="flex gap-1 flex-wrap mb-2">
+                                    {(item.categories && item.categories.length > 0 ? item.categories : [item.category]).map((catId, idx) => (
+                                        catId ? (
+                                            <span key={idx} className="inline-block px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-md font-medium">
+                                                {PRODUCT_CATEGORIES.find(c => c.id === catId)?.name || catId || 'General'}
+                                            </span>
+                                        ) : null
+                                    ))}
+                                </div>
+                                {item.product_collections && (
+                                    <div className="text-xs text-gray-500 flex items-center gap-1">
+                                        <span className="font-semibold text-black">{item.product_collections?.name}</span>
+                                        {item.product_variant_ids && item.product_variant_ids.length > 0 && (
+                                            <span>(+{item.product_variant_ids.length} options)</span>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     ))}
@@ -277,7 +379,20 @@ export default function AdminPortfolioPage() {
                                     </td>
                                     <td className="p-4 font-bold text-gray-900">{item.title_th}</td>
                                     <td className="p-4 text-gray-600">{item.title_en || '-'}</td>
-                                    <td className="p-4"><span className="px-2 py-1 bg-gray-100 text-xs rounded-md">{item.category}</span></td>
+                                    <td className="p-4">
+                                        <div className="flex gap-1 flex-wrap max-w-[200px]">
+                                            {(item.categories && item.categories.length > 0 ? item.categories : [item.category]).slice(0, 3).map((catId, idx) => (
+                                                catId ? (
+                                                    <span key={idx} className="px-2 py-1 bg-gray-100 text-xs rounded-md whitespace-nowrap">
+                                                        {PRODUCT_CATEGORIES.find(c => c.id === catId)?.name || catId || '-'}
+                                                    </span>
+                                                ) : null
+                                            ))}
+                                            {(item.categories?.length || 0) > 3 && (
+                                                <span className="text-xs text-gray-400">+{item.categories!.length - 3}</span>
+                                            )}
+                                        </div>
+                                    </td>
                                     <td className="p-4 pr-6 text-right">
                                         <div className="flex justify-end gap-2">
                                             <button onClick={() => handleOpenModal(item)} className="p-2 text-gray-400 hover:text-blue-600 transition cursor-pointer"><Edit size={18} /></button>
@@ -311,114 +426,163 @@ export default function AdminPortfolioPage() {
                             </div>
 
                             <form onSubmit={handleSubmit} className="p-8 space-y-6">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-6">
+                                    {/* Category Selection */}
                                     <div>
-                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">หัวข้อ (ภาษาไทย) <span className="text-red-500">*</span></label>
-                                        <input
-                                            type="text"
-                                            required
-                                            value={formData.title_th}
-                                            onChange={(e) => setFormData({ ...formData, title_th: e.target.value })}
-                                            className="w-full px-4 py-3 bg-gray-50 rounded-xl border border-transparent focus:bg-white focus:border-black focus:ring-4 focus:ring-black/5 transition outline-none"
-                                            placeholder="เช่น ติดตั้งผ้าม่านกัน UV"
-                                        />
+                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">หมวดหมู่ (เลือก 1 รายการ) <span className="text-red-500">*</span></label>
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                            {PRODUCT_CATEGORIES.map((cat) => {
+                                                const isSelected = formData.categories.includes(cat.id);
+                                                return (
+                                                    <label
+                                                        key={cat.id}
+                                                        className={`
+                                                            flex items-center gap-3 p-3 rounded-xl border border-gray-200 cursor-pointer transition-all
+                                                            ${isSelected ? 'bg-black text-white border-black shadow-md' : 'bg-white hover:bg-gray-50'}
+                                                        `}
+                                                    >
+                                                        <div className={`
+                                                            w-5 h-5 rounded-full border flex items-center justify-center transition-colors
+                                                            ${isSelected ? 'bg-white border-white' : 'border-gray-300'}
+                                                        `}>
+                                                            {isSelected && <div className="w-2.5 h-2.5 bg-black rounded-full" />}
+                                                        </div>
+                                                        <input
+                                                            type="radio"
+                                                            name="category"
+                                                            checked={isSelected}
+                                                            onChange={() => setFormData(prev => ({ ...prev, categories: [cat.id] }))}
+                                                            className="hidden"
+                                                        />
+                                                        <span className="text-sm font-medium">{cat.name}</span>
+                                                    </label>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
+
+                                    {/* Catalog Selection */}
                                     <div>
-                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Title (English)</label>
-                                        <input
-                                            type="text"
-                                            value={formData.title_en}
-                                            onChange={(e) => setFormData({ ...formData, title_en: e.target.value })}
-                                            className="w-full px-4 py-3 bg-gray-50 rounded-xl border border-transparent focus:bg-white focus:border-black focus:ring-4 focus:ring-black/5 transition outline-none"
-                                            placeholder="e.g. UV Curtain Installation"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">หมวดหมู่</label>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">เลือกเล่มตัวอย่าง (Catalog) <span className="text-red-500">*</span></label>
                                         <select
-                                            value={formData.category}
-                                            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                                            required
+                                            value={formData.product_collection_id}
+                                            onChange={(e) => {
+                                                setFormData(prev => ({
+                                                    ...prev,
+                                                    product_collection_id: e.target.value,
+                                                    product_variant_ids: [] // Reset variants when catalog changes
+                                                }));
+                                            }}
                                             className="w-full px-4 py-3 bg-gray-50 rounded-xl border border-transparent focus:bg-white focus:border-black focus:ring-4 focus:ring-black/5 transition outline-none"
                                         >
-                                            <option value="">-- เลือกหมวดหมู่ --</option>
-                                            <option value="Curtains">Curtains (ผ้าม่าน)</option>
-                                            <option value="Wallpaper">Wallpaper (วอลเปเปอร์)</option>
-                                            <option value="Blinds">Blinds (มู่ลี่)</option>
-                                            <option value="Other">Other (อื่นๆ)</option>
+                                            <option value="">-- กรุณาเลือกเล่มตัวอย่าง --</option>
+                                            {collections.map(c => (
+                                                <option key={c.id} value={c.id}>{c.name}</option>
+                                            ))}
                                         </select>
+                                        <p className="text-xs text-gray-400 mt-1">ชื่อผลงานจะถูกตั้งตามชื่อเล่มตัวอย่างโดยอัตโนมัติ</p>
                                     </div>
-                                </div>
 
-                                {/* Descriptions */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">รายละเอียด (ไทย)</label>
-                                        <textarea
-                                            value={formData.description_th}
-                                            onChange={(e) => setFormData({ ...formData, description_th: e.target.value })}
-                                            className="w-full px-4 py-3 bg-gray-50 rounded-xl border border-transparent focus:bg-white focus:border-black focus:ring-4 focus:ring-black/5 transition outline-none h-32 resize-none"
-                                            placeholder="รายละเอียดงาน..."
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Description (English)</label>
-                                        <textarea
-                                            value={formData.description_en}
-                                            onChange={(e) => setFormData({ ...formData, description_en: e.target.value })}
-                                            className="w-full px-4 py-3 bg-gray-50 rounded-xl border border-transparent focus:bg-white focus:border-black focus:ring-4 focus:ring-black/5 transition outline-none h-32 resize-none"
-                                            placeholder="Job details..."
-                                        />
-                                    </div>
-                                </div>
-
-
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">รูปภาพผลงาน</label>
-                                    {formData.image_url ? (
-                                        <div className="relative p-4 bg-gray-50 rounded-2xl border border-gray-200 group">
-                                            <div className="flex items-center gap-4">
-                                                <div className="h-24 w-24 rounded-xl overflow-hidden shadow-sm bg-white shrink-0 border border-gray-100 flex items-center justify-center text-gray-400">
-                                                    <img src={formData.image_url} alt="Preview" className="w-full h-full object-cover" />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-bold text-gray-900">อัปโหลดสำเร็จ ✓</p>
-                                                    <p className="text-xs text-gray-500 mt-1 line-clamp-1 break-all">{formData.image_url}</p>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setFormData(prev => ({ ...prev, image_url: '' }))}
-                                                        className="mt-2 text-xs px-3 py-1.5 bg-white border border-red-200 rounded-lg hover:bg-red-50 transition text-red-500 font-medium cursor-pointer"
-                                                    >
-                                                        ลบรูป
-                                                    </button>
-                                                </div>
+                                    {/* Options Selection */}
+                                    {formData.product_collection_id && (
+                                        <div>
+                                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+                                                เลือกรายการสินค้า (Options)
+                                                <span className="ml-2 text-gray-400 font-normal">เลือกได้หลายรายการ</span>
+                                            </label>
+                                            <div className="max-h-48 overflow-y-auto p-3 bg-gray-50 rounded-xl border border-gray-100 grid grid-cols-1 gap-2">
+                                                {variants.filter(v => v.collection_id === Number(formData.product_collection_id)).length > 0 ? (
+                                                    variants
+                                                        .filter(v => v.collection_id === Number(formData.product_collection_id))
+                                                        .map(v => {
+                                                            const isSelected = formData.product_variant_ids.includes(v.id);
+                                                            return (
+                                                                <label key={v.id} className="flex items-center gap-3 cursor-pointer hover:bg-black/5 p-2 rounded-lg transition">
+                                                                    <div className={`
+                                                                        w-5 h-5 rounded border flex items-center justify-center transition-colors
+                                                                        ${isSelected ? 'bg-black border-black' : 'bg-white border-gray-300'}
+                                                                    `}>
+                                                                        {isSelected && <div className="w-2 h-2 bg-white rounded-full" />}
+                                                                    </div>
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        className="hidden"
+                                                                        checked={isSelected}
+                                                                        onChange={(e) => {
+                                                                            if (e.target.checked) {
+                                                                                setFormData(prev => ({
+                                                                                    ...prev,
+                                                                                    product_variant_ids: [...prev.product_variant_ids, v.id]
+                                                                                }));
+                                                                            } else {
+                                                                                setFormData(prev => ({
+                                                                                    ...prev,
+                                                                                    product_variant_ids: prev.product_variant_ids.filter(id => id !== v.id)
+                                                                                }));
+                                                                            }
+                                                                        }}
+                                                                    />
+                                                                    <span className="text-sm text-gray-700">{v.name}</span>
+                                                                </label>
+                                                            );
+                                                        })
+                                                ) : (
+                                                    <div className="text-gray-400 text-sm p-2 text-center">ไม่มีรายการสินค้าในเล่มนี้</div>
+                                                )}
                                             </div>
                                         </div>
-                                    ) : (
-                                        <CldUploadWidget
-                                            uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}
-                                            options={{ maxFiles: 1, resourceType: 'image', folder: 'samredroob/portfolio' }}
-                                            onSuccess={(result: CloudinaryUploadWidgetResults) => {
-                                                const info = result?.info;
-                                                if (typeof info !== 'string' && info?.secure_url) {
-                                                    setFormData(prev => ({ ...prev, image_url: info.secure_url }));
-                                                }
-                                                setUploading(false);
-                                            }}
-                                            onOpen={() => setUploading(true)}
-                                            onClose={() => setUploading(false)}
-                                        >
-                                            {({ open }) => (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => open()}
-                                                    className="w-full p-8 border-2 border-dashed border-gray-200 rounded-2xl hover:border-black hover:bg-gray-50 transition-all duration-300 flex flex-col items-center justify-center gap-3 group cursor-pointer"
-                                                >
-                                                    <Upload size={24} className="text-gray-400 group-hover:text-black transition-colors" />
-                                                    <span className="text-sm font-medium text-gray-500 group-hover:text-black">คลิกเพื่ออัปโหลด</span>
-                                                </button>
-                                            )}
-                                        </CldUploadWidget>
                                     )}
+
+                                    {/* Image Upload */}
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">รูปภาพผลงาน <span className="text-red-500">*</span></label>
+                                        {formData.image_url ? (
+                                            <div className="relative p-4 bg-gray-50 rounded-2xl border border-gray-200 group">
+                                                <div className="flex items-center gap-4">
+                                                    <div className="h-24 w-24 rounded-xl overflow-hidden shadow-sm bg-white shrink-0 border border-gray-100 flex items-center justify-center text-gray-400">
+                                                        <img src={formData.image_url} alt="Preview" className="w-full h-full object-cover" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm font-bold text-gray-900">อัปโหลดสำเร็จ ✓</p>
+                                                        <p className="text-xs text-gray-500 mt-1 line-clamp-1 break-all">{formData.image_url}</p>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => setFormData(prev => ({ ...prev, image_url: '' }))}
+                                                            className="mt-2 text-xs px-3 py-1.5 bg-white border border-red-200 rounded-lg hover:bg-red-50 transition text-red-500 font-medium cursor-pointer"
+                                                        >
+                                                            ลบรูป
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <CldUploadWidget
+                                                uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}
+                                                options={{ maxFiles: 1, resourceType: 'image', folder: 'samredroob/portfolio' }}
+                                                onSuccess={(result: CloudinaryUploadWidgetResults) => {
+                                                    const info = result?.info;
+                                                    if (typeof info !== 'string' && info?.secure_url) {
+                                                        setFormData(prev => ({ ...prev, image_url: info.secure_url }));
+                                                    }
+                                                    setUploading(false);
+                                                }}
+                                                onOpen={() => setUploading(true)}
+                                                onClose={() => setUploading(false)}
+                                            >
+                                                {({ open }) => (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => open()}
+                                                        className="w-full p-8 border-2 border-dashed border-gray-200 rounded-2xl hover:border-black hover:bg-gray-50 transition-all duration-300 flex flex-col items-center justify-center gap-3 group cursor-pointer"
+                                                    >
+                                                        <Upload size={24} className="text-gray-400 group-hover:text-black transition-colors" />
+                                                        <span className="text-sm font-medium text-gray-500 group-hover:text-black">คลิกเพื่ออัปโหลด</span>
+                                                    </button>
+                                                )}
+                                            </CldUploadWidget>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <div className="pt-6 flex justify-end gap-3 border-t border-gray-100">

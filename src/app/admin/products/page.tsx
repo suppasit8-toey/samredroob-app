@@ -16,16 +16,7 @@ interface Product {
     tags?: string[];
 }
 
-const CATEGORIES = [
-    { id: 'wooden-blinds', name: 'มู่ลี่ไม้', color: 'bg-amber-100 text-amber-800' },
-    { id: 'roller-blinds', name: 'ม่านม้วน', color: 'bg-slate-100 text-slate-800' },
-    { id: 'curtains', name: 'ผ้าม่าน', color: 'bg-rose-100 text-rose-800' },
-    { id: 'pvc-partition', name: 'ฉากกั้น PVC', color: 'bg-blue-100 text-blue-800' },
-    { id: 'vertical-blinds', name: 'ม่านปรับแสง', color: 'bg-indigo-100 text-indigo-800' },
-    { id: 'wallpaper', name: 'วอลล์เปเปอร์', color: 'bg-purple-100 text-purple-800' },
-    { id: 'alum-blinds', name: 'มู่ลี่อลูมิเนียม', color: 'bg-gray-100 text-gray-800' },
-    { id: 'accessories', name: 'อุปกรณ์/อื่นๆ', color: 'bg-emerald-100 text-emerald-800' },
-];
+import { PRODUCT_CATEGORIES } from '@/lib/constants';
 
 export default function AdminProductsPage() {
     const [products, setProducts] = useState<Product[]>([]);
@@ -221,7 +212,7 @@ export default function AdminProductsPage() {
                                 </div>
                                 <div className="absolute bottom-3 left-3">
                                     {(() => {
-                                        const cat = CATEGORIES.find(c => c.id === product.category);
+                                        const cat = PRODUCT_CATEGORIES.find(c => c.id === product.category);
                                         return (
                                             <span className={`px - 2.5 py - 1 rounded - lg text - xs font - semibold shadow - sm backdrop - blur - md ${cat?.color || 'bg-gray-100 text-gray-800'} `}>
                                                 {cat?.name || product.category}
@@ -273,7 +264,7 @@ export default function AdminProductsPage() {
                                     <td className="p-4 font-medium text-gray-900">{product.name}</td>
                                     <td className="p-4">
                                         {(() => {
-                                            const cat = CATEGORIES.find(c => c.id === product.category);
+                                            const cat = PRODUCT_CATEGORIES.find(c => c.id === product.category);
                                             return (
                                                 <span className={`px - 2.5 py - 1 rounded - lg text - xs font - semibold ${cat?.color || 'bg-gray-100 text-gray-800'} `}>
                                                     {cat?.name || product.category}
@@ -347,7 +338,7 @@ export default function AdminProductsPage() {
                                         onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                                         className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition"
                                     >
-                                        {CATEGORIES.map(cat => (
+                                        {PRODUCT_CATEGORIES.map(cat => (
                                             <option key={cat.id} value={cat.id}>{cat.name}</option>
                                         ))}
                                     </select>
