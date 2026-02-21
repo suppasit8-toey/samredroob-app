@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { ProductCollection, Category } from '@/lib/types';
+import { ProductCollection, Category, parseCatalogEntries } from '@/lib/types';
 import { calculatePrice } from '@/utils/pricing';
 import { Calculator as CalcIcon, RefreshCw, Loader2, ExternalLink, ArrowRight, ShoppingCart, Check, Store, ShoppingBag, Info, LayoutGrid, List, Search } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -1043,18 +1043,19 @@ export default function CalculatorPage() {
                                                             )}
                                                         </button>
 
-                                                        {item.collection.catalog_url && (
+                                                        {parseCatalogEntries(item.collection.catalog_url).map((cat, ci) => (
                                                             <button
+                                                                key={ci}
                                                                 onClick={() => setActiveCatalog({
-                                                                    url: item.collection.catalog_url!,
-                                                                    title: `Spec: ${item.collection.name}`
+                                                                    url: cat.url,
+                                                                    title: cat.name || `Spec: ${item.collection.name}`
                                                                 })}
                                                                 className="flex items-center justify-center p-2 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition cursor-pointer"
-                                                                title={language === 'th' ? "ดู Catalog / Spec" : "View Catalog / Spec"}
+                                                                title={cat.name || (language === 'th' ? "ดู Catalog / Spec" : "View Catalog / Spec")}
                                                             >
                                                                 <ExternalLink size={16} />
                                                             </button>
-                                                        )}
+                                                        ))}
                                                     </div>
                                                 </div>
                                             );
@@ -1169,18 +1170,19 @@ export default function CalculatorPage() {
                                                     gap: '0.5rem',
                                                     backgroundColor: '#fafafa'
                                                 }}>
-                                                    {item.collection.catalog_url && (
+                                                    {parseCatalogEntries(item.collection.catalog_url).map((cat, ci) => (
                                                         <button
+                                                            key={ci}
                                                             onClick={() => setActiveCatalog({
-                                                                url: item.collection.catalog_url!,
-                                                                title: `Spec: ${item.collection.name}`
+                                                                url: cat.url,
+                                                                title: cat.name || `Spec: ${item.collection.name}`
                                                             })}
                                                             className="flex-1 flex justify-center items-center gap-2 p-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer"
-                                                            title={language === 'th' ? "ดู Catalog / Spec" : "View Catalog / Spec"}
+                                                            title={cat.name || (language === 'th' ? "ดู Catalog / Spec" : "View Catalog / Spec")}
                                                         >
-                                                            <ExternalLink size={14} /> {language === 'th' ? 'ดู Catalog' : 'View Catalog'}
+                                                            <ExternalLink size={14} /> {cat.name || (language === 'th' ? 'ดู Catalog' : 'View Catalog')}
                                                         </button>
-                                                    )}
+                                                    ))}
                                                 </div>
                                             </div>
                                         );

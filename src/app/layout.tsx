@@ -3,6 +3,7 @@ import { Kanit } from "next/font/google";
 import "./globals.css";
 
 import { CartProvider } from "@/context/CartContext";
+import GoogleAnalytics from "@/components/GoogleAnalytics";
 
 const kanit = Kanit({
     subsets: ["thai", "latin"],
@@ -24,6 +25,7 @@ export default function RootLayout({
     return (
         <html lang="th">
             <body className={`${kanit.variable} ${kanit.className} antialiased`}>
+                <GoogleAnalytics />
                 <CartProvider>
                     {children}
                 </CartProvider>

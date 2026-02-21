@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { Trash2, ArrowLeft, Send, Store, ShoppingBag, Info, BookOpen, Images, ChevronDown, ChevronUp, Plus, Minus } from 'lucide-react';
 import { calculatePrice } from '@/utils/pricing';
 import { supabase } from '@/lib/supabase';
-import { ProductVariant } from '@/lib/types';
+import { ProductVariant, CatalogEntry, parseCatalogEntries } from '@/lib/types';
 import CatalogModal from '@/components/CatalogModal';
 
 export default function QuotationPage() {
@@ -136,7 +136,7 @@ export default function QuotationPage() {
 
     // Variant State
     const [variantsMap, setVariantsMap] = useState<Record<number, ProductVariant[]>>({});
-    const [catalogMap, setCatalogMap] = useState<Record<number, string | null>>({});
+    const [catalogMap, setCatalogMap] = useState<Record<number, CatalogEntry[] | null>>({});
     const [portfolioMap, setPortfolioMap] = useState<Record<number, string | null>>({});
     const [brandMap, setBrandMap] = useState<Record<number, { name: string; logo_url?: string } | null>>({});
 
@@ -197,12 +197,13 @@ export default function QuotationPage() {
                     .in('id', collectionIds);
 
                 if (!colError && collections) {
-                    const cMap: Record<number, string | null> = {};
+                    const cMap: Record<number, CatalogEntry[] | null> = {};
                     const pMap: Record<number, string | null> = {};
                     const bMap: Record<number, { name: string; logo_url?: string } | null> = {};
 
                     collections.forEach((c: any) => {
-                        cMap[c.id] = c.catalog_url || null;
+                        const entries = parseCatalogEntries(c.catalog_url);
+                        cMap[c.id] = entries.length > 0 ? entries : null;
                         pMap[c.id] = c.portfolio_url || null;
                         if (c.product_brands) {
                             bMap[c.id] = {
@@ -524,15 +525,23 @@ export default function QuotationPage() {
                                                                                 {language === 'en' && firstItem.collection.name_en ? firstItem.collection.name_en : firstItem.collection.name} ({groupItems.length} {t[language].itemsCount})
                                                                             </span>
                                                                         </div>
-                                                                        {catalogMap[collectionId] && (
-                                                                            <button
-                                                                                type="button"
-                                                                                onClick={() => setViewingCatalogUrl(catalogMap[collectionId]!)}
-                                                                                className="text-blue-600 hover:text-blue-800 text-xs font-medium flex items-center gap-1 bg-blue-50 px-2 py-1 rounded"
-                                                                            >
-                                                                                <BookOpen size={12} /> {t[language].viewCatalog}
-                                                                            </button>
-                                                                        )}
+                                                                        {(() => {
+                                                                            const allEntries = catalogMap[collectionId] || [];
+                                                                            const groupCatalogNames = [...new Set(groupItems.map(i => i.selectedVariant?.catalog_name).filter(Boolean))] as string[];
+                                                                            const filtered = groupCatalogNames.length > 0
+                                                                                ? allEntries.filter(cat => groupCatalogNames.includes(cat.name))
+                                                                                : allEntries;
+                                                                            return filtered.map((cat, ci) => (
+                                                                                <button
+                                                                                    key={ci}
+                                                                                    type="button"
+                                                                                    onClick={() => setViewingCatalogUrl(cat.url)}
+                                                                                    className="text-blue-600 hover:text-blue-800 text-xs font-medium flex items-center gap-1 bg-blue-50 px-2 py-1 rounded"
+                                                                                >
+                                                                                    <BookOpen size={12} /> {cat.name || t[language].viewCatalog}
+                                                                                </button>
+                                                                            ));
+                                                                        })()}
                                                                     </div>
 
                                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -625,15 +634,23 @@ export default function QuotationPage() {
                                                                     {/* Show catalog button individually ONLY if not grouped (grouped handles it in header) */}
                                                                     {!isMultiple && (
                                                                         <div className="flex flex-col gap-2 mt-3">
-                                                                            {catalogMap[item.collection.id] && (
-                                                                                <button
-                                                                                    type="button"
-                                                                                    onClick={() => setViewingCatalogUrl(catalogMap[item.collection.id]!)}
-                                                                                    className="w-full py-1.5 px-3 rounded text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-800 flex items-center justify-center gap-2 font-medium transition-colors"
-                                                                                >
-                                                                                    <BookOpen size={14} /> {t[language].viewCatalog}
-                                                                                </button>
-                                                                            )}
+                                                                            {(() => {
+                                                                                const allEntries = catalogMap[item.collection.id] || [];
+                                                                                const vCatalog = item.selectedVariant?.catalog_name;
+                                                                                const filtered = vCatalog
+                                                                                    ? allEntries.filter(cat => cat.name === vCatalog)
+                                                                                    : allEntries;
+                                                                                return filtered.map((cat, ci) => (
+                                                                                    <button
+                                                                                        key={ci}
+                                                                                        type="button"
+                                                                                        onClick={() => setViewingCatalogUrl(cat.url)}
+                                                                                        className="w-full py-1.5 px-3 rounded text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-800 flex items-center justify-center gap-2 font-medium transition-colors"
+                                                                                    >
+                                                                                        <BookOpen size={14} /> {cat.name || t[language].viewCatalog}
+                                                                                    </button>
+                                                                                ));
+                                                                            })()}
                                                                             {portfolioMap[item.collection.id] && (
                                                                                 <button
                                                                                     type="button"
@@ -843,15 +860,23 @@ export default function QuotationPage() {
 
                                                         {/* Action Buttons (Show if not multiple, or just keep them?) - keeping for mobile convenience */}
                                                         <div className="grid grid-cols-2 gap-2 mb-3">
-                                                            {catalogMap[item.collection.id] && (
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => setViewingCatalogUrl(catalogMap[item.collection.id]!)}
-                                                                    className="py-1.5 px-3 rounded text-xs bg-blue-50 text-blue-600 font-medium flex items-center justify-center gap-1"
-                                                                >
-                                                                    <BookOpen size={14} /> {t[language].viewCatalog}
-                                                                </button>
-                                                            )}
+                                                            {(() => {
+                                                                const allEntries = catalogMap[item.collection.id] || [];
+                                                                const vCatalog = item.selectedVariant?.catalog_name;
+                                                                const filtered = vCatalog
+                                                                    ? allEntries.filter(cat => cat.name === vCatalog)
+                                                                    : allEntries;
+                                                                return filtered.map((cat, ci) => (
+                                                                    <button
+                                                                        key={ci}
+                                                                        type="button"
+                                                                        onClick={() => setViewingCatalogUrl(cat.url)}
+                                                                        className="py-1.5 px-3 rounded text-xs bg-blue-50 text-blue-600 font-medium flex items-center justify-center gap-1"
+                                                                    >
+                                                                        <BookOpen size={14} /> {cat.name || t[language].viewCatalog}
+                                                                    </button>
+                                                                ));
+                                                            })()}
                                                             {portfolioMap[item.collection.id] && (
                                                                 <button
                                                                     type="button"

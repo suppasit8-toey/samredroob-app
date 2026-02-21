@@ -44,7 +44,7 @@ export interface ProductCollection {
     price_data?: any; // JSONB for storing price steps or ranges
 
     // Links
-    catalog_url?: string;
+    catalog_url?: string; // JSON string of CatalogEntry[] or legacy plain URL
     portfolio_url?: string;
 
     // Joined fields (optional)
@@ -61,7 +61,35 @@ export interface ProductVariant {
     created_at?: string;
     in_stock?: boolean;
     description?: string; // New field
+    catalog_name?: string; // Links variant to a specific catalog entry
 
     // Joined fields
     product_collections?: ProductCollection;
+}
+
+// Catalog entry for multi-catalog support
+export interface CatalogEntry {
+    name: string;
+    url: string;
+}
+
+/**
+ * Parse catalog_url field from DB.
+ * Handles:
+ *  - JSON array string: '[{"name":"...","url":"..."}]'
+ *  - Legacy plain URL string: 'https://...'
+ *  - null/undefined/empty
+ */
+export function parseCatalogEntries(catalogUrl?: string | null): CatalogEntry[] {
+    if (!catalogUrl) return [];
+    try {
+        const parsed = JSON.parse(catalogUrl);
+        if (Array.isArray(parsed)) {
+            return parsed.filter((e: any) => e && e.url);
+        }
+    } catch {
+        // Not JSON — treat as legacy single URL
+    }
+    // Legacy single URL
+    return [{ name: 'Catalog', url: catalogUrl }];
 }

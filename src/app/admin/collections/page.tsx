@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { ProductCollection, Category, Brand, ProductVariant } from '@/lib/types';
+import { ProductCollection, Category, Brand, ProductVariant, CatalogEntry, parseCatalogEntries } from '@/lib/types';
 import {
     Plus,
     Edit,
@@ -102,6 +102,7 @@ export default function AdminCollectionsPage() {
     const [variantsLoading, setVariantsLoading] = useState(false);
     const [newVariantCode, setNewVariantCode] = useState('');
     const [newVariantDescription, setNewVariantDescription] = useState('');
+    const [newVariantCatalog, setNewVariantCatalog] = useState('');
 
     // UI State
     const [isConstraintsExpanded, setIsConstraintsExpanded] = useState(false);
@@ -124,7 +125,7 @@ export default function AdminCollectionsPage() {
         width_step: '',
         height_step: '',
         area_rounding: '',
-        catalog_url: '',
+        catalog_entries: [] as CatalogEntry[],
         portfolio_url: '',
         brand_id: '',
         coverage_per_unit: '',
@@ -220,6 +221,7 @@ export default function AdminCollectionsPage() {
                         collection_id: editingCollection.id,
                         name: newVariantCode.trim(),
                         description: newVariantDescription.trim() || null,
+                        catalog_name: newVariantCatalog || null,
                         in_stock: true
                     }]);
 
@@ -232,6 +234,7 @@ export default function AdminCollectionsPage() {
                     collection_id: 0,
                     name: newVariantCode.trim(),
                     description: newVariantDescription.trim() || undefined,
+                    catalog_name: newVariantCatalog || undefined,
                     in_stock: true,
                     created_at: new Date().toISOString()
                 };
@@ -240,6 +243,7 @@ export default function AdminCollectionsPage() {
 
             setNewVariantCode('');
             setNewVariantDescription('');
+            setNewVariantCatalog('');
         } catch (error) {
             console.error('Error adding variant:', error);
             alert('ไม่สามารถเพิ่มรหัสสินค้าได้');
@@ -344,7 +348,7 @@ export default function AdminCollectionsPage() {
                 // @ts-ignore
                 area_rounding: collection.area_rounding?.toString() || '',
                 // @ts-ignore
-                catalog_url: collection.catalog_url || '',
+                catalog_entries: parseCatalogEntries(collection.catalog_url),
                 // @ts-ignore
                 portfolio_url: collection.portfolio_url || '',
                 brand_id: collection.brand_id?.toString() || '',
@@ -402,7 +406,7 @@ export default function AdminCollectionsPage() {
                 width_step: '',
                 height_step: '',
                 area_rounding: '',
-                catalog_url: '',
+                catalog_entries: [] as CatalogEntry[],
                 portfolio_url: '',
                 brand_id: '',
                 coverage_per_unit: '',
@@ -459,7 +463,7 @@ export default function AdminCollectionsPage() {
             width_step: collection.width_step?.toString() || '',
             height_step: collection.height_step?.toString() || '',
             area_rounding: collection.area_rounding?.toString() || '',
-            catalog_url: collection.catalog_url || '',
+            catalog_entries: parseCatalogEntries(collection.catalog_url),
             portfolio_url: collection.portfolio_url || '',
             brand_id: collection.brand_id?.toString() || '',
             coverage_per_unit: collection.coverage_per_unit?.toString() || '',
@@ -552,7 +556,7 @@ export default function AdminCollectionsPage() {
                 width_step: enabledConstraints.width_step && formData.width_step ? Number(formData.width_step) : null,
                 height_step: enabledConstraints.height_step && formData.height_step ? Number(formData.height_step) : null,
                 area_rounding: enabledConstraints.area_rounding && formData.area_rounding ? Number(formData.area_rounding) : null,
-                catalog_url: formData.catalog_url || null,
+                catalog_url: formData.catalog_entries.length > 0 ? JSON.stringify(formData.catalog_entries.filter(e => e.url.trim())) : null,
                 portfolio_url: formData.portfolio_url || null,
                 brand_id: formData.brand_id ? Number(formData.brand_id) : null,
                 tags: tags,
@@ -586,6 +590,7 @@ export default function AdminCollectionsPage() {
                         collection_id: newCollection.id,
                         name: v.name,
                         description: v.description,
+                        catalog_name: v.catalog_name || null,
                         in_stock: v.in_stock !== undefined ? v.in_stock : true,
                     }));
 
@@ -1652,65 +1657,105 @@ export default function AdminCollectionsPage() {
                                         <Link2 size={18} className="text-blue-600" />
                                         ลิงก์ที่เกี่ยวข้อง
                                     </h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">🗂️ ดูแคตตาล็อก (Catalog URL)</label>
-                                            <div className="flex gap-3">
+                                    {/* Multi-Catalog Entries */}
+                                    <div className="space-y-3">
+                                        <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide">🗂️ แคตตาล็อก (Catalogs)</label>
+                                        {formData.catalog_entries.map((entry, idx) => (
+                                            <div key={idx} className="flex flex-col sm:flex-row gap-2 bg-white p-3 rounded-xl border border-gray-200">
                                                 <input
-                                                    type="url"
-                                                    value={formData.catalog_url}
-                                                    onChange={(e) => setFormData({ ...formData, catalog_url: e.target.value })}
-                                                    className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition text-sm"
-                                                    placeholder="https://example.com/catalog"
+                                                    type="text"
+                                                    value={entry.name}
+                                                    onChange={(e) => {
+                                                        const updated = [...formData.catalog_entries];
+                                                        updated[idx] = { ...updated[idx], name: e.target.value };
+                                                        setFormData({ ...formData, catalog_entries: updated });
+                                                    }}
+                                                    className="sm:w-1/3 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition text-sm"
+                                                    placeholder="ชื่อ เช่น Spec Sheet"
                                                 />
-                                                <div>
+                                                <div className="flex flex-1 gap-2">
                                                     <input
-                                                        type="file"
-                                                        id="catalog-upload"
-                                                        accept=".pdf,.jpg,.jpeg,.png"
-                                                        className="hidden"
-                                                        onChange={async (e) => {
-                                                            if (!supabase || !e.target.files || e.target.files.length === 0) return;
-                                                            const file = e.target.files[0];
-                                                            const fileExt = file.name.split('.').pop();
-                                                            const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}.${fileExt} `;
-
-                                                            try {
-                                                                const { error: uploadError } = await supabase.storage
-                                                                    .from('catalogs')
-                                                                    .upload(fileName, file);
-
-                                                                if (uploadError) throw uploadError;
-
-                                                                const { data } = supabase.storage.from('catalogs').getPublicUrl(fileName);
-                                                                setFormData({ ...formData, catalog_url: data.publicUrl });
-                                                                alert('อัพโหลดไฟล์เรียบร้อยแล้ว');
-                                                            } catch (error) {
-                                                                console.error('Upload error:', error);
-                                                                alert('เกิดข้อผิดพลาดในการอัพโหลด');
-                                                            }
+                                                        type="url"
+                                                        value={entry.url}
+                                                        onChange={(e) => {
+                                                            const updated = [...formData.catalog_entries];
+                                                            updated[idx] = { ...updated[idx], url: e.target.value };
+                                                            setFormData({ ...formData, catalog_entries: updated });
                                                         }}
+                                                        className="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition text-sm"
+                                                        placeholder="https://example.com/catalog.pdf"
                                                     />
-                                                    <label
-                                                        htmlFor="catalog-upload"
-                                                        className="flex items-center justify-center p-2.5 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition cursor-pointer border border-gray-200"
-                                                        title="อัพโหลด PDF หรือ รูปภาพ"
+                                                    <div>
+                                                        <input
+                                                            type="file"
+                                                            id={`catalog-upload-${idx}`}
+                                                            accept=".pdf,.jpg,.jpeg,.png"
+                                                            className="hidden"
+                                                            onChange={async (e) => {
+                                                                if (!supabase || !e.target.files || e.target.files.length === 0) return;
+                                                                const file = e.target.files[0];
+                                                                const fileExt = file.name.split('.').pop();
+                                                                const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+
+                                                                try {
+                                                                    const { error: uploadError } = await supabase.storage
+                                                                        .from('catalogs')
+                                                                        .upload(fileName, file);
+
+                                                                    if (uploadError) throw uploadError;
+
+                                                                    const { data } = supabase.storage.from('catalogs').getPublicUrl(fileName);
+                                                                    const updated = [...formData.catalog_entries];
+                                                                    updated[idx] = { ...updated[idx], url: data.publicUrl, name: updated[idx].name || file.name.replace(/\.[^.]+$/, '') };
+                                                                    setFormData({ ...formData, catalog_entries: updated });
+                                                                    alert('อัพโหลดไฟล์เรียบร้อยแล้ว');
+                                                                } catch (error) {
+                                                                    console.error('Upload error:', error);
+                                                                    alert('เกิดข้อผิดพลาดในการอัพโหลด');
+                                                                }
+                                                            }}
+                                                        />
+                                                        <label
+                                                            htmlFor={`catalog-upload-${idx}`}
+                                                            className="flex items-center justify-center p-2.5 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition cursor-pointer border border-gray-200"
+                                                            title="อัพโหลด PDF หรือ รูปภาพ"
+                                                        >
+                                                            <Upload size={18} />
+                                                        </label>
+                                                    </div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            const updated = formData.catalog_entries.filter((_, i) => i !== idx);
+                                                            setFormData({ ...formData, catalog_entries: updated });
+                                                        }}
+                                                        className="p-2.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                                                        title="ลบ"
                                                     >
-                                                        <Upload size={20} />
-                                                    </label>
+                                                        <X size={18} />
+                                                    </button>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div>
-                                            <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">🏗️ ผลงานการผลิตและติดตั้ง (Portfolio URL)</label>
-                                            <input
-                                                type="url"
-                                                value={formData.portfolio_url}
-                                                onChange={(e) => setFormData({ ...formData, portfolio_url: e.target.value })}
-                                                className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition text-sm"
-                                                placeholder="https://example.com/portfolio"
-                                            />
-                                        </div>
+                                        ))}
+                                        <button
+                                            type="button"
+                                            onClick={() => setFormData({ ...formData, catalog_entries: [...formData.catalog_entries, { name: '', url: '' }] })}
+                                            className="w-full py-2 border-2 border-dashed border-gray-200 rounded-xl text-sm text-gray-500 hover:border-gray-400 hover:text-gray-700 transition cursor-pointer flex items-center justify-center gap-1.5"
+                                        >
+                                            <Plus size={16} /> เพิ่ม Catalog
+                                        </button>
+                                    </div>
+
+                                    {/* Portfolio URL (unchanged, single) */}
+                                    <div>
+                                        <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">🏗️ ผลงานการผลิตและติดตั้ง (Portfolio URL)</label>
+                                        <input
+                                            type="url"
+                                            value={formData.portfolio_url}
+                                            onChange={(e) => setFormData({ ...formData, portfolio_url: e.target.value })}
+                                            className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition text-sm"
+                                            placeholder="https://example.com/portfolio"
+                                        />
                                     </div>
                                     <p className="text-xs text-gray-500">* ลิงก์เหล่านี้จะแสดงให้ลูกค้าเห็นในหน้าคำนวณราคา</p>
                                 </div>
@@ -1731,7 +1776,7 @@ export default function AdminCollectionsPage() {
                                             value={newVariantCode}
                                             onChange={(e) => setNewVariantCode(e.target.value)}
                                             onKeyDown={(e) => { if (e.key === 'Enter') handleAddVariant(); }}
-                                            className="w-full sm:w-1/3 px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition text-sm"
+                                            className="w-full sm:w-1/4 px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition text-sm"
                                             placeholder="รหัส (เช่น 850-1)"
                                         />
                                         <input
@@ -1742,6 +1787,18 @@ export default function AdminCollectionsPage() {
                                             className="flex-1 px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition text-sm"
                                             placeholder="รายละเอียด (เช่น สีเทาเข้ม)"
                                         />
+                                        {formData.catalog_entries.length > 0 && (
+                                            <select
+                                                value={newVariantCatalog}
+                                                onChange={(e) => setNewVariantCatalog(e.target.value)}
+                                                className="sm:w-1/4 px-3 py-2 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-black/5 focus:border-black transition text-sm"
+                                            >
+                                                <option value="">-- เลือก Catalog --</option>
+                                                {formData.catalog_entries.filter(e => e.name.trim()).map((entry, idx) => (
+                                                    <option key={idx} value={entry.name}>{entry.name}</option>
+                                                ))}
+                                            </select>
+                                        )}
                                         <button
                                             type="button"
                                             onClick={handleAddVariant}
@@ -1773,11 +1830,18 @@ export default function AdminCollectionsPage() {
                                                                     {variant.name}
                                                                 </span>
                                                             </div>
-                                                            {variant.description && (
-                                                                <span className="text-[10px] text-gray-500 ml-4 truncate">
-                                                                    {variant.description}
-                                                                </span>
-                                                            )}
+                                                            <div className="flex items-center gap-1 ml-4">
+                                                                {variant.catalog_name && (
+                                                                    <span className="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded border border-blue-100 font-medium">
+                                                                        {variant.catalog_name}
+                                                                    </span>
+                                                                )}
+                                                                {variant.description && (
+                                                                    <span className="text-[10px] text-gray-500 truncate">
+                                                                        {variant.description}
+                                                                    </span>
+                                                                )}
+                                                            </div>
                                                         </div>
                                                         <div className="flex items-center gap-1 shrink-0">
                                                             <button
