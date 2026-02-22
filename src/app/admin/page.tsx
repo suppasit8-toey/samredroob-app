@@ -11,281 +11,495 @@ import {
     ArrowRight,
     Clock,
     AlertCircle,
-    FileText
+    FileText,
+    Calendar,
+    ChevronDown
 } from 'lucide-react';
+import {
+    LineChart,
+    Line,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
+    PieChart,
+    Pie,
+    Cell,
+    Legend,
+    TooltipProps
+} from 'recharts';
+import { format, subDays, startOfDay, parseISO } from 'date-fns';
+import { th } from 'date-fns/locale';
+
+const COLORS = ['#3b82f6', '#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#64748b'];
+
+type TimeRange = 'today' | '7d' | '30d' | 'all';
+
+// Extract CustomTooltip outside of the main component to avoid Hook rule violations
+// and improve performance slightly.
+const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="bg-white p-4 border border-gray-100 shadow-xl rounded-xl">
+                <p className="font-bold text-gray-800 mb-2">{label}</p>
+                {payload.map((entry: any, index: number) => (
+                    <div key={index} className="flex items-center gap-2 text-sm mb-1">
+                        <div className="w-3 h-3 rounded-full" style={{ backgroundColor: entry.color }} />
+                        <span className="text-gray-600">{entry.name}:</span>
+                        <span className="font-bold text-gray-900">{entry.value}</span>
+                    </div>
+                ))}
+            </div>
+        );
+    }
+    return null;
+};
 
 export default function AdminPage() {
+    const [timeRange, setTimeRange] = useState<TimeRange>('today');
+    const [isLoading, setIsLoading] = useState(true);
+
     const [stats, setStats] = useState({
         productsCount: 0,
-        calculationsToday: 0,
-        visitsToday: 0
+        calculationsCount: 0,
+        visitsCount: 0,
+        conversionRate: 0
     });
 
-    // Marketing Data State
+    const [chartData, setChartData] = useState<any[]>([]);
     const [marketingData, setMarketingData] = useState<{
-        sources: Record<string, number>;
-        devices: Record<string, number>;
-        pages: Record<string, number>;
+        sources: { name: string; value: number }[];
+        devices: { name: string; value: number }[];
+        pages: { name: string; value: number; percentage: number }[];
     } | null>(null);
 
     useEffect(() => {
-        const fetchStats = async () => {
+        const fetchAnalytics = async () => {
+            setIsLoading(true);
             if (!supabase) return;
 
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const todayISO = today.toISOString();
+            // Determine date threshold based on selected range
+            const now = new Date();
+            let startDate = new Date(0); // Epoch for 'All Time'
 
-            // 1. Count Products
+            if (timeRange === 'today') {
+                startDate = startOfDay(now);
+            } else if (timeRange === '7d') {
+                startDate = startOfDay(subDays(now, 6)); // Include today
+            } else if (timeRange === '30d') {
+                startDate = startOfDay(subDays(now, 29));
+            }
+
+            const startDateISO = startDate.toISOString();
+
+            // 1. Get total products
             const { count: productsCount } = await supabase
                 .from('products')
                 .select('*', { count: 'exact', head: true });
 
-            // 2. Count Calculations Today
-            const { count: calculationsToday } = await supabase
+            // 2. Fetch all analytics events in the date range
+            // We fetch both 'visit' and 'calculate' to build charts
+            const { data: events } = await supabase
                 .from('analytics_events')
-                .select('*', { count: 'exact', head: true })
-                .eq('event_type', 'calculate')
-                .gte('created_at', todayISO);
+                .select('event_type, page_path, metadata, created_at')
+                .gte('created_at', startDateISO)
+                .order('created_at', { ascending: true }); // Need ascending for time-series
 
-            // 3. Fetch Visits Today (Detailed)
-            const { data: visits } = await supabase
-                .from('analytics_events')
-                .select('page_path, metadata')
-                .eq('event_type', 'visit')
-                // .gte('created_at', todayISO); // Use this for Today only
-                .limit(100); // For dev/demo purposes, assume all time or recent 100 to show data if today is empty
+            const visits = events?.filter(e => e.event_type === 'visit') || [];
+            const calculations = events?.filter(e => e.event_type === 'calculate') || [];
 
-            const visitsCount = visits?.length || 0;
-
-            // Process Marketing Data
-            const sources: Record<string, number> = {};
-            const devices: Record<string, number> = {};
-            const pages: Record<string, number> = {};
-
-            visits?.forEach((v: any) => {
-                // Source
-                let source = 'Direct / Unknown';
-                const referrer = v.metadata?.referrer || '';
-                if (referrer.includes('google')) source = 'Google Search';
-                else if (referrer.includes('facebook')) source = 'Facebook';
-                else if (referrer.includes('instagram')) source = 'Instagram';
-                else if (referrer.includes('line')) source = 'Line';
-                else if (referrer.includes('twitter') || referrer.includes('x.com')) source = 'Twitter';
-                sources[source] = (sources[source] || 0) + 1;
-
-                // Device
-                let device = 'Desktop';
-                const ua = (v.metadata?.user_agent || '').toLowerCase();
-                if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) device = 'Mobile';
-                devices[device] = (devices[device] || 0) + 1;
-
-                // Page
-                const page = v.page_path || '/';
-                pages[page] = (pages[page] || 0) + 1;
-            });
+            // Calculate Totals for Top Stats
+            const totalVisits = visits.length;
+            const totalCalculations = calculations.length;
+            const conversionRate = totalVisits > 0 ? ((totalCalculations / totalVisits) * 100).toFixed(1) : '0.0';
 
             setStats({
                 productsCount: productsCount || 0,
-                calculationsToday: calculationsToday || 0,
-                visitsToday: visitsCount
+                calculationsCount: totalCalculations,
+                visitsCount: totalVisits,
+                conversionRate: parseFloat(conversionRate)
             });
 
-            setMarketingData({ sources, devices, pages });
+            // --- Process Data for Line Chart (Time Series) ---
+            const timeMap = new Map<string, { time: string; visits: number; calculations: number }>();
+
+            // Helper to group by appropriate time unit based on range
+            const getGroupKey = (dateString: string) => {
+                const d = parseISO(dateString);
+                if (timeRange === 'today') {
+                    // Group by hour
+                    return format(d, 'HH:00');
+                } else if (timeRange === 'all') {
+                    // Group by month/year to avoid huge charts
+                    return format(d, 'MMM yyyy', { locale: th });
+                } else {
+                    // Group by day 
+                    return format(d, 'dd MMM', { locale: th });
+                }
+            };
+
+            // Initialize map with empty values depending on range to ensure continuous lines
+            if (timeRange === '7d' || timeRange === '30d') {
+                const daysToIterate = timeRange === '7d' ? 6 : 29;
+                for (let i = daysToIterate; i >= 0; i--) {
+                    const d = subDays(now, i);
+                    const key = format(d, 'dd MMM', { locale: th });
+                    timeMap.set(key, { time: key, visits: 0, calculations: 0 });
+                }
+            } else if (timeRange === 'today') {
+                for (let i = 0; i <= now.getHours(); i++) {
+                    const key = `${i.toString().padStart(2, '0')}:00`;
+                    timeMap.set(key, { time: key, visits: 0, calculations: 0 });
+                }
+            }
+
+            // Populate Map
+            visits.forEach(v => {
+                const key = getGroupKey(v.created_at);
+                const current = timeMap.get(key) || { time: key, visits: 0, calculations: 0 };
+                timeMap.set(key, { ...current, visits: current.visits + 1 });
+            });
+
+            calculations.forEach(c => {
+                const key = getGroupKey(c.created_at);
+                const current = timeMap.get(key) || { time: key, visits: 0, calculations: 0 };
+                timeMap.set(key, { ...current, calculations: current.calculations + 1 });
+            });
+
+            setChartData(Array.from(timeMap.values()));
+
+            // --- Process Marketing Data (Donuts & Tables) ---
+            const sourceMap: Record<string, number> = {};
+            const deviceMap: Record<string, number> = {};
+            const pageMap: Record<string, number> = {};
+
+            visits.forEach((v: any) => {
+                // Source Detection
+                let source = 'Direct / Unknown';
+                const referrer = v.metadata?.referrer?.toLowerCase() || '';
+                if (referrer.includes('google')) source = 'Google Search';
+                else if (referrer.includes('facebook') || referrer.includes('fb.com')) source = 'Facebook';
+                else if (referrer.includes('instagram')) source = 'Instagram';
+                else if (referrer.includes('line')) source = 'LINE';
+                else if (referrer.includes('tiktok')) source = 'TikTok';
+                else if (referrer) source = 'Other Referrals';
+                sourceMap[source] = (sourceMap[source] || 0) + 1;
+
+                // Device Detection
+                let device = 'Desktop';
+                const ua = (v.metadata?.user_agent || '').toLowerCase();
+                if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) device = 'Mobile';
+                else if (ua.includes('tablet') || ua.includes('ipad')) device = 'Tablet';
+                deviceMap[device] = (deviceMap[device] || 0) + 1;
+
+                // Top Pages
+                const page = v.page_path || '/';
+                pageMap[page] = (pageMap[page] || 0) + 1;
+            });
+
+            // Convert Maps to Arrays for Recharts and Sorting
+            const sourcesArray = Object.entries(sourceMap)
+                .map(([name, value]) => ({ name, value }))
+                .sort((a, b) => b.value - a.value);
+
+            const devicesArray = Object.entries(deviceMap)
+                .map(([name, value]) => ({ name, value }))
+                .sort((a, b) => b.value - a.value);
+
+            const pagesArray = Object.entries(pageMap)
+                .map(([name, value]) => ({
+                    name,
+                    value,
+                    percentage: totalVisits > 0 ? (value / totalVisits) * 100 : 0
+                }))
+                .sort((a, b) => b.value - a.value)
+                .slice(0, 6); // Top 6 pages
+
+            setMarketingData({
+                sources: sourcesArray,
+                devices: devicesArray,
+                pages: pagesArray
+            });
+
+            setIsLoading(false);
         };
 
-        fetchStats();
-    }, []);
-
-    // Mock Data for Dashboard (Updated with real values)
-    const statCards = [
-        {
-            label: 'สินค้าทั้งหมด',
-            value: stats.productsCount.toString(),
-            icon: <Package size={24} className="text-blue-600" />,
-            bg: 'bg-blue-50',
-            trend: 'Live',
-            trendUp: true
-        },
-        {
-            label: 'คำนวณราคา (วันนี้)',
-            value: stats.calculationsToday.toString(),
-            icon: <Calculator size={24} className="text-purple-600" />,
-            bg: 'bg-purple-50',
-            trend: 'Today',
-            trendUp: true
-        },
-        {
-            label: 'ผู้เข้าชม (รวม)',
-            value: stats.visitsToday.toString(),
-            icon: <Users size={24} className="text-green-600" />,
-            bg: 'bg-green-50',
-            trend: 'All Time',
-            trendUp: true
-        },
-    ];
+        fetchAnalytics();
+    }, [timeRange]);
 
     return (
-        <div className="space-y-8">
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {statCards.map((stat, index) => (
-                    <div key={index} className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
-                        <div className="flex justify-between items-start mb-4">
-                            <div className={`p-3 rounded-xl ${stat.bg}`}>
-                                {stat.icon}
-                            </div>
-                            <span className={`text-xs font-semibold px-2 py-1 rounded-lg ${stat.trendUp ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                {stat.trend}
-                            </span>
-                        </div>
-                        <h3 className="text-gray-500 text-sm font-medium mb-1">{stat.label}</h3>
-                        <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
-                    </div>
-                ))}
+        <div className="space-y-6 max-w-7xl mx-auto">
+
+            {/* Header & Filters */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-900 font-[family-name:var(--font-mitr)]">ภาพรวมระบบ (Dashboard Dashboard)</h1>
+                    <p className="text-sm text-gray-500">ติดตามสถิติและพฤติกรรมลูกค้า</p>
+                </div>
+
+                <div className="flex items-center gap-2 bg-gray-50 p-1.5 rounded-xl border border-gray-200">
+                    <button
+                        onClick={() => setTimeRange('today')}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${timeRange === 'today' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-900'}`}
+                    >
+                        วันนี้
+                    </button>
+                    <button
+                        onClick={() => setTimeRange('7d')}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${timeRange === '7d' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-900'}`}
+                    >
+                        7 วันที่ผ่านมา
+                    </button>
+                    <button
+                        onClick={() => setTimeRange('30d')}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${timeRange === '30d' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-900'}`}
+                    >
+                        30 วัน
+                    </button>
+                    <button
+                        onClick={() => setTimeRange('all')}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${timeRange === 'all' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-900'}`}
+                    >
+                        ตลอดกาล
+                    </button>
+                </div>
             </div>
 
-            {/* Marketing Insights */}
+            {/* Loading Overlay State */}
+            {isLoading && (
+                <div className="w-full h-2 bg-blue-50 overflow-hidden rounded-full">
+                    <div className="w-1/3 h-full bg-blue-500 animate-[pulse_1.5s_ease-in-out_infinite] rounded-full relative" style={{ left: '0%', animation: 'slide 1.5s infinite' }}></div>
+                    <style>{`@keyframes slide { 0% { left: -30%; } 100% { left: 100%; } }`}</style>
+                </div>
+            )}
+
+            {/* Key Metrics Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 hover:-translate-y-1 transition-transform">
+                    <div className="w-14 h-14 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                        <Users size={28} />
+                    </div>
+                    <div>
+                        <p className="text-sm font-medium text-gray-500">ผู้ชม (Visits)</p>
+                        <h3 className="text-2xl font-bold text-gray-900">{stats.visitsCount.toLocaleString()}</h3>
+                    </div>
+                </div>
+
+                <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 hover:-translate-y-1 transition-transform">
+                    <div className="w-14 h-14 rounded-full bg-purple-50 flex items-center justify-center text-purple-600">
+                        <Calculator size={28} />
+                    </div>
+                    <div>
+                        <p className="text-sm font-medium text-gray-500">กดคำนวณราคา</p>
+                        <h3 className="text-2xl font-bold text-gray-900">{stats.calculationsCount.toLocaleString()}</h3>
+                    </div>
+                </div>
+
+                <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 hover:-translate-y-1 transition-transform">
+                    <div className="w-14 h-14 rounded-full bg-green-50 flex items-center justify-center text-green-600">
+                        <TrendingUp size={28} />
+                    </div>
+                    <div>
+                        <p className="text-sm font-medium text-gray-500">อัตราความสนใจ (Rate)</p>
+                        <div className="flex items-baseline gap-2">
+                            <h3 className="text-2xl font-bold text-gray-900">{stats.conversionRate}%</h3>
+                            <span className="text-xs text-green-600 font-medium">สูง</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4 hover:-translate-y-1 transition-transform">
+                    <div className="w-14 h-14 rounded-full bg-orange-50 flex items-center justify-center text-orange-600">
+                        <Package size={28} />
+                    </div>
+                    <div>
+                        <p className="text-sm font-medium text-gray-500">สินค้าในระบบ</p>
+                        <h3 className="text-2xl font-bold text-gray-900">{stats.productsCount.toLocaleString()}</h3>
+                    </div>
+                </div>
+            </div>
+
+            {/* Main Chart Area */}
+            <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                        <TrendingUp size={20} className="text-blue-500" /> เทรนด์การเข้าชม (Traffic Trend)
+                    </h2>
+                </div>
+
+                <div className="h-[350px] w-full mt-4">
+                    {chartData.length > 0 ? (
+                        <ResponsiveContainer width="100%" height="100%">
+                            <LineChart data={chartData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                <XAxis
+                                    dataKey="time"
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{ fill: '#64748b', fontSize: 12 }}
+                                    dy={10}
+                                />
+                                <YAxis
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{ fill: '#64748b', fontSize: 12 }}
+                                    allowDecimals={false}
+                                />
+                                <Tooltip content={<CustomTooltip />} />
+                                <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                                <Line
+                                    type="monotone"
+                                    name="ผู้ชม (Visits)"
+                                    dataKey="visits"
+                                    stroke="#3b82f6"
+                                    strokeWidth={3}
+                                    dot={{ r: 4, fill: '#3b82f6', strokeWidth: 2, stroke: '#fff' }}
+                                    activeDot={{ r: 6, strokeWidth: 0 }}
+                                />
+                                <Line
+                                    type="monotone"
+                                    name="คำนวณราคา (Calculations)"
+                                    dataKey="calculations"
+                                    stroke="#ec4899"
+                                    strokeWidth={3}
+                                    dot={{ r: 4, fill: '#ec4899', strokeWidth: 2, stroke: '#fff' }}
+                                />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                            <Clock size={48} className="mb-2 opacity-20" />
+                            <p>ไม่มีข้อมูลในช่วงเวลานี้</p>
+                        </div>
+                    )}
+                </div>
+            </div>
+
+            {/* Bottom Row - Breakdowns */}
             {marketingData && (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Sources */}
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                        <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                            <TrendingUp size={18} className="text-blue-500" /> แหล่งที่มา (Traffic Source)
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                    {/* Device breakdown Pie Chart */}
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
+                        <h3 className="font-bold text-gray-900 mb-6 flex items-center gap-2">
+                            สัดส่วนอุปกรณ์ (Devices)
                         </h3>
-                        <div className="space-y-3">
-                            {Object.entries(marketingData.sources).map(([source, count]) => (
-                                <div key={source} className="flex justify-between items-center text-sm">
-                                    <span className="text-gray-600">{source}</span>
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-24 h-2 bg-gray-100 rounded-full overflow-hidden">
-                                            <div
-                                                className="h-full bg-blue-500 rounded-full"
-                                                style={{ width: `${(count / stats.visitsToday) * 100}%` }}
-                                            />
+                        {marketingData.devices.length > 0 ? (
+                            <div className="flex-1 flex flex-col justify-center relative min-h-[250px]">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={marketingData.devices}
+                                            cx="50%"
+                                            cy="50%"
+                                            innerRadius={60}
+                                            outerRadius={90}
+                                            paddingAngle={5}
+                                            dataKey="value"
+                                            stroke="none"
+                                        >
+                                            {marketingData.devices.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip
+                                            formatter={(value) => [`${value} Visits`, 'Users']}
+                                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                                        />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                                {/* Custom Legend Below */}
+                                <div className="flex flex-wrap justify-center gap-4 mt-4">
+                                    {marketingData.devices.map((entry, index) => (
+                                        <div key={entry.name} className="flex items-center gap-2 text-sm">
+                                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
+                                            <span className="text-gray-600">{entry.name}</span>
+                                            <span className="font-bold text-gray-900">{entry.value}</span>
                                         </div>
-                                        <span className="font-medium">{count}</span>
-                                    </div>
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
+                            </div>
+                        ) : (
+                            <p className="text-gray-400 text-sm text-center my-auto py-10">ไม่มีข้อมูล</p>
+                        )}
                     </div>
 
-                    {/* Devices */}
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                        <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                            <Users size={18} className="text-purple-500" /> อุปกรณ์ (Devices)
+                    {/* Source Breakdown Pie Chart */}
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
+                        <h3 className="font-bold text-gray-900 mb-6 flex items-center gap-2">
+                            แหล่งที่มา (Traffic Source)
                         </h3>
-                        <div className="space-y-3">
-                            {Object.entries(marketingData.devices).map(([device, count]) => (
-                                <div key={device} className="flex justify-between items-center text-sm">
-                                    <span className="text-gray-600">{device}</span>
-                                    <span className="font-medium bg-gray-50 px-2 py-1 rounded">{count}</span>
+                        {marketingData.sources.length > 0 ? (
+                            <div className="flex-1 flex flex-col justify-center relative min-h-[250px]">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={marketingData.sources}
+                                            cx="50%"
+                                            cy="50%"
+                                            innerRadius={60}
+                                            outerRadius={90}
+                                            paddingAngle={5}
+                                            dataKey="value"
+                                            stroke="none"
+                                        >
+                                            {marketingData.sources.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={COLORS[(index + 2) % COLORS.length]} /> // Offset colors so they differ from devices
+                                            ))}
+                                        </Pie>
+                                        <Tooltip
+                                            formatter={(value) => [`${value} Visits`, 'Users']}
+                                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                                        />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                                <div className="flex flex-wrap justify-center gap-4 mt-4">
+                                    {marketingData.sources.slice(0, 4).map((entry, index) => (
+                                        <div key={entry.name} className="flex items-center gap-2 text-sm">
+                                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[(index + 2) % COLORS.length] }}></div>
+                                            <span className="text-gray-600">{entry.name}</span>
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
+                            </div>
+                        ) : (
+                            <p className="text-gray-400 text-sm text-center my-auto py-10">ไม่มีข้อมูล</p>
+                        )}
                     </div>
 
-                    {/* Top Pages */}
-                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                        <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                            <Package size={18} className="text-green-500" /> หน้ายอดนิยม (Top Pages)
+                    {/* Top Pages List */}
+                    <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col">
+                        <h3 className="font-bold text-gray-900 mb-6 flex items-center justify-between">
+                            <span>หน้ายอดนิยม (Top Pages)</span>
                         </h3>
-                        <div className="space-y-3">
-                            {Object.entries(marketingData.pages)
-                                .sort(([, a], [, b]) => b - a)
-                                .slice(0, 5)
-                                .map(([page, count]) => (
-                                    <div key={page} className="flex justify-between items-center text-sm">
-                                        <span className="text-gray-600 truncate max-w-[180px]" title={page}>{page}</span>
-                                        <span className="font-medium">{count}</span>
+                        <div className="space-y-4 flex-1">
+                            {marketingData.pages.length > 0 ? marketingData.pages.map((page, i) => (
+                                <div key={page.name} className="group flex items-center justify-between">
+                                    <div className="flex items-center gap-3 overflow-hidden">
+                                        <div className="w-6 h-6 rounded-md bg-gray-50 flex items-center justify-center text-xs font-bold text-gray-400 group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                                            {i + 1}
+                                        </div>
+                                        <span className="text-sm text-gray-700 truncate font-medium" title={page.name}>
+                                            {page.name === '/' ? 'หน้าแรก (Home)' : page.name}
+                                        </span>
                                     </div>
-                                ))}
+                                    <div className="flex items-center gap-4 ml-4">
+                                        <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden hidden sm:block">
+                                            <div className="h-full bg-blue-400 rounded-full" style={{ width: `${page.percentage}%` }}></div>
+                                        </div>
+                                        <span className="text-sm font-bold text-gray-900 whitespace-nowrap w-8 text-right">
+                                            {page.value}
+                                        </span>
+                                    </div>
+                                </div>
+                            )) : (
+                                <p className="text-gray-400 text-sm text-center mt-10">ไม่มีข้อมูลการเข้าชม</p>
+                            )}
                         </div>
                     </div>
                 </div>
             )}
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Quick Actions */}
-                <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                    <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-lg font-bold text-gray-900">เมนูลัด (Quick Actions)</h3>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <Link href="/admin/products" className="group p-4 rounded-xl border border-gray-100 hover:border-black hover:bg-gray-50 transition-all duration-200 flex items-center gap-4">
-                            <div className="p-3 bg-gray-100 rounded-lg group-hover:bg-white transition-colors">
-                                <Package size={24} className="text-gray-600 group-hover:text-black" />
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-gray-900">จัดการสินค้า</h4>
-                                <p className="text-sm text-gray-500">เพิ่ม ลบ หรือแก้ไขข้อมูลสินค้า</p>
-                            </div>
-                            <ArrowRight size={18} className="ml-auto text-gray-300 group-hover:text-black transform group-hover:translate-x-1 transition-all" />
-                        </Link>
-
-                        <Link href="/admin/pricing" className="group p-4 rounded-xl border border-gray-100 hover:border-black hover:bg-gray-50 transition-all duration-200 flex items-center gap-4">
-                            <div className="p-3 bg-gray-100 rounded-lg group-hover:bg-white transition-colors">
-                                <Calculator size={24} className="text-gray-600 group-hover:text-black" />
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-gray-900">ตั้งค่าราคา</h4>
-                                <p className="text-sm text-gray-500">กำหนด VAT และค่าบริการต่างๆ</p>
-                            </div>
-                            <ArrowRight size={18} className="ml-auto text-gray-300 group-hover:text-black transform group-hover:translate-x-1 transition-all" />
-                        </Link>
-
-                        <Link href="/admin/history" className="group p-4 rounded-xl border border-gray-100 hover:border-black hover:bg-gray-50 transition-all duration-200 flex items-center gap-4">
-                            <div className="p-3 bg-gray-100 rounded-lg group-hover:bg-white transition-colors">
-                                <Clock size={24} className="text-gray-600 group-hover:text-black" />
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-gray-900">ประวัติการคำนวณ</h4>
-                                <p className="text-sm text-gray-500">ดูรายการที่ลูกค้ากดคำนวณ</p>
-                            </div>
-                            <ArrowRight size={18} className="ml-auto text-gray-300 group-hover:text-black transform group-hover:translate-x-1 transition-all" />
-                        </Link>
-
-                        <Link href="/admin/quotations" className="group p-4 rounded-xl border border-gray-100 hover:border-black hover:bg-gray-50 transition-all duration-200 flex items-center gap-4">
-                            <div className="p-3 bg-gray-100 rounded-lg group-hover:bg-white transition-colors">
-                                <FileText size={24} className="text-gray-600 group-hover:text-black" />
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-gray-900">คำขอใบเสนอราคา</h4>
-                                <p className="text-sm text-gray-500">ดูรายการที่ลูกค้าติดต่อเข้ามา</p>
-                            </div>
-                            <ArrowRight size={18} className="ml-auto text-gray-300 group-hover:text-black transform group-hover:translate-x-1 transition-all" />
-                        </Link>
-                    </div>
-                </div>
-
-                {/* Notifications / Updates */}
-                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                    <h3 className="text-lg font-bold text-gray-900 mb-6">การแจ้งเตือน</h3>
-                    <div className="space-y-4">
-                        <div className="flex gap-3">
-                            <div className="mt-1">
-                                <AlertCircle size={16} className="text-orange-500" />
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-800 font-medium">สต็อกผ้าเหลือน้อย</p>
-                                <p className="text-xs text-gray-500 mt-1">ผ้า Dimout รหัส D-001 ใกล้หมดแล้ว</p>
-                            </div>
-                        </div>
-                        <div className="w-full h-px bg-gray-50"></div>
-                        <div className="flex gap-3">
-                            <div className="mt-1">
-                                <Clock size={16} className="text-blue-500" />
-                            </div>
-                            <div>
-                                <p className="text-sm text-gray-800 font-medium">อัปเดตระบบล่าสุด</p>
-                                <p className="text-xs text-gray-500 mt-1">เมื่อ 2 ชม. ที่แล้ว</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
     );
 }

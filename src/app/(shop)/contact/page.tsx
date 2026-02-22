@@ -228,7 +228,7 @@ export default function ContactPage() {
                     borderTop: '1px solid #f0f0f0',
                 }}>
                     <iframe
-                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3874.8!2d100.85!3d13.83!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2z44CA!5e0!3m2!1sth!2sth!4v1700000000000!5m2!1sth!2sth"
+                        src="https://maps.google.com/maps?q=13.8554676,100.8124588&hl=th&z=15&output=embed"
                         width="100%"
                         height="100%"
                         style={{ border: 0 }}
@@ -241,7 +241,7 @@ export default function ContactPage() {
                 {/* Open in Google Maps Button */}
                 <div style={{ padding: '1rem 1.5rem' }}>
                     <a
-                        href="https://maps.google.com/?q=5/59+มิตรไมตรี+แขวงคู้ฝั่งเหนือ+เขตหนองจอก+กรุงเทพมหานคร+10530"
+                        href="https://maps.app.goo.gl/wFt5MbjC3ykLKxSg6"
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{

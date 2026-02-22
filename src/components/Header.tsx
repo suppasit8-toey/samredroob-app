@@ -95,14 +95,28 @@ const Header: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Mobile Menu Toggle */}
-                <button
-                    className="mobile-menu-toggle"
-                    onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                    aria-label="Toggle Menu"
-                >
-                    {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-                </button>
+                {/* Mobile Controls */}
+                <div className="mobile-controls">
+                    {/* Language Toggle in Mobile Header */}
+                    <button
+                        onClick={toggleLanguage}
+                        className="mobile-header-lang-toggle"
+                        aria-label="Toggle Language"
+                    >
+                        <span className={language === 'th' ? 'active' : ''}>TH</span>
+                        <span className="text-gray-300 mx-1">|</span>
+                        <span className={language === 'en' ? 'active' : ''}>EN</span>
+                    </button>
+
+                    {/* Mobile Menu Toggle */}
+                    <button
+                        className="mobile-menu-toggle-btn"
+                        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                        aria-label="Toggle Menu"
+                    >
+                        {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                    </button>
+                </div>
 
                 {/* Mobile Full Screen Menu Overlay */}
                 <div className={`mobile-menu-overlay ${isMobileMenuOpen ? 'open' : ''}`}>
@@ -122,15 +136,6 @@ const Header: React.FC = () => {
 
                         <div className="mobile-menu-divider"></div>
 
-                        {/* Language Toggle in Mobile Menu */}
-                        <button
-                            onClick={toggleLanguage}
-                            className="mobile-lang-toggle"
-                        >
-                            <span className={language === 'th' ? 'active' : ''}>TH</span>
-                            <span className="separator">|</span>
-                            <span className={language === 'en' ? 'active' : ''}>EN</span>
-                        </button>
 
 
 
@@ -162,8 +167,31 @@ const Header: React.FC = () => {
                         }
                         .desktop-nav { display: none !important; }
                         
-                        /* Mobile Menu Styles */
-                        .mobile-menu-toggle {
+                        /* Mobile Controls Styles */
+                        .mobile-controls {
+                            display: flex;
+                            align-items: center;
+                            gap: 0.5rem;
+                        }
+
+                        .mobile-header-lang-toggle {
+                            display: flex;
+                            align-items: center;
+                            font-size: 0.85rem;
+                            font-weight: 500;
+                            color: #888;
+                            background: none;
+                            border: 1px solid #e5e5e5;
+                            padding: 0.25rem 0.75rem;
+                            border-radius: 50px;
+                        }
+
+                        .mobile-header-lang-toggle .active {
+                            color: #000;
+                            font-weight: 700;
+                        }
+
+                        .mobile-menu-toggle-btn {
                             display: flex;
                             align-items: center;
                             justify-content: center;
@@ -226,26 +254,9 @@ const Header: React.FC = () => {
                             margin: 1rem 0;
                         }
 
-                        .mobile-lang-toggle {
-                            display: flex;
-                            align-items: center;
-                            gap: 0.5rem;
-                            font-size: 1.2rem;
-                            font-weight: 500;
-                            color: #888;
-                            background: none;
-                            border: 1px solid #e5e5e5;
-                            padding: 0.5rem 1.5rem;
-                            border-radius: 50px;
-                        }
-
-                        .mobile-lang-toggle .active {
-                            color: #000;
-                            font-weight: 700;
-                        }
                     }
                     @media (min-width: 769px) {
-                        .mobile-menu-toggle {
+                        .mobile-controls {
                             display: none;
                         }
                         .mobile-menu-overlay {

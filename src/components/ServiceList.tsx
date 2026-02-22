@@ -1,8 +1,8 @@
 "use client";
 
 import React from 'react';
-import { Package, MapPin, Wrench, ShieldCheck } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { BoxIcon, MeasurementIcon, FullServiceIcon, PremiumIcon } from './CustomSVGs';
 
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -15,7 +15,7 @@ export default function ServiceList() {
             titleEn: "1. Online Order",
             subtitle: "(ประหยัดที่สุด)",
             subtitleEn: "(Most Economical)",
-            icon: <Package size={32} className="text-gray-700" />,
+            icon: <BoxIcon size={56} className="transform group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500 drop-shadow-md" />,
             description: "เลือกสินค้าออนไลน์ วัดพื้นที่ สั่งผลิต และติดตั้งเอง",
             descriptionEn: "Choose online, measure yourself, order, and install yourself",
             details: [
@@ -39,7 +39,7 @@ export default function ServiceList() {
             titleEn: "2. Measurement Service",
             subtitle: "(ติดตั้งเอง)",
             subtitleEn: "(Self-Installation)",
-            icon: <MapPin size={32} className="text-gray-700" />,
+            icon: <MeasurementIcon size={56} className="transform group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-500 drop-shadow-md" />,
             description: "วัดพื้นที่และเลือกแบบถึงบ้าน (ลูกค้าติดตั้งเอง)",
             descriptionEn: "On-site measurement & selection (Customer installs)",
             details: [
@@ -65,7 +65,7 @@ export default function ServiceList() {
             titleEn: "3. Full Service",
             subtitle: "(แนะนำ)",
             subtitleEn: "(Recommended)",
-            icon: <Wrench size={32} className="text-yellow-600" />,
+            icon: <FullServiceIcon size={56} className="transform group-hover:scale-110 group-hover:rotate-6 transition-transform duration-500 drop-shadow-md" />,
             description: "ดูแลครบวงจร ตั้งแต่เลือกแบบ ผลิต จนถึงติดตั้ง",
             descriptionEn: "Full service from selection, production to installation",
             details: [
@@ -91,7 +91,7 @@ export default function ServiceList() {
             titleEn: "4. Full Service (Premium)",
             subtitle: "(รับประกัน 2 ปี)",
             subtitleEn: "(2 Year Warranty)",
-            icon: <ShieldCheck size={32} className="text-emerald-600" />,
+            icon: <PremiumIcon size={56} className="transform group-hover:scale-110 group-hover:-rotate-6 transition-transform duration-500 drop-shadow-md" />,
             description: "บริการพรีเมียม คุมงาน A-Z พร้อมออกแบบ & ประกัน 2 ปี",
             descriptionEn: "Premium service A-Z with design & 2 year warranty",
             details: [
@@ -130,16 +130,11 @@ export default function ServiceList() {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
-                        style={{
-                            backgroundColor: service.highlight ? 'white' : 'white',
-                            border: service.highlight ? '2px solid var(--color-accent)' : '1px solid #eee',
-                            borderRadius: 'var(--radius-lg)',
-                            padding: '1.5rem',
-                            boxShadow: service.highlight ? 'var(--shadow-lg)' : 'var(--shadow-card)',
-                            position: 'relative',
-                            display: 'flex',
-                            flexDirection: 'column'
-                        }}
+                        className={`relative flex flex-col p-6 rounded-2xl transition-all duration-300 group
+                            ${service.highlight
+                                ? 'bg-gradient-to-b from-white to-orange-50/30 border-2 border-orange-400 shadow-[0_8px_30px_rgb(255,122,0,0.15)] hover:shadow-[0_20px_40px_rgb(255,122,0,0.2)]'
+                                : 'bg-white/80 backdrop-blur-xl border border-white/50 shadow-xl hover:shadow-2xl'
+                            } hover:-translate-y-2`}
                     >
                         {service.highlight && (
                             <span style={{

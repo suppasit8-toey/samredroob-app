@@ -6,6 +6,7 @@ import { ArrowRight, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 
 import { useLanguage } from '@/contexts/LanguageContext';
+import { BackgroundOrbs } from './CustomSVGs';
 
 const slides = [
     {
@@ -78,6 +79,9 @@ export default function HeroBanner() {
                     <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent" />
                 </div>
             ))}
+
+            {/* Content background orbs */}
+            <BackgroundOrbs />
 
             {/* Content */}
             <div className="absolute inset-0 flex flex-col justify-center px-6 md:px-16 text-white z-20 max-w-4xl">

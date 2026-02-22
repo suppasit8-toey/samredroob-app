@@ -8,6 +8,8 @@ import { ArrowRight, ShoppingBag, Truck, ShieldCheck, Star } from 'lucide-react'
 import ServiceList from '@/components/ServiceList';
 import ServiceComparisonTable from '@/components/ServiceComparisonTable';
 import HeroBanner from '@/components/HeroBanner';
+import FeatureSection from '@/components/FeatureSection';
+import { SvgGradients } from '@/components/CustomSVGs';
 
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -23,10 +25,15 @@ export default function Home() {
             padding: '1rem',
             paddingTop: '2rem'
         }}>
+            {/* SVG Definitions for Gradients and Filters */}
+            <SvgGradients />
 
 
             {/* Hero Banner Component */}
             <HeroBanner />
+
+            {/* Feature Section: Why Choose Us */}
+            <FeatureSection />
 
             {/* Shopee Banner */}
             <a href="https://shopee.co.th/shop/1058873301" target="_blank" className="block mb-12 group no-underline relative overflow-hidden rounded-2xl shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1">

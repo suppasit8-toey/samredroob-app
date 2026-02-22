@@ -30,11 +30,6 @@ export default function AdminLayout({
     const [loading, setLoading] = useState(true);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Default to FALSE on mobile to prevent overlap
 
-    // Allow access to login page without auth
-    if (pathname === "/admin/login") {
-        return <>{children}</>;
-    }
-
     useEffect(() => {
         const checkUser = async () => {
             // ... Authentication check logic remains same ...
@@ -70,6 +65,11 @@ export default function AdminLayout({
         return () => window.removeEventListener('resize', handleResize);
 
     }, [router, pathname]);
+
+    // Allow access to login page without auth AFTER hooks have registered
+    if (pathname === "/admin/login") {
+        return <>{children}</>;
+    }
 
     const handleSignOut = async () => {
         if (supabase) {
